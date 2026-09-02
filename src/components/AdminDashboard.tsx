@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { 
   LayoutDashboard, Calendar, Camera, Package, Image as ImageIcon, Video, 
-  MessageSquare, Tag, Settings, History, LogOut, X, Plus, Trash2, Edit, Check, Eye, EyeOff, ShieldCheck, Download, Upload, Search, PhoneCall, Send, Mail
+  MessageSquare, Tag, Settings, History, LogOut, X, Plus, Trash2, Edit, Check, Eye, EyeOff, ShieldCheck, Download, Upload, Search, PhoneCall, Send, Mail,
+  BarChart3, CalendarDays, FileText, CheckSquare
 } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -23,11 +24,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
     activityLogs, logout, backupData, restoreData
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'dash' | 'bookings' | 'services' | 'packages' | 'portfolio' | 'videos' | 'testimonials' | 'offers' | 'messages' | 'settings' | 'logs'>('dash');
+  const [activeTab, setActiveTab] = useState<'dash' | 'bookings' | 'services' | 'packages' | 'portfolio' | 'videos' | 'testimonials' | 'offers' | 'messages' | 'analytics' | 'calendar' | 'settings' | 'logs'>('dash');
   const [searchTerm, setSearchTerm] = useState('');
   
   // SMS Notification Modal state when confirming a booking
   const [smsModalData, setSmsModalData] = useState<{ booking: any; message: string } | null>(null);
+  const [invoiceModalData, setInvoiceModalData] = useState<any | null>(null);
+
+  // Admin Notes state
+  const [adminNotes, setAdminNotes] = useState<string>(() => {
+    return localStorage.getItem('ibra_admin_notes') || 'قائمة المهام اليومية:\n1. تأكيد مواعيد عطلة نهاية الأسبوع\n2. تسليم ألبومات الصور للعرسان\n3. شحن بطاريات كاميرات 4K';
+  });
 
   // Modals state for adding/editing
   const [serviceModal, setServiceModal] = useState<any | null>(null);
@@ -130,6 +137,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
           {[
             { id: 'dash', label: 'لوحة القيادة العامة', icon: <LayoutDashboard className="w-4 h-4" /> },
             { id: 'bookings', label: `الحجوزات والطلبات (${newBookingsCount} جديدة)`, icon: <Calendar className="w-4 h-4" /> },
+            { id: 'analytics', label: 'الإحصائيات والأرباح', icon: <BarChart3 className="w-4 h-4" /> },
+            { id: 'calendar', label: 'تقويم مواعيد التصوير', icon: <CalendarDays className="w-4 h-4" /> },
             { id: 'services', label: 'إدارة الخدمات', icon: <Camera className="w-4 h-4" /> },
             { id: 'packages', label: 'الباقات والأسعار', icon: <Package className="w-4 h-4" /> },
             { id: 'portfolio', label: 'معرض الأعمال', icon: <ImageIcon className="w-4 h-4" /> },
@@ -226,6 +235,32 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
                   </label>
                 </div>
               </div>
+
+              {/* Admin Quick Notes Widget */}
+              <div className="glass-card p-6 rounded-3xl border border-neutral-800 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-white font-bold font-cinzel">
+                    <CheckSquare className="w-5 h-5 text-amber-400" />
+                    <span>مفكرة المهام السريعة للمسؤول</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      localStorage.setItem('ibra_admin_notes', adminNotes);
+                      alert('تم حفظ الملاحظات بنجاح!');
+                    }}
+                    className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-neutral-950 rounded-xl font-bold text-xs"
+                  >
+                    حفظ الملاحظات
+                  </button>
+                </div>
+                <textarea
+                  rows={4}
+                  value={adminNotes}
+                  onChange={e => setAdminNotes(e.target.value)}
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl p-4 text-white text-sm focus:border-amber-500 focus:outline-none"
+                  placeholder="اكتب ملاحظاتك، مهام المونتاج، أو قائمة اتصالات العرسان هنا..."
+                />
+              </div>
             </div>
           )}
 
@@ -296,6 +331,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
                                 <option value="cancelled">ملغي</option>
                               </select>
                               <button
+                                onClick={() => setInvoiceModalData(b)}
+                                className="p-1.5 bg-neutral-900 text-amber-400 hover:bg-neutral-800 rounded-lg transition-colors border border-neutral-800"
+                                title="إصدار عقد الحجز"
+                              >
+                                <FileText className="w-4 h-4" />
+                              </button>
+                              <button
                                 onClick={() => deleteBooking(b.id)}
                                 className="p-1.5 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                                 title="حذف الطلب"
@@ -309,6 +351,114 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
                     </tbody>
                   </table>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: ANALYTICS */}
+          {activeTab === 'analytics' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold font-cinzel text-white">الإحصائيات والأرباح التقديرية</h2>
+                <p className="text-xs text-neutral-400">تحليل أداء الحجوزات، الإيرادات المتوقعة، ومعدلات الطلب.</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div className="glass-card p-6 rounded-3xl border border-neutral-800">
+                  <span className="text-xs text-neutral-400 block mb-2">إجمالي الإيرادات المتوقعة (للحجوزات المؤكدة)</span>
+                  <div className="text-3xl font-extrabold font-cinzel text-amber-400 font-mono">
+                    {(confirmedBookingsCount * 75000).toLocaleString()} دج
+                  </div>
+                  <p className="text-[11px] text-neutral-500 mt-2">بمتوسط 75,000 دج للحجز المؤكد الواحد</p>
+                </div>
+
+                <div className="glass-card p-6 rounded-3xl border border-neutral-800">
+                  <span className="text-xs text-neutral-400 block mb-2">معدل تحويل الحجوزات</span>
+                  <div className="text-3xl font-extrabold font-cinzel text-emerald-400 font-mono">
+                    {bookings.length > 0 ? Math.round((confirmedBookingsCount / bookings.length) * 100) : 0}%
+                  </div>
+                  <p className="text-[11px] text-neutral-500 mt-2">نسبة الحجوزات المؤكدة من إجمالي الطلبات</p>
+                </div>
+
+                <div className="glass-card p-6 rounded-3xl border border-neutral-800">
+                  <span className="text-xs text-neutral-400 block mb-2">رسائل التواصل غير المقروءة</span>
+                  <div className="text-3xl font-extrabold font-cinzel text-white font-mono">
+                    {unreadMessagesCount}
+                  </div>
+                  <p className="text-[11px] text-neutral-500 mt-2">استفسارات جديدة تنتظر رد المسؤول</p>
+                </div>
+              </div>
+
+              <div className="glass-card p-8 rounded-3xl border border-neutral-800 space-y-6">
+                <h3 className="text-lg font-bold text-white font-cinzel">توزيع الحجوزات حسب الحالة</h3>
+                <div className="space-y-4">
+                  {[
+                    { label: 'طلبات جديدة بانتظار التأكيد', count: newBookingsCount, color: 'bg-amber-500' },
+                    { label: 'حجوزات مؤكدة (تم إرسال SMS)', count: confirmedBookingsCount, color: 'bg-emerald-500' },
+                    { label: 'إجمالي الطلبات الواردة', count: bookings.length, color: 'bg-indigo-500' },
+                  ].map((item, idx) => (
+                    <div key={idx} className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-neutral-300">{item.label}</span>
+                        <span className="font-bold text-white font-mono">{item.count}</span>
+                      </div>
+                      <div className="w-full bg-neutral-900 h-3 rounded-full overflow-hidden border border-neutral-800">
+                        <div className={`${item.color} h-full rounded-full`} style={{ width: `${Math.min(100, (item.count / (bookings.length || 1)) * 100)}%` }}></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: CALENDAR */}
+          {activeTab === 'calendar' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold font-cinzel text-white">تقويم مواعيد التصوير والحجوزات</h2>
+                  <p className="text-xs text-neutral-400">جدول زمني لجميع مواعيد الأعراس والمناسبات المؤكدة.</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {bookings.filter(b => b.status === 'confirmed').length === 0 ? (
+                  <div className="glass-card p-12 text-center rounded-3xl border border-neutral-800">
+                    <CalendarDays className="w-12 h-12 text-neutral-600 mx-auto mb-3" />
+                    <p className="text-neutral-400">لا توجد مواعيد تصوير مؤكدة حالياً في التقويم.</p>
+                  </div>
+                ) : (
+                  bookings.filter(b => b.status === 'confirmed').map(b => (
+                    <div key={b.id} className="glass-card p-6 rounded-2xl border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex flex-col items-center justify-center shrink-0 font-mono">
+                          <span className="text-xs font-bold">{b.eventDate}</span>
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-white text-base">{b.eventType} - {b.groomName} & {b.brideName}</h3>
+                          <p className="text-xs text-neutral-400">المكان: <span className="text-amber-400">{b.venue}</span> | الوقت: {b.eventTime}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <a
+                          href={`tel:${b.phone}`}
+                          className="px-4 py-2 bg-neutral-900 hover:bg-neutral-800 text-amber-400 rounded-xl text-xs font-bold border border-neutral-800 flex items-center gap-2"
+                        >
+                          <PhoneCall className="w-3.5 h-3.5" />
+                          <span>اتصال بالعريس</span>
+                        </a>
+                        <button
+                          onClick={() => setInvoiceModalData(b)}
+                          className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-neutral-950 rounded-xl text-xs font-bold flex items-center gap-2"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                          <span>إصدار عقد الحجز</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}
@@ -1092,6 +1242,70 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
                 className="px-6 py-2.5 rounded-xl bg-amber-500 text-neutral-950 text-xs font-bold"
               >
                 حفظ الباقة
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* INVOICE / CONTRACT MODAL */}
+      {invoiceModalData && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-neutral-900 border border-amber-500/40 rounded-3xl max-w-2xl w-full p-8 space-y-6 shadow-2xl relative text-right overflow-y-auto max-h-[95vh]">
+            <button
+              onClick={() => setInvoiceModalData(null)}
+              className="absolute top-4 left-4 p-2 text-neutral-400 hover:text-white bg-neutral-800 rounded-full"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="text-center pb-6 border-b border-neutral-800">
+              <span className="text-xs uppercase tracking-widest text-amber-400 font-cinzel">IBRA PRODUCTION</span>
+              <h2 className="text-2xl font-bold font-cinzel text-white mt-1">عقد اتفاق حجز وتوثيق سينمائي</h2>
+              <p className="text-xs text-neutral-400 mt-1">رقم الحجز: #{invoiceModalData.id.slice(-6)} | التاريخ: {new Date().toLocaleDateString()}</p>
+            </div>
+
+            <div className="space-y-4 text-sm text-neutral-200">
+              <div className="grid grid-cols-2 gap-4 bg-neutral-950 p-4 rounded-2xl border border-neutral-800">
+                <div>
+                  <span className="text-xs text-neutral-400 block">العريس والعروس:</span>
+                  <span className="font-bold text-white text-base">{invoiceModalData.groomName} & {invoiceModalData.brideName}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-neutral-400 block">رقم الهاتف:</span>
+                  <span className="font-mono text-amber-400">{invoiceModalData.phone}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-neutral-400 block">نوع المناسبة والتاريخ:</span>
+                  <span className="text-white">{invoiceModalData.eventType} ({invoiceModalData.eventDate})</span>
+                </div>
+                <div>
+                  <span className="text-xs text-neutral-400 block">مكان الحفل (القاعة):</span>
+                  <span className="text-white">{invoiceModalData.venue}</span>
+                </div>
+              </div>
+
+              <div className="bg-neutral-950 p-4 rounded-2xl border border-neutral-800 space-y-2 text-xs text-neutral-300">
+                <h4 className="font-bold text-amber-400 text-sm mb-2">الشروط والأحكام العامة:</h4>
+                <p>1. يتعهد فريق IBRA PRODUCTION بالحضور في الوقت المحدد وتغطية المناسبة بأحدث معدات التصوير السينمائي (4K و Drone).</p>
+                <p>2. يتم تسليم العمل النهائي (المونتاج والألبومات) في المدة المتفق عليها.</p>
+                <p>3. هذا العقد معتمد رسمياً من طرف مؤسسة إبرا برودكشن للإنتاج الفني والاعلامي بالجزائر.</p>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center pt-4 border-t border-neutral-800">
+              <button
+                onClick={() => window.print()}
+                className="px-5 py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-bold flex items-center gap-2"
+              >
+                <Download className="w-4 h-4 text-amber-400" />
+                <span>طباعة أو حفظ PDF</span>
+              </button>
+              <button
+                onClick={() => setInvoiceModalData(null)}
+                className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs font-bold"
+              >
+                إغلاق النافذة
               </button>
             </div>
           </div>
