@@ -11,7 +11,7 @@ interface AdminLoginProps {
 export const AdminLogin: React.FC<AdminLoginProps> = ({ isOpen, onClose, onLoginSuccess }) => {
   const { login, language } = useApp();
   const [email, setEmail] = useState('admin@ibraprod.online');
-  const [password, setPassword] = useState('admin123');
+  const [password, setPassword] = useState('ibra2005Admin');
   const [error, setError] = useState(false);
 
   if (!isOpen) return null;
@@ -52,7 +52,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ isOpen, onClose, onLogin
 
         {error && (
           <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-xs p-3 rounded-xl mb-6 text-center">
-            {language === 'ar' ? 'بيانات الدخول غير صحيحة. جرب: admin123' : 'Invalid credentials. Try admin123'}
+            {language === 'ar' ? 'بيانات الدخول غير صحيحة. جرب: ibra2005Admin' : 'Invalid credentials. Try ibra2005Admin'}
           </div>
         )}
 
