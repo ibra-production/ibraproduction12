@@ -39,14 +39,14 @@ export const About: React.FC = () => {
           <div className="relative">
             <div className="relative z-10 rounded-2xl overflow-hidden shadow-2xl border border-amber-500/20 aspect-[4/3]">
               <img
-                src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=80"
+                src="/src/assets/about/file_00000000d7348210af4bc67f18918c76.png"
                 alt="IBRA PRODUCTION Team at Work"
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
               />
             </div>
             <div className="absolute -bottom-8 -right-8 w-2/3 aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl border-2 border-amber-500/30 hidden sm:block z-20">
               <img
-                src="https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=800&q=80"
+                src="/src/assets/about/file_00000000d7348210af4bc67f18918c76.png"
                 alt="Wedding Cinematic Moment"
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
               />
