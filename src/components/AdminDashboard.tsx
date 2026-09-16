@@ -1141,77 +1141,206 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
           )}
 
           {activeTab === 'videos' && (
-            <div className="space-y-6">
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <h2 className="text-2xl font-bold font-cinzel text-white">
+        إدارة الفيديوهات
+      </h2>
 
-              <div>
-                <h2 className="text-2xl font-bold text-white">
-                  الفيديوهات
-                </h2>
-                <p className="text-xs text-neutral-400 mt-2">
-                  الفيديوهات الموجودة في الموقع.
-                </p>
-              </div>
+      <button
+        onClick={() =>
+          setVideoModal({
+            titleAr: '',
+            titleFr: '',
+            titleEn: '',
+            videoUrl: '',
+            thumbnail: '',
+            duration: ''
+          })
+        }
+        className="flex items-center gap-2 px-5 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-sm"
+      >
+        <Plus className="w-4 h-4" />
+        إضافة فيديو
+      </button>
+    </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      {videos.map(v => (
+        <div
+          key={v.id}
+          className="glass-card p-4 rounded-2xl border border-neutral-800"
+        >
+          <div className="relative aspect-video bg-black rounded-xl overflow-hidden mb-4">
+            {v.videoUrl ? (
+              <video
+                src={v.videoUrl}
+                poster={v.thumbnail}
+                controls
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <img
+                src={v.thumbnail}
+                alt=""
+                className="w-full h-full object-cover"
+              />
+            )}
+          </div>
 
-                {Array.isArray(videos) && videos.length > 0 ? (
-                  videos.map((video: any) => (
-                    <div
-                      key={video.id}
-                      className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5"
-                    >
+          <h3 className="font-bold text-white text-sm mb-1">
+            {v.titleAr}
+          </h3>
 
-                      <div className="w-full h-40 bg-neutral-950 rounded-xl flex items-center justify-center overflow-hidden">
+          <span className="text-xs text-amber-400 block mb-4">
+            {v.duration}
+          </span>
 
-                        {video.thumbnail ? (
-                          <img
-                            src={video.thumbnail}
-                            alt={video.titleAr || ''}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <Video className="w-10 h-10 text-neutral-700" />
-                        )}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setVideoModal(v)}
+              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-bold"
+            >
+              <Edit className="w-4 h-4" />
+              تعديل
+            </button>
 
-                      </div>
+            <button
+              onClick={() => {
+                if (confirm('هل أنت متأكد من حذف هذا الفيديو؟')) {
+                  deleteVideoItem(v.id);
+                }
+              }}
+              className="flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold"
+            >
+              <Trash2 className="w-4 h-4" />
+              حذف
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
 
-                      <h3 className="font-bold text-white mt-4">
-                        {video.titleAr ||
-                          video.title ||
-                          'فيديو'}
-                      </h3>
+    {videoModal && (
+      <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="bg-neutral-900 border border-amber-500/40 rounded-3xl max-w-xl w-full p-6 space-y-5">
 
-                      {video.descriptionAr && (
-                        <p className="text-xs text-neutral-400 mt-2">
-                          {video.descriptionAr}
-                        </p>
-                      )}
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-bold text-white">
+              {videoModal.id ? 'تعديل الفيديو' : 'إضافة فيديو جديد'}
+            </h3>
 
-                      {video.url && (
-                        <a
-                          href={video.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-2 mt-4 text-xs text-amber-400"
-                        >
-                          مشاهدة الفيديو
-                        </a>
-                      )}
+            <button
+              onClick={() => setVideoModal(null)}
+              className="p-2 rounded-xl bg-neutral-800 text-neutral-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
 
-                    </div>
-                  ))
-                ) : (
-                  <div className="col-span-full bg-neutral-900 border border-neutral-800 rounded-2xl p-10 text-center text-neutral-500">
-                    لا توجد فيديوهات حالياً.
-                  </div>
-                )}
+          <input
+            value={videoModal.titleAr || ''}
+            onChange={e =>
+              setVideoModal({
+                ...videoModal,
+                titleAr: e.target.value
+              })
+            }
+            placeholder="عنوان الفيديو بالعربية"
+            className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"
+          />
 
-              </div>
+          <input
+            value={videoModal.titleFr || ''}
+            onChange={e =>
+              setVideoModal({
+                ...videoModal,
+                titleFr: e.target.value
+              })
+            }
+            placeholder="Titre du vidéo"
+            className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"
+          />
 
-            </div>
-          )}
+          <input
+            value={videoModal.titleEn || ''}
+            onChange={e =>
+              setVideoModal({
+                ...videoModal,
+                titleEn: e.target.value
+              })
+            }
+            placeholder="Video title"
+            className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"
+          />
 
-          {activeTab === 'testimonials' && (
+          <input
+            value={videoModal.videoUrl || ''}
+            onChange={e =>
+              setVideoModal({
+                ...videoModal,
+                videoUrl: e.target.value
+              })
+            }
+            placeholder="رابط الفيديو MP4"
+            className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"
+          />
+
+          <input
+            value={videoModal.thumbnail || ''}
+            onChange={e =>
+              setVideoModal({
+                ...videoModal,
+                thumbnail: e.target.value
+              })
+            }
+            placeholder="رابط الصورة المصغرة"
+            className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"
+          />
+
+          <input
+            value={videoModal.duration || ''}
+            onChange={e =>
+              setVideoModal({
+                ...videoModal,
+                duration: e.target.value
+              })
+            }
+            placeholder="المدة مثال: 01:25"
+            className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"
+          />
+
+          <div className="flex gap-3 pt-2">
+            <button
+              onClick={() => {
+                if (videoModal.id) {
+                  updateVideoItem(videoModal.id, videoModal);
+                } else {
+                  addVideoItem(videoModal);
+                }
+
+                setVideoModal(null);
+              }}
+              className="flex-1 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold"
+            >
+              حفظ
+            </button>
+
+            <button
+              onClick={() => setVideoModal(null)}
+              className="px-6 py-3 rounded-xl bg-neutral-800 text-white font-bold"
+            >
+              إلغاء
+            </button>
+          </div>
+
+        </div>
+      </div>
+    )}
+  </div>
+)}
+
+{activeTab === 'testimonials' && (
             <div className="space-y-6">
 
               <div>
