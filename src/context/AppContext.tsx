@@ -16,6 +16,12 @@ import {
 } from "firebase/firestore";
 
 import {
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+} from "firebase/auth";
+
+import {
   SiteSettings,
   StatItem,
   ServiceItem,
@@ -43,7 +49,7 @@ import {
   initialUsers,
 } from "../data/initialData";
 
-import { db } from "../firebase";
+import { db, auth } from "../firebase";
 
 interface AppContextType {
   language: Language;
@@ -67,11 +73,13 @@ interface AppContextType {
   users: AdminUser[];
 
   currentUser: AdminUser | null;
+
   login: (
     email: string,
     pass: string
-  ) => boolean;
-  logout: () => void;
+  ) => Promise<boolean>;
+
+  logout: () => Promise<void>;
 
   addService: (
     service: Omit<ServiceItem, "id">
@@ -345,17 +353,19 @@ export const AppProvider: React.FC<{
   // Testimonials
   // =========================
 
-  const [testimonials, setTestimonials] =
-    useState<TestimonialItem[]>(() => {
-      const saved =
-        localStorage.getItem(
-          "ibra_testimonials"
-        );
+  const [
+    testimonials,
+    setTestimonials,
+  ] = useState<TestimonialItem[]>(() => {
+    const saved =
+      localStorage.getItem(
+        "ibra_testimonials"
+      );
 
-      return saved
-        ? JSON.parse(saved)
-        : initialTestimonials;
-    });
+    return saved
+      ? JSON.parse(saved)
+      : initialTestimonials;
+  });
 
   // =========================
   // Bookings
@@ -393,43 +403,47 @@ export const AppProvider: React.FC<{
   // Contact Messages
   // =========================
 
-  const [contactMessages, setContactMessages] =
-    useState<ContactMessage[]>(() => {
-      const saved =
-        localStorage.getItem(
-          "ibra_contact_messages"
-        );
+  const [
+    contactMessages,
+    setContactMessages,
+  ] = useState<ContactMessage[]>(() => {
+    const saved =
+      localStorage.getItem(
+        "ibra_contact_messages"
+      );
 
-      return saved
-        ? JSON.parse(saved)
-        : [];
-    });
+    return saved
+      ? JSON.parse(saved)
+      : [];
+  });
 
   // =========================
   // Activity Logs
   // =========================
 
-  const [activityLogs, setActivityLogs] =
-    useState<ActivityLog[]>(() => {
-      const saved =
-        localStorage.getItem(
-          "ibra_logs"
-        );
+  const [
+    activityLogs,
+    setActivityLogs,
+  ] = useState<ActivityLog[]>(() => {
+    const saved =
+      localStorage.getItem(
+        "ibra_logs"
+      );
 
-      return saved
-        ? JSON.parse(saved)
-        : [
-            {
-              id: "l1",
-              user: "Ibrahim (Owner)",
-              actionAr:
-                "تم تسجيل دخول النظام وإطلاق الموقع",
-              timestamp:
-                "2026-08-31 12:00",
-              type: "settings",
-            },
-          ];
-    });
+    return saved
+      ? JSON.parse(saved)
+      : [
+          {
+            id: "l1",
+            user: "Ibrahim (Owner)",
+            actionAr:
+              "تم تسجيل دخول النظام وإطلاق الموقع",
+            timestamp:
+              "2026-08-31 12:00",
+            type: "settings",
+          },
+        ];
+  });
 
   // =========================
   // Users
@@ -445,16 +459,7 @@ export const AppProvider: React.FC<{
   // =========================
 
   const [currentUser, setCurrentUser] =
-    useState<AdminUser | null>(() => {
-      const saved =
-        localStorage.getItem(
-          "ibra_current_user"
-        );
-
-      return saved
-        ? JSON.parse(saved)
-        : null;
-    });
+    useState<AdminUser | null>(null);
 
   // =========================
   // LocalStorage
@@ -640,52 +645,73 @@ export const AppProvider: React.FC<{
   };
 
   // =========================
-  // Login
+  // Firebase Authentication
   // =========================
 
-  const login = (
+  const login = async (
     email: string,
     pass: string
-  ) => {
-    if (
-      (
-        email ===
-          "admin@ibraprod.online" &&
-        pass === "admin123"
-      ) ||
-      pass === "ibra2026"
-    ) {
-      const user = users[0];
-
-      setCurrentUser(user);
-
-      localStorage.setItem(
-        "ibra_current_user",
-        JSON.stringify(user)
-      );
-
-      logActivity(
-        "تم تسجيل الدخول إلى لوحة الإدارة",
-        "settings"
+  ): Promise<boolean> => {
+    try {
+      await signInWithEmailAndPassword(
+        auth,
+        email,
+        pass
       );
 
       return true;
+    } catch (error) {
+      alert(String(error)); console.error(
+        "Firebase login error:",
+        error
+      );
+
+      return false;
     }
+  };
 
-    return false;
+  const logout = async (): Promise<void> => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      alert(String(error)); console.error(
+        "Firebase logout error:",
+        error
+      );
+    }
   };
 
   // =========================
-  // Logout
+  // Firebase Auth State
   // =========================
 
-  const logout = () => {
-    setCurrentUser(null);
+  useEffect(() => {
+    const unsubscribe =
+      onAuthStateChanged(
+        auth,
+        (firebaseUser) => {
+          if (firebaseUser) {
+            const adminUser =
+              users[0];
 
-    localStorage.removeItem(
-      "ibra_current_user"
-    );
-  };
+            setCurrentUser(
+              adminUser
+            );
+
+            logActivity(
+              "تم تسجيل الدخول إلى لوحة الإدارة",
+              "settings"
+            );
+          } else {
+            setCurrentUser(null);
+          }
+        }
+      );
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   // =========================
   // Services
@@ -1000,7 +1026,9 @@ export const AppProvider: React.FC<{
 
       const cleanBookingData =
         Object.fromEntries(
-          Object.entries(bookingData).filter(
+          Object.entries(
+            bookingData
+          ).filter(
             ([, value]) =>
               value !== undefined &&
               value !== null
@@ -1044,7 +1072,7 @@ export const AppProvider: React.FC<{
         "create"
       );
     } catch (error: any) {
-      console.error(
+      alert(String(error)); console.error(
         "❌ FIRESTORE BOOKING ERROR:",
         error
       );
@@ -1097,7 +1125,7 @@ export const AppProvider: React.FC<{
           "update"
         );
       } catch (error) {
-        console.error(
+        alert(String(error)); console.error(
           "Firestore update booking error:",
           error
         );
@@ -1135,7 +1163,7 @@ export const AppProvider: React.FC<{
           "delete"
         );
       } catch (error) {
-        console.error(
+        alert(String(error)); console.error(
           "Firestore delete booking error:",
           error
         );
@@ -1243,7 +1271,7 @@ export const AppProvider: React.FC<{
           );
         },
         (error) => {
-          console.error(
+          alert(String(error)); console.error(
             "❌ Firestore bookings listener error:",
             error
           );
@@ -1403,7 +1431,7 @@ export const AppProvider: React.FC<{
 
       return true;
     } catch (error) {
-      console.error(
+      alert(String(error)); console.error(
         "Restore error:",
         error
       );
@@ -1411,11 +1439,9 @@ export const AppProvider: React.FC<{
       return false;
     }
   };
-
-  // =========================
+ // =========================
   // Provider
-  // =========================
-
+   // =========================
   return (
     <AppContext.Provider
       value={{
@@ -1483,15 +1509,13 @@ export const AppProvider: React.FC<{
   );
 };
 
+
 // =========================
 // useApp Hook
 // =========================
 
 export const useApp = () => {
-  const context =
-    useContext(
-      AppContext
-    );
+  const context = useContext(AppContext);
 
   if (!context) {
     throw new Error(

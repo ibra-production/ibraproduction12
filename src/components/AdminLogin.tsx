@@ -11,14 +11,14 @@ interface AdminLoginProps {
 export const AdminLogin: React.FC<AdminLoginProps> = ({ isOpen, onClose, onLoginSuccess }) => {
   const { login, language } = useApp();
   const [email, setEmail] = useState('admin@ibraprod.online');
-  const [password, setPassword] = useState('ibra2005Admin');
+ const [password, setPassword] = useState('');
   const [error, setError] = useState(false);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = login(email, password);
+    const success = await login(email, password);
     if (success) {
       setError(false);
       onLoginSuccess();
@@ -51,10 +51,12 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ isOpen, onClose, onLogin
         </div>
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-xs p-3 rounded-xl mb-6 text-center">
-            {language === 'ar' ? 'بيانات الدخول غير صحيحة. جرب: ibra2005Admin' : 'Invalid credentials. Try ibra2005Admin'}
-          </div>
-        )}
+  <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-xs p-3 rounded-xl mb-6 text-center">
+    {language === 'ar'
+      ? 'بيانات الدخول غير صحيحة'
+      : 'Invalid email or password'}
+  </div>
+)}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
