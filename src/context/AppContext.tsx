@@ -894,16 +894,24 @@ export const AppProvider: React.FC<{
   // Videos
   // =========================
 
+    const saveVideos = (items: VideoItem[]) => {
+    setVideos(items);
+    localStorage.setItem(
+      "ibra_videos",
+      JSON.stringify(items)
+    );
+  };
+
   const addVideoItem = (
     item: Omit<VideoItem, "id">
   ) => {
-    const newItem = {
+    const newItem: VideoItem = {
       ...item,
       id: "v_" + Date.now(),
     };
 
-    setVideos((prev) => [
-      ...prev,
+    saveVideos([
+      ...videos,
       newItem,
     ]);
 
@@ -917,16 +925,16 @@ export const AppProvider: React.FC<{
     id: string,
     data: Partial<VideoItem>
   ) => {
-    setVideos((prev) =>
-      prev.map((v) =>
-        v.id === id
-          ? {
-              ...v,
-              ...data,
-            }
-          : v
-      )
+    const updatedVideos = videos.map((v) =>
+      v.id === id
+        ? {
+            ...v,
+            ...data,
+          }
+        : v
     );
+
+    saveVideos(updatedVideos);
 
     logActivity(
       `تم تحديث الفيديو ID: ${id}`,
@@ -937,11 +945,11 @@ export const AppProvider: React.FC<{
   const deleteVideoItem = (
     id: string
   ) => {
-    setVideos((prev) =>
-      prev.filter(
-        (v) => v.id !== id
-      )
+    const updatedVideos = videos.filter(
+      (v) => v.id !== id
     );
+
+    saveVideos(updatedVideos);
 
     logActivity(
       `تم حذف الفيديو ID: ${id}`,
