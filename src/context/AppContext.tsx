@@ -13,6 +13,8 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  setDoc,
+  getDocs,
 } from "firebase/firestore";
 
 import {
@@ -206,9 +208,9 @@ const AppContext =
 export const AppProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
-  // =========================
+  // =========================================================
   // Language
-  // =========================
+  // =========================================================
 
   const [language, setLanguageState] =
     useState<Language>(() => {
@@ -252,9 +254,9 @@ export const AppProvider: React.FC<{
       dir;
   }, [language, dir]);
 
-  // =========================
+  // =========================================================
   // Settings
-  // =========================
+  // =========================================================
 
   const [settings, setSettings] =
     useState<SiteSettings>(() => {
@@ -268,26 +270,23 @@ export const AppProvider: React.FC<{
         : initialSiteSettings;
 
       return {
+        ...initialSiteSettings,
         ...parsed,
-        facebookUrl:
-          "https://www.facebook.com/share/1HpLYTDQYR/?mibextid=wwXIfr",
-        instagramUrl:
-          "https://www.instagram.com/ibrahim_journalist?igsi=N2M4d2NvYmY1Z2Fp&utm_source=qr",
       };
     });
 
-  // =========================
+  // =========================================================
   // Stats
-  // =========================
+  // =========================================================
 
   const [stats] =
     useState<StatItem[]>(
       initialStats
     );
 
-  // =========================
+  // =========================================================
   // Services
-  // =========================
+  // =========================================================
 
   const [services, setServices] =
     useState<ServiceItem[]>(() => {
@@ -301,9 +300,9 @@ export const AppProvider: React.FC<{
         : initialServices;
     });
 
-  // =========================
+  // =========================================================
   // Packages
-  // =========================
+  // =========================================================
 
   const [packages, setPackages] =
     useState<PackageItem[]>(() => {
@@ -317,9 +316,9 @@ export const AppProvider: React.FC<{
         : initialPackages;
     });
 
-  // =========================
+  // =========================================================
   // Portfolio
-  // =========================
+  // =========================================================
 
   const [portfolio, setPortfolio] =
     useState<PortfolioItem[]>(() => {
@@ -333,9 +332,9 @@ export const AppProvider: React.FC<{
         : initialPortfolio;
     });
 
-  // =========================
+  // =========================================================
   // Videos
-  // =========================
+  // =========================================================
 
   const [videos, setVideos] =
     useState<VideoItem[]>(() => {
@@ -349,9 +348,9 @@ export const AppProvider: React.FC<{
         : initialVideos;
     });
 
-  // =========================
+  // =========================================================
   // Testimonials
-  // =========================
+  // =========================================================
 
   const [
     testimonials,
@@ -367,9 +366,9 @@ export const AppProvider: React.FC<{
       : initialTestimonials;
   });
 
-  // =========================
+  // =========================================================
   // Bookings
-  // =========================
+  // =========================================================
 
   const [bookings, setBookings] =
     useState<BookingItem[]>(() => {
@@ -383,9 +382,9 @@ export const AppProvider: React.FC<{
         : [];
     });
 
-  // =========================
+  // =========================================================
   // Offers
-  // =========================
+  // =========================================================
 
   const [offers, setOffers] =
     useState<OfferItem[]>(() => {
@@ -399,9 +398,9 @@ export const AppProvider: React.FC<{
         : initialOffers;
     });
 
-  // =========================
+  // =========================================================
   // Contact Messages
-  // =========================
+  // =========================================================
 
   const [
     contactMessages,
@@ -417,9 +416,9 @@ export const AppProvider: React.FC<{
       : [];
   });
 
-  // =========================
+  // =========================================================
   // Activity Logs
-  // =========================
+  // =========================================================
 
   const [
     activityLogs,
@@ -445,25 +444,34 @@ export const AppProvider: React.FC<{
         ];
   });
 
-  // =========================
+  // =========================================================
   // Users
-  // =========================
+  // =========================================================
 
   const [users] =
     useState<AdminUser[]>(
       initialUsers
     );
 
-  // =========================
+  // =========================================================
   // Current User
-  // =========================
+  // =========================================================
 
   const [currentUser, setCurrentUser] =
     useState<AdminUser | null>(null);
 
-  // =========================
-  // LocalStorage
-  // =========================
+  // =========================================================
+  // Firestore migration state
+  // =========================================================
+
+  const [
+    firestoreMigrationReady,
+    setFirestoreMigrationReady,
+  ] = useState(false);
+
+  // =========================================================
+  // LocalStorage Cache
+  // =========================================================
 
   useEffect(() => {
     localStorage.setItem(
@@ -535,9 +543,9 @@ export const AppProvider: React.FC<{
     );
   }, [contactMessages]);
 
-  // =========================
+  // =========================================================
   // Activity Log
-  // =========================
+  // =========================================================
 
   const logActivity = (
     actionAr: string,
@@ -563,9 +571,9 @@ export const AppProvider: React.FC<{
     ]);
   };
 
-  // =========================
+  // =========================================================
   // Contact Messages
-  // =========================
+  // =========================================================
 
   const addContactMessage = (msg: {
     name: string;
@@ -626,17 +634,39 @@ export const AppProvider: React.FC<{
     );
   };
 
-  // =========================
-  // Settings
-  // =========================
+  // =========================================================
+  // Settings - Firestore
+  // =========================================================
 
   const updateSettings = (
     newSettings: Partial<SiteSettings>
   ) => {
-    setSettings((prev) => ({
-      ...prev,
+    const updatedSettings: SiteSettings = {
+      ...settings,
       ...newSettings,
-    }));
+    };
+
+    setSettings(updatedSettings);
+
+    localStorage.setItem(
+      "ibra_settings",
+      JSON.stringify(updatedSettings)
+    );
+
+    setDoc(
+      doc(
+        db,
+        "siteSettings",
+        "main"
+      ),
+      updatedSettings,
+      { merge: true }
+    ).catch((error) => {
+      console.error(
+        "Firestore settings update error:",
+        error
+      );
+    });
 
     logActivity(
       "تم تحديث إعدادات الموقع الأساسية",
@@ -644,9 +674,9 @@ export const AppProvider: React.FC<{
     );
   };
 
-  // =========================
+  // =========================================================
   // Firebase Authentication
-  // =========================
+  // =========================================================
 
   const login = async (
     email: string,
@@ -661,9 +691,18 @@ export const AppProvider: React.FC<{
 
       return true;
     } catch (error) {
-      alert(String(error)); console.error(
+      console.error(
         "Firebase login error:",
         error
+      );
+
+      alert(
+        "فشل تسجيل الدخول: " +
+          String(
+            error instanceof Error
+              ? error.message
+              : error
+          )
       );
 
       return false;
@@ -674,16 +713,20 @@ export const AppProvider: React.FC<{
     try {
       await signOut(auth);
     } catch (error) {
-      alert(String(error)); console.error(
+      console.error(
         "Firebase logout error:",
         error
+      );
+
+      alert(
+        "حدث خطأ أثناء تسجيل الخروج"
       );
     }
   };
 
-  // =========================
+  // =========================================================
   // Firebase Auth State
-  // =========================
+  // =========================================================
 
   useEffect(() => {
     const unsubscribe =
@@ -713,14 +756,572 @@ export const AppProvider: React.FC<{
     };
   }, []);
 
-  // =========================
-  // Services
-  // =========================
+  // =========================================================
+  // FIRESTORE REALTIME - SETTINGS
+  // =========================================================
+
+  useEffect(() => {
+    const settingsRef = doc(
+      db,
+      "siteSettings",
+      "main"
+    );
+
+    const unsubscribe =
+      onSnapshot(
+        settingsRef,
+        (snapshot) => {
+          if (!snapshot.exists()) {
+            return;
+          }
+
+          const data =
+            snapshot.data() as Partial<SiteSettings>;
+
+          setSettings((prev) => ({
+            ...prev,
+            ...data,
+          }));
+        },
+        (error) => {
+          console.error(
+            "Firestore settings listener error:",
+            error
+          );
+        }
+      );
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  // =========================================================
+  // Helper: Firestore Collection Listener
+  // =========================================================
+
+  useEffect(() => {
+    const unsubscribe =
+      onSnapshot(
+        collection(db, "services"),
+        (snapshot) => {
+          if (
+            snapshot.empty &&
+            !firestoreMigrationReady
+          ) {
+            return;
+          }
+
+          const items =
+            snapshot.docs.map(
+              (itemDoc) =>
+                ({
+                  id: itemDoc.id,
+                  ...itemDoc.data(),
+                }) as ServiceItem
+            );
+
+          items.sort(
+            (a, b) =>
+              (a.order ?? 0) -
+              (b.order ?? 0)
+          );
+
+          setServices(items);
+        },
+        (error) => {
+          console.error(
+            "Firestore services listener error:",
+            error
+          );
+        }
+      );
+
+    return () => {
+      unsubscribe();
+    };
+  }, [firestoreMigrationReady]);
+
+  useEffect(() => {
+    const unsubscribe =
+      onSnapshot(
+        collection(db, "packages"),
+        (snapshot) => {
+          if (
+            snapshot.empty &&
+            !firestoreMigrationReady
+          ) {
+            return;
+          }
+
+          const items =
+            snapshot.docs.map(
+              (itemDoc) =>
+                ({
+                  id: itemDoc.id,
+                  ...itemDoc.data(),
+                }) as PackageItem
+            );
+
+          items.sort(
+            (a, b) =>
+              (a.order ?? 0) -
+              (b.order ?? 0)
+          );
+
+          setPackages(items);
+        },
+        (error) => {
+          console.error(
+            "Firestore packages listener error:",
+            error
+          );
+        }
+      );
+
+    return () => {
+      unsubscribe();
+    };
+  }, [firestoreMigrationReady]);
+
+  useEffect(() => {
+    const unsubscribe =
+      onSnapshot(
+        collection(db, "portfolio"),
+        (snapshot) => {
+          if (
+            snapshot.empty &&
+            !firestoreMigrationReady
+          ) {
+            return;
+          }
+
+          const items =
+            snapshot.docs.map(
+              (itemDoc) =>
+                ({
+                  id: itemDoc.id,
+                  ...itemDoc.data(),
+                }) as PortfolioItem
+            );
+
+          items.sort(
+            (a, b) =>
+              (a.order ?? 0) -
+              (b.order ?? 0)
+          );
+
+          setPortfolio(items);
+        },
+        (error) => {
+          console.error(
+            "Firestore portfolio listener error:",
+            error
+          );
+        }
+      );
+
+    return () => {
+      unsubscribe();
+    };
+  }, [firestoreMigrationReady]);
+
+  useEffect(() => {
+    const unsubscribe =
+      onSnapshot(
+        collection(db, "videos"),
+        (snapshot) => {
+          if (
+            snapshot.empty &&
+            !firestoreMigrationReady
+          ) {
+            return;
+          }
+
+          const items =
+            snapshot.docs.map(
+              (itemDoc) =>
+                ({
+                  id: itemDoc.id,
+                  ...itemDoc.data(),
+                }) as VideoItem
+            );
+
+          items.sort(
+            (a, b) =>
+              (a.order ?? 0) -
+              (b.order ?? 0)
+          );
+
+          setVideos(items);
+        },
+        (error) => {
+          console.error(
+            "Firestore videos listener error:",
+            error
+          );
+        }
+      );
+
+    return () => {
+      unsubscribe();
+    };
+  }, [firestoreMigrationReady]);
+
+  useEffect(() => {
+    const unsubscribe =
+      onSnapshot(
+        collection(db, "testimonials"),
+        (snapshot) => {
+          if (
+            snapshot.empty &&
+            !firestoreMigrationReady
+          ) {
+            return;
+          }
+
+          const items =
+            snapshot.docs.map(
+              (itemDoc) =>
+                ({
+                  id: itemDoc.id,
+                  ...itemDoc.data(),
+                }) as TestimonialItem
+            );
+
+          setTestimonials(items);
+        },
+        (error) => {
+          console.error(
+            "Firestore testimonials listener error:",
+            error
+          );
+        }
+      );
+
+    return () => {
+      unsubscribe();
+    };
+  }, [firestoreMigrationReady]);
+
+  useEffect(() => {
+    const unsubscribe =
+      onSnapshot(
+        collection(db, "offers"),
+        (snapshot) => {
+          if (
+            snapshot.empty &&
+            !firestoreMigrationReady
+          ) {
+            return;
+          }
+
+          const items =
+            snapshot.docs.map(
+              (itemDoc) =>
+                ({
+                  id: itemDoc.id,
+                  ...itemDoc.data(),
+                }) as OfferItem
+            );
+
+          setOffers(items);
+        },
+        (error) => {
+          console.error(
+            "Firestore offers listener error:",
+            error
+          );
+        }
+      );
+
+    return () => {
+      unsubscribe();
+    };
+  }, [firestoreMigrationReady]);
+
+  // =========================================================
+  // ONE-TIME MIGRATION
+  //
+  // ينقل البيانات الحالية الموجودة في localStorage
+  // إلى Firestore فقط إذا كانت مجموعة Firestore فارغة.
+  // =========================================================
+
+  useEffect(() => {
+    if (!currentUser) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const migrateToFirestore =
+      async () => {
+        try {
+          console.log(
+            "🔥 بدء نقل بيانات Ibra إلى Firestore..."
+          );
+
+          // -------------------------
+          // Settings
+          // -------------------------
+
+          const settingsRef =
+            doc(
+              db,
+              "siteSettings",
+              "main"
+            );
+
+          const settingsSnapshot =
+            await getDocs(
+              collection(
+                db,
+                "siteSettings"
+              )
+            );
+
+          if (
+            settingsSnapshot.empty
+          ) {
+            await setDoc(
+              settingsRef,
+              settings
+            );
+
+            console.log(
+              "✅ Settings migrated"
+            );
+          }
+
+          // -------------------------
+          // Services
+          // -------------------------
+
+          const servicesSnapshot =
+            await getDocs(
+              collection(
+                db,
+                "services"
+              )
+            );
+
+          if (
+            servicesSnapshot.empty
+          ) {
+            for (const item of services) {
+              await setDoc(
+                doc(
+                  db,
+                  "services",
+                  item.id
+                ),
+                item
+              );
+            }
+
+            console.log(
+              "✅ Services migrated"
+            );
+          }
+
+          // -------------------------
+          // Packages
+          // -------------------------
+
+          const packagesSnapshot =
+            await getDocs(
+              collection(
+                db,
+                "packages"
+              )
+            );
+
+          if (
+            packagesSnapshot.empty
+          ) {
+            for (const item of packages) {
+              await setDoc(
+                doc(
+                  db,
+                  "packages",
+                  item.id
+                ),
+                item
+              );
+            }
+
+            console.log(
+              "✅ Packages migrated"
+            );
+          }
+
+          // -------------------------
+          // Portfolio
+          // -------------------------
+
+          const portfolioSnapshot =
+            await getDocs(
+              collection(
+                db,
+                "portfolio"
+              )
+            );
+
+          if (
+            portfolioSnapshot.empty
+          ) {
+            for (const item of portfolio) {
+              await setDoc(
+                doc(
+                  db,
+                  "portfolio",
+                  item.id
+                ),
+                item
+              );
+            }
+
+            console.log(
+              "✅ Portfolio migrated"
+            );
+          }
+
+          // -------------------------
+          // Videos
+          // -------------------------
+
+          const videosSnapshot =
+            await getDocs(
+              collection(
+                db,
+                "videos"
+              )
+            );
+
+          if (
+            videosSnapshot.empty
+          ) {
+            for (const item of videos) {
+              await setDoc(
+                doc(
+                  db,
+                  "videos",
+                  item.id
+                ),
+                item
+              );
+            }
+
+            console.log(
+              "✅ Videos migrated"
+            );
+          }
+
+          // -------------------------
+          // Testimonials
+          // -------------------------
+
+          const testimonialsSnapshot =
+            await getDocs(
+              collection(
+                db,
+                "testimonials"
+              )
+            );
+
+          if (
+            testimonialsSnapshot.empty
+          ) {
+            for (const item of testimonials) {
+              await setDoc(
+                doc(
+                  db,
+                  "testimonials",
+                  item.id
+                ),
+                item
+              );
+            }
+
+            console.log(
+              "✅ Testimonials migrated"
+            );
+          }
+
+          // -------------------------
+          // Offers
+          // -------------------------
+
+          const offersSnapshot =
+            await getDocs(
+              collection(
+                db,
+                "offers"
+              )
+            );
+
+          if (
+            offersSnapshot.empty
+          ) {
+            for (const item of offers) {
+              await setDoc(
+                doc(
+                  db,
+                  "offers",
+                  item.id
+                ),
+                item
+              );
+            }
+
+            console.log(
+              "✅ Offers migrated"
+            );
+          }
+
+          if (!cancelled) {
+            localStorage.setItem(
+              "ibra_firestore_migration_v2",
+              "true"
+            );
+
+            setFirestoreMigrationReady(
+              true
+            );
+
+            console.log(
+              "🔥 Ibra Firestore migration completed successfully"
+            );
+          }
+        } catch (error) {
+          console.error(
+            "❌ Firestore migration error:",
+            error
+          );
+
+          if (!cancelled) {
+            setFirestoreMigrationReady(
+              true
+            );
+          }
+        }
+      };
+
+    migrateToFirestore();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser]);
+
+  // =========================================================
+  // Services - Firestore
+  // =========================================================
 
   const addService = (
     service: Omit<ServiceItem, "id">
   ) => {
-    const newItem = {
+    const newItem: ServiceItem = {
       ...service,
       id: "s_" + Date.now(),
     };
@@ -729,6 +1330,20 @@ export const AppProvider: React.FC<{
       ...prev,
       newItem,
     ]);
+
+    setDoc(
+      doc(
+        db,
+        "services",
+        newItem.id
+      ),
+      newItem
+    ).catch((error) => {
+      console.error(
+        "Firestore add service error:",
+        error
+      );
+    });
 
     logActivity(
       `تمت إضافة خدمة جديدة: ${service.titleAr}`,
@@ -740,16 +1355,42 @@ export const AppProvider: React.FC<{
     id: string,
     data: Partial<ServiceItem>
   ) => {
+    const current =
+      services.find(
+        (item) => item.id === id
+      );
+
+    if (!current) {
+      return;
+    }
+
+    const updated: ServiceItem = {
+      ...current,
+      ...data,
+      id,
+    };
+
     setServices((prev) =>
       prev.map((s) =>
         s.id === id
-          ? {
-              ...s,
-              ...data,
-            }
+          ? updated
           : s
       )
     );
+
+    setDoc(
+      doc(
+        db,
+        "services",
+        id
+      ),
+      updated
+    ).catch((error) => {
+      console.error(
+        "Firestore update service error:",
+        error
+      );
+    });
 
     logActivity(
       `تم تحديث الخدمة ID: ${id}`,
@@ -766,20 +1407,33 @@ export const AppProvider: React.FC<{
       )
     );
 
+    deleteDoc(
+      doc(
+        db,
+        "services",
+        id
+      )
+    ).catch((error) => {
+      console.error(
+        "Firestore delete service error:",
+        error
+      );
+    });
+
     logActivity(
       `تم حذف الخدمة ID: ${id}`,
       "delete"
     );
   };
 
-  // =========================
-  // Packages
-  // =========================
+  // =========================================================
+  // Packages - Firestore
+  // =========================================================
 
   const addPackage = (
     pkg: Omit<PackageItem, "id">
   ) => {
-    const newItem = {
+    const newItem: PackageItem = {
       ...pkg,
       id: "p_" + Date.now(),
     };
@@ -788,6 +1442,20 @@ export const AppProvider: React.FC<{
       ...prev,
       newItem,
     ]);
+
+    setDoc(
+      doc(
+        db,
+        "packages",
+        newItem.id
+      ),
+      newItem
+    ).catch((error) => {
+      console.error(
+        "Firestore add package error:",
+        error
+      );
+    });
 
     logActivity(
       `تمت إضافة باقة جديدة: ${pkg.nameAr}`,
@@ -799,16 +1467,42 @@ export const AppProvider: React.FC<{
     id: string,
     data: Partial<PackageItem>
   ) => {
+    const current =
+      packages.find(
+        (item) => item.id === id
+      );
+
+    if (!current) {
+      return;
+    }
+
+    const updated: PackageItem = {
+      ...current,
+      ...data,
+      id,
+    };
+
     setPackages((prev) =>
       prev.map((p) =>
         p.id === id
-          ? {
-              ...p,
-              ...data,
-            }
+          ? updated
           : p
       )
     );
+
+    setDoc(
+      doc(
+        db,
+        "packages",
+        id
+      ),
+      updated
+    ).catch((error) => {
+      console.error(
+        "Firestore update package error:",
+        error
+      );
+    });
 
     logActivity(
       `تم تحديث الباقة ID: ${id}`,
@@ -825,20 +1519,33 @@ export const AppProvider: React.FC<{
       )
     );
 
+    deleteDoc(
+      doc(
+        db,
+        "packages",
+        id
+      )
+    ).catch((error) => {
+      console.error(
+        "Firestore delete package error:",
+        error
+      );
+    });
+
     logActivity(
       `تم حذف الباقة ID: ${id}`,
       "delete"
     );
   };
 
-  // =========================
-  // Portfolio
-  // =========================
+  // =========================================================
+  // Portfolio - Firestore
+  // =========================================================
 
   const addPortfolioItem = (
     item: Omit<PortfolioItem, "id">
   ) => {
-    const newItem = {
+    const newItem: PortfolioItem = {
       ...item,
       id: "port_" + Date.now(),
     };
@@ -847,6 +1554,20 @@ export const AppProvider: React.FC<{
       ...prev,
       newItem,
     ]);
+
+    setDoc(
+      doc(
+        db,
+        "portfolio",
+        newItem.id
+      ),
+      newItem
+    ).catch((error) => {
+      console.error(
+        "Firestore add portfolio error:",
+        error
+      );
+    });
 
     logActivity(
       `تمت إضافة مشروع جديد للمعرض: ${item.titleAr}`,
@@ -858,16 +1579,42 @@ export const AppProvider: React.FC<{
     id: string,
     data: Partial<PortfolioItem>
   ) => {
+    const current =
+      portfolio.find(
+        (item) => item.id === id
+      );
+
+    if (!current) {
+      return;
+    }
+
+    const updated: PortfolioItem = {
+      ...current,
+      ...data,
+      id,
+    };
+
     setPortfolio((prev) =>
       prev.map((p) =>
         p.id === id
-          ? {
-              ...p,
-              ...data,
-            }
+          ? updated
           : p
       )
     );
+
+    setDoc(
+      doc(
+        db,
+        "portfolio",
+        id
+      ),
+      updated
+    ).catch((error) => {
+      console.error(
+        "Firestore update portfolio error:",
+        error
+      );
+    });
 
     logActivity(
       `تم تحديث المشروع ID: ${id}`,
@@ -884,18 +1631,34 @@ export const AppProvider: React.FC<{
       )
     );
 
+    deleteDoc(
+      doc(
+        db,
+        "portfolio",
+        id
+      )
+    ).catch((error) => {
+      console.error(
+        "Firestore delete portfolio error:",
+        error
+      );
+    });
+
     logActivity(
       `تم حذف المشروع ID: ${id}`,
       "delete"
     );
   };
 
-  // =========================
-  // Videos
-  // =========================
+  // =========================================================
+  // Videos - Firestore
+  // =========================================================
 
-    const saveVideos = (items: VideoItem[]) => {
+  const saveVideos = (
+    items: VideoItem[]
+  ) => {
     setVideos(items);
+
     localStorage.setItem(
       "ibra_videos",
       JSON.stringify(items)
@@ -905,16 +1668,31 @@ export const AppProvider: React.FC<{
   const addVideoItem = (
     item: Omit<VideoItem, "id">
   ) => {
-   const newItem: VideoItem = {
-  ...item,
-  id: "v_" + Date.now(),
-  visible: true,
-};
+    const newItem: VideoItem = {
+      ...item,
+      id: "v_" + Date.now(),
+      visible:
+        item.visible !== false,
+    };
 
-    saveVideos([
-      ...videos,
+    setVideos((prev) => [
+      ...prev,
       newItem,
     ]);
+
+    setDoc(
+      doc(
+        db,
+        "videos",
+        newItem.id
+      ),
+      newItem
+    ).catch((error) => {
+      console.error(
+        "Firestore add video error:",
+        error
+      );
+    });
 
     logActivity(
       `تمت إضافة فيديو جديد: ${item.titleAr}`,
@@ -926,16 +1704,42 @@ export const AppProvider: React.FC<{
     id: string,
     data: Partial<VideoItem>
   ) => {
-    const updatedVideos = videos.map((v) =>
-      v.id === id
-        ? {
-            ...v,
-            ...data,
-          }
-        : v
+    const current =
+      videos.find(
+        (item) => item.id === id
+      );
+
+    if (!current) {
+      return;
+    }
+
+    const updated: VideoItem = {
+      ...current,
+      ...data,
+      id,
+    };
+
+    saveVideos(
+      videos.map((v) =>
+        v.id === id
+          ? updated
+          : v
+      )
     );
 
-    saveVideos(updatedVideos);
+    setDoc(
+      doc(
+        db,
+        "videos",
+        id
+      ),
+      updated
+    ).catch((error) => {
+      console.error(
+        "Firestore update video error:",
+        error
+      );
+    });
 
     logActivity(
       `تم تحديث الفيديو ID: ${id}`,
@@ -946,11 +1750,27 @@ export const AppProvider: React.FC<{
   const deleteVideoItem = (
     id: string
   ) => {
-    const updatedVideos = videos.filter(
-      (v) => v.id !== id
+    const updatedVideos =
+      videos.filter(
+        (v) => v.id !== id
+      );
+
+    saveVideos(
+      updatedVideos
     );
 
-    saveVideos(updatedVideos);
+    deleteDoc(
+      doc(
+        db,
+        "videos",
+        id
+      )
+    ).catch((error) => {
+      console.error(
+        "Firestore delete video error:",
+        error
+      );
+    });
 
     logActivity(
       `تم حذف الفيديو ID: ${id}`,
@@ -958,14 +1778,14 @@ export const AppProvider: React.FC<{
     );
   };
 
-  // =========================
-  // Testimonials
-  // =========================
+  // =========================================================
+  // Testimonials - Firestore
+  // =========================================================
 
   const addTestimonial = (
     item: Omit<TestimonialItem, "id">
   ) => {
-    const newItem = {
+    const newItem: TestimonialItem = {
       ...item,
       id: "t_" + Date.now(),
     };
@@ -974,6 +1794,20 @@ export const AppProvider: React.FC<{
       ...prev,
       newItem,
     ]);
+
+    setDoc(
+      doc(
+        db,
+        "testimonials",
+        newItem.id
+      ),
+      newItem
+    ).catch((error) => {
+      console.error(
+        "Firestore add testimonial error:",
+        error
+      );
+    });
 
     logActivity(
       `تمت إضافة تقييم للعميل: ${item.clientName}`,
@@ -985,16 +1819,42 @@ export const AppProvider: React.FC<{
     id: string,
     data: Partial<TestimonialItem>
   ) => {
+    const current =
+      testimonials.find(
+        (item) => item.id === id
+      );
+
+    if (!current) {
+      return;
+    }
+
+    const updated: TestimonialItem = {
+      ...current,
+      ...data,
+      id,
+    };
+
     setTestimonials((prev) =>
       prev.map((t) =>
         t.id === id
-          ? {
-              ...t,
-              ...data,
-            }
+          ? updated
           : t
       )
     );
+
+    setDoc(
+      doc(
+        db,
+        "testimonials",
+        id
+      ),
+      updated
+    ).catch((error) => {
+      console.error(
+        "Firestore update testimonial error:",
+        error
+      );
+    });
 
     logActivity(
       `تم تحديث التقييم ID: ${id}`,
@@ -1011,15 +1871,28 @@ export const AppProvider: React.FC<{
       )
     );
 
+    deleteDoc(
+      doc(
+        db,
+        "testimonials",
+        id
+      )
+    ).catch((error) => {
+      console.error(
+        "Firestore delete testimonial error:",
+        error
+      );
+    });
+
     logActivity(
       `تم حذف التقييم ID: ${id}`,
       "delete"
     );
   };
 
-  // =========================
+  // =========================================================
   // Bookings - Firestore
-  // =========================
+  // =========================================================
 
   const addBooking = async (
     bookingData: Omit<
@@ -1081,7 +1954,7 @@ export const AppProvider: React.FC<{
         "create"
       );
     } catch (error: any) {
-      alert(String(error)); console.error(
+      console.error(
         "❌ FIRESTORE BOOKING ERROR:",
         error
       );
@@ -1096,9 +1969,9 @@ export const AppProvider: React.FC<{
     }
   };
 
-  // =========================
+  // =========================================================
   // Update Booking Status
-  // =========================
+  // =========================================================
 
   const updateBookingStatus =
     async (
@@ -1134,7 +2007,7 @@ export const AppProvider: React.FC<{
           "update"
         );
       } catch (error) {
-        alert(String(error)); console.error(
+        console.error(
           "Firestore update booking error:",
           error
         );
@@ -1143,9 +2016,9 @@ export const AppProvider: React.FC<{
       }
     };
 
-  // =========================
+  // =========================================================
   // Delete Booking
-  // =========================
+  // =========================================================
 
   const deleteBooking =
     async (
@@ -1172,7 +2045,7 @@ export const AppProvider: React.FC<{
           "delete"
         );
       } catch (error) {
-        alert(String(error)); console.error(
+        console.error(
           "Firestore delete booking error:",
           error
         );
@@ -1181,9 +2054,9 @@ export const AppProvider: React.FC<{
       }
     };
 
-  // =========================
-  // Firestore Realtime Listener
-  // =========================
+  // =========================================================
+  // Firestore Realtime Listener - Bookings
+  // =========================================================
 
   useEffect(() => {
     const unsubscribe =
@@ -1280,7 +2153,7 @@ export const AppProvider: React.FC<{
           );
         },
         (error) => {
-          alert(String(error)); console.error(
+          console.error(
             "❌ Firestore bookings listener error:",
             error
           );
@@ -1292,14 +2165,14 @@ export const AppProvider: React.FC<{
     };
   }, []);
 
-  // =========================
-  // Offers
-  // =========================
+  // =========================================================
+  // Offers - Firestore
+  // =========================================================
 
   const addOffer = (
     offer: Omit<OfferItem, "id">
   ) => {
-    const newItem = {
+    const newItem: OfferItem = {
       ...offer,
       id: "off_" + Date.now(),
     };
@@ -1308,6 +2181,20 @@ export const AppProvider: React.FC<{
       ...prev,
       newItem,
     ]);
+
+    setDoc(
+      doc(
+        db,
+        "offers",
+        newItem.id
+      ),
+      newItem
+    ).catch((error) => {
+      console.error(
+        "Firestore add offer error:",
+        error
+      );
+    });
 
     logActivity(
       `تمت إضافة عرض جديد: ${offer.titleAr}`,
@@ -1319,16 +2206,42 @@ export const AppProvider: React.FC<{
     id: string,
     data: Partial<OfferItem>
   ) => {
+    const current =
+      offers.find(
+        (item) => item.id === id
+      );
+
+    if (!current) {
+      return;
+    }
+
+    const updated: OfferItem = {
+      ...current,
+      ...data,
+      id,
+    };
+
     setOffers((prev) =>
       prev.map((o) =>
         o.id === id
-          ? {
-              ...o,
-              ...data,
-            }
+          ? updated
           : o
       )
     );
+
+    setDoc(
+      doc(
+        db,
+        "offers",
+        id
+      ),
+      updated
+    ).catch((error) => {
+      console.error(
+        "Firestore update offer error:",
+        error
+      );
+    });
 
     logActivity(
       `تم تحديث العرض ID: ${id}`,
@@ -1345,15 +2258,28 @@ export const AppProvider: React.FC<{
       )
     );
 
+    deleteDoc(
+      doc(
+        db,
+        "offers",
+        id
+      )
+    ).catch((error) => {
+      console.error(
+        "Firestore delete offer error:",
+        error
+      );
+    });
+
     logActivity(
       `تم حذف العرض ID: ${id}`,
       "delete"
     );
   };
 
-  // =========================
+  // =========================================================
   // Backup
-  // =========================
+  // =========================================================
 
   const backupData = () => {
     const state = {
@@ -1374,9 +2300,9 @@ export const AppProvider: React.FC<{
     );
   };
 
-  // =========================
+  // =========================================================
   // Restore
-  // =========================
+  // =========================================================
 
   const restoreData = (
     jsonData: string
@@ -1389,36 +2315,118 @@ export const AppProvider: React.FC<{
         setSettings(
           data.settings
         );
+
+        setDoc(
+          doc(
+            db,
+            "siteSettings",
+            "main"
+          ),
+          data.settings,
+          { merge: true }
+        ).catch(console.error);
       }
 
       if (data.services) {
         setServices(
           data.services
         );
+
+        Promise.all(
+          data.services.map(
+            (item: ServiceItem) =>
+              setDoc(
+                doc(
+                  db,
+                  "services",
+                  item.id
+                ),
+                item
+              )
+          )
+        ).catch(console.error);
       }
 
       if (data.packages) {
         setPackages(
           data.packages
         );
+
+        Promise.all(
+          data.packages.map(
+            (item: PackageItem) =>
+              setDoc(
+                doc(
+                  db,
+                  "packages",
+                  item.id
+                ),
+                item
+              )
+          )
+        ).catch(console.error);
       }
 
       if (data.portfolio) {
         setPortfolio(
           data.portfolio
         );
+
+        Promise.all(
+          data.portfolio.map(
+            (item: PortfolioItem) =>
+              setDoc(
+                doc(
+                  db,
+                  "portfolio",
+                  item.id
+                ),
+                item
+              )
+          )
+        ).catch(console.error);
       }
 
       if (data.videos) {
         setVideos(
           data.videos
         );
+
+        Promise.all(
+          data.videos.map(
+            (item: VideoItem) =>
+              setDoc(
+                doc(
+                  db,
+                  "videos",
+                  item.id
+                ),
+                item
+              )
+          )
+        ).catch(console.error);
       }
 
       if (data.testimonials) {
         setTestimonials(
           data.testimonials
         );
+
+        Promise.all(
+          data.testimonials.map(
+            (
+              item: TestimonialItem
+            ) =>
+              setDoc(
+                doc(
+                  db,
+                  "testimonials",
+                  item.id
+                ),
+                item
+              )
+          )
+        ).catch(console.error);
       }
 
       if (data.bookings) {
@@ -1431,6 +2439,20 @@ export const AppProvider: React.FC<{
         setOffers(
           data.offers
         );
+
+        Promise.all(
+          data.offers.map(
+            (item: OfferItem) =>
+              setDoc(
+                doc(
+                  db,
+                  "offers",
+                  item.id
+                ),
+                item
+              )
+          )
+        ).catch(console.error);
       }
 
       logActivity(
@@ -1440,7 +2462,7 @@ export const AppProvider: React.FC<{
 
       return true;
     } catch (error) {
-      alert(String(error)); console.error(
+      console.error(
         "Restore error:",
         error
       );
@@ -1448,9 +2470,11 @@ export const AppProvider: React.FC<{
       return false;
     }
   };
- // =========================
+
+  // =========================================================
   // Provider
-   // =========================
+  // =========================================================
+
   return (
     <AppContext.Provider
       value={{
@@ -1518,13 +2542,13 @@ export const AppProvider: React.FC<{
   );
 };
 
-
-// =========================
+// =========================================================
 // useApp Hook
-// =========================
+// =========================================================
 
 export const useApp = () => {
-  const context = useContext(AppContext);
+  const context =
+    useContext(AppContext);
 
   if (!context) {
     throw new Error(
