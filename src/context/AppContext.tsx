@@ -905,10 +905,11 @@ export const AppProvider: React.FC<{
   const addVideoItem = (
     item: Omit<VideoItem, "id">
   ) => {
-    const newItem: VideoItem = {
-      ...item,
-      id: "v_" + Date.now(),
-    };
+   const newItem: VideoItem = {
+  ...item,
+  id: "v_" + Date.now(),
+  visible: true,
+};
 
     saveVideos([
       ...videos,

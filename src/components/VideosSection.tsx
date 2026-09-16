@@ -7,7 +7,7 @@ export const VideosSection: React.FC = () => {
   const { language, videos } = useApp();
   const [activeVideo, setActiveVideo] = useState<VideoItem | null>(null);
 
-  const activeVideos = videos.filter(v => v.visible);
+  const activeVideos = videos.filter(v => v.visible !== false);
 
   return (
     <section id="videos" className="py-24 bg-neutral-950 relative overflow-hidden">
