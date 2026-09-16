@@ -96,6 +96,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
   const [serviceModal, setServiceModal] = useState<any | null>(null);
   const [packageModal, setPackageModal] = useState<any | null>(null);
   const [portfolioModal, setPortfolioModal] = useState<any | null>(null);
+const [videoModal, setVideoModal] = useState<any | null>(null);
 
   const safeBookings = Array.isArray(bookings)
     ? bookings.filter(b => b && typeof b === 'object')
