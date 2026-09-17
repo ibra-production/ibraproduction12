@@ -1,3 +1,4 @@
+cd /workspaces/ibraproduction12 && cat > src/context/AppContext.tsx <<'EOF'
 import React, {
   createContext,
   useContext,
@@ -14,7 +15,6 @@ import {
   deleteDoc,
   doc,
   setDoc,
-  getDocs,
 } from "firebase/firestore";
 
 import {
@@ -42,12 +42,6 @@ import {
 import {
   initialSiteSettings,
   initialStats,
-  initialServices,
-  initialPackages,
-  initialPortfolio,
-  initialVideos,
-  initialTestimonials,
-  initialOffers,
   initialUsers,
 } from "../data/initialData";
 
@@ -256,27 +250,16 @@ export const AppProvider: React.FC<{
 
   // =========================================================
   // Settings
+  // Firestore is the source of truth.
   // =========================================================
 
   const [settings, setSettings] =
-    useState<SiteSettings>(() => {
-      const saved =
-        localStorage.getItem(
-          "ibra_settings"
-        );
-
-      const parsed = saved
-        ? JSON.parse(saved)
-        : initialSiteSettings;
-
-      return {
-        ...initialSiteSettings,
-        ...parsed,
-      };
-    });
+    useState<SiteSettings>(
+      initialSiteSettings
+    );
 
   // =========================================================
-  // Stats
+  // Static Stats / Users
   // =========================================================
 
   const [stats] =
@@ -284,123 +267,58 @@ export const AppProvider: React.FC<{
       initialStats
     );
 
+  const [users] =
+    useState<AdminUser[]>(
+      initialUsers
+    );
+
   // =========================================================
-  // Services
+  // Firestore Data
+  //
+  // IMPORTANT:
+  // No localStorage fallback is used for these collections.
   // =========================================================
 
   const [services, setServices] =
-    useState<ServiceItem[]>(() => {
-      const saved =
-        localStorage.getItem(
-          "ibra_services"
-        );
-
-      return saved
-        ? JSON.parse(saved)
-        : initialServices;
-    });
-
-  // =========================================================
-  // Packages
-  // =========================================================
+    useState<ServiceItem[]>([]);
 
   const [packages, setPackages] =
-    useState<PackageItem[]>(() => {
-      const saved =
-        localStorage.getItem(
-          "ibra_packages"
-        );
-
-      return saved
-        ? JSON.parse(saved)
-        : initialPackages;
-    });
-
-  // =========================================================
-  // Portfolio
-  // =========================================================
+    useState<PackageItem[]>([]);
 
   const [portfolio, setPortfolio] =
-    useState<PortfolioItem[]>(() => {
-      const saved =
-        localStorage.getItem(
-          "ibra_portfolio"
-        );
-
-      return saved
-        ? JSON.parse(saved)
-        : initialPortfolio;
-    });
-
-  // =========================================================
-  // Videos
-  // =========================================================
+    useState<PortfolioItem[]>([]);
 
   const [videos, setVideos] =
-    useState<VideoItem[]>(() => {
-      const saved =
-        localStorage.getItem(
-          "ibra_videos"
-        );
-
-      return saved
-        ? JSON.parse(saved)
-        : initialVideos;
-    });
-
-  // =========================================================
-  // Testimonials
-  // =========================================================
+    useState<VideoItem[]>([]);
 
   const [
     testimonials,
     setTestimonials,
-  ] = useState<TestimonialItem[]>(() => {
+  ] = useState<TestimonialItem[]>([]);
+
+  const [bookings, setBookings] =
+    useState<BookingItem[]>([]);
+
+  const [offers, setOffers] =
+    useState<OfferItem[]>([]);
+
+  // =========================================================
+  // Local-only UI data
+  // =========================================================
+
+  const [
+    activityLogs,
+    setActivityLogs,
+  ] = useState<ActivityLog[]>(() => {
     const saved =
       localStorage.getItem(
-        "ibra_testimonials"
+        "ibra_logs"
       );
 
     return saved
       ? JSON.parse(saved)
-      : initialTestimonials;
+      : [];
   });
-
-  // =========================================================
-  // Bookings
-  // =========================================================
-
-  const [bookings, setBookings] =
-    useState<BookingItem[]>(() => {
-      const saved =
-        localStorage.getItem(
-          "ibra_bookings"
-        );
-
-      return saved
-        ? JSON.parse(saved)
-        : [];
-    });
-
-  // =========================================================
-  // Offers
-  // =========================================================
-
-  const [offers, setOffers] =
-    useState<OfferItem[]>(() => {
-      const saved =
-        localStorage.getItem(
-          "ibra_offers"
-        );
-
-      return saved
-        ? JSON.parse(saved)
-        : initialOffers;
-    });
-
-  // =========================================================
-  // Contact Messages
-  // =========================================================
 
   const [
     contactMessages,
@@ -417,43 +335,6 @@ export const AppProvider: React.FC<{
   });
 
   // =========================================================
-  // Activity Logs
-  // =========================================================
-
-  const [
-    activityLogs,
-    setActivityLogs,
-  ] = useState<ActivityLog[]>(() => {
-    const saved =
-      localStorage.getItem(
-        "ibra_logs"
-      );
-
-    return saved
-      ? JSON.parse(saved)
-      : [
-          {
-            id: "l1",
-            user: "Ibrahim (Owner)",
-            actionAr:
-              "تم تسجيل دخول النظام وإطلاق الموقع",
-            timestamp:
-              "2026-08-31 12:00",
-            type: "settings",
-          },
-        ];
-  });
-
-  // =========================================================
-  // Users
-  // =========================================================
-
-  const [users] =
-    useState<AdminUser[]>(
-      initialUsers
-    );
-
-  // =========================================================
   // Current User
   // =========================================================
 
@@ -461,73 +342,8 @@ export const AppProvider: React.FC<{
     useState<AdminUser | null>(null);
 
   // =========================================================
-  // Firestore migration state
+  // Local logs only
   // =========================================================
-
-  const [
-    firestoreMigrationReady,
-    setFirestoreMigrationReady,
-  ] = useState(false);
-
-  // =========================================================
-  // LocalStorage Cache
-  // =========================================================
-
-  useEffect(() => {
-    localStorage.setItem(
-      "ibra_settings",
-      JSON.stringify(settings)
-    );
-  }, [settings]);
-
-  useEffect(() => {
-    localStorage.setItem(
-      "ibra_services",
-      JSON.stringify(services)
-    );
-  }, [services]);
-
-  useEffect(() => {
-    localStorage.setItem(
-      "ibra_packages",
-      JSON.stringify(packages)
-    );
-  }, [packages]);
-
-  useEffect(() => {
-    localStorage.setItem(
-      "ibra_portfolio",
-      JSON.stringify(portfolio)
-    );
-  }, [portfolio]);
-
-  useEffect(() => {
-    localStorage.setItem(
-      "ibra_videos",
-      JSON.stringify(videos)
-    );
-  }, [videos]);
-
-  useEffect(() => {
-    localStorage.setItem(
-      "ibra_testimonials",
-      JSON.stringify(testimonials)
-    );
-  }, [testimonials]);
-
-  useEffect(() => {
-    localStorage.setItem(
-      "ibra_bookings",
-      JSON.stringify(bookings)
-    );
-  }, [bookings]);
-
-  useEffect(() => {
-    localStorage.setItem(
-      "ibra_offers",
-      JSON.stringify(offers)
-    );
-  }, [offers]);
 
   useEffect(() => {
     localStorage.setItem(
@@ -648,11 +464,6 @@ export const AppProvider: React.FC<{
 
     setSettings(updatedSettings);
 
-    localStorage.setItem(
-      "ibra_settings",
-      JSON.stringify(updatedSettings)
-    );
-
     setDoc(
       doc(
         db,
@@ -661,12 +472,22 @@ export const AppProvider: React.FC<{
       ),
       updatedSettings,
       { merge: true }
-    ).catch((error) => {
-      console.error(
-        "Firestore settings update error:",
-        error
-      );
-    });
+    )
+      .then(() => {
+        console.log(
+          "✅ Settings saved to Firestore"
+        );
+      })
+      .catch((error) => {
+        console.error(
+          "❌ Firestore settings update error:",
+          error
+        );
+
+        alert(
+          "فشل حفظ إعدادات الموقع في Firestore. تحقق من الاتصال والصلاحيات."
+        );
+      });
 
     logActivity(
       "تم تحديث إعدادات الموقع الأساسية",
@@ -740,11 +561,6 @@ export const AppProvider: React.FC<{
             setCurrentUser(
               adminUser
             );
-
-            logActivity(
-              "تم تسجيل الدخول إلى لوحة الإدارة",
-              "settings"
-            );
           } else {
             setCurrentUser(null);
           }
@@ -754,7 +570,7 @@ export const AppProvider: React.FC<{
     return () => {
       unsubscribe();
     };
-  }, []);
+  }, [users]);
 
   // =========================================================
   // FIRESTORE REALTIME - SETTINGS
@@ -772,6 +588,9 @@ export const AppProvider: React.FC<{
         settingsRef,
         (snapshot) => {
           if (!snapshot.exists()) {
+            console.warn(
+              "⚠️ siteSettings/main does not exist in Firestore"
+            );
             return;
           }
 
@@ -782,10 +601,14 @@ export const AppProvider: React.FC<{
             ...prev,
             ...data,
           }));
+
+          console.log(
+            "🔥 Settings loaded from Firestore"
+          );
         },
         (error) => {
           console.error(
-            "Firestore settings listener error:",
+            "❌ Firestore settings listener error:",
             error
           );
         }
@@ -797,7 +620,7 @@ export const AppProvider: React.FC<{
   }, []);
 
   // =========================================================
-  // Helper: Firestore Collection Listener
+  // FIRESTORE REALTIME - SERVICES
   // =========================================================
 
   useEffect(() => {
@@ -805,13 +628,6 @@ export const AppProvider: React.FC<{
       onSnapshot(
         collection(db, "services"),
         (snapshot) => {
-          if (
-            snapshot.empty &&
-            !firestoreMigrationReady
-          ) {
-            return;
-          }
-
           const items =
             snapshot.docs.map(
               (itemDoc) =>
@@ -828,10 +644,15 @@ export const AppProvider: React.FC<{
           );
 
           setServices(items);
+
+          console.log(
+            "🔥 Services:",
+            items.length
+          );
         },
         (error) => {
           console.error(
-            "Firestore services listener error:",
+            "❌ Firestore services listener error:",
             error
           );
         }
@@ -840,20 +661,17 @@ export const AppProvider: React.FC<{
     return () => {
       unsubscribe();
     };
-  }, [firestoreMigrationReady]);
+  }, []);
+
+  // =========================================================
+  // FIRESTORE REALTIME - PACKAGES
+  // =========================================================
 
   useEffect(() => {
     const unsubscribe =
       onSnapshot(
         collection(db, "packages"),
         (snapshot) => {
-          if (
-            snapshot.empty &&
-            !firestoreMigrationReady
-          ) {
-            return;
-          }
-
           const items =
             snapshot.docs.map(
               (itemDoc) =>
@@ -870,10 +688,15 @@ export const AppProvider: React.FC<{
           );
 
           setPackages(items);
+
+          console.log(
+            "🔥 Packages:",
+            items.length
+          );
         },
         (error) => {
           console.error(
-            "Firestore packages listener error:",
+            "❌ Firestore packages listener error:",
             error
           );
         }
@@ -882,20 +705,17 @@ export const AppProvider: React.FC<{
     return () => {
       unsubscribe();
     };
-  }, [firestoreMigrationReady]);
+  }, []);
+
+  // =========================================================
+  // FIRESTORE REALTIME - PORTFOLIO
+  // =========================================================
 
   useEffect(() => {
     const unsubscribe =
       onSnapshot(
         collection(db, "portfolio"),
         (snapshot) => {
-          if (
-            snapshot.empty &&
-            !firestoreMigrationReady
-          ) {
-            return;
-          }
-
           const items =
             snapshot.docs.map(
               (itemDoc) =>
@@ -912,10 +732,15 @@ export const AppProvider: React.FC<{
           );
 
           setPortfolio(items);
+
+          console.log(
+            "🔥 Portfolio:",
+            items.length
+          );
         },
         (error) => {
           console.error(
-            "Firestore portfolio listener error:",
+            "❌ Firestore portfolio listener error:",
             error
           );
         }
@@ -924,20 +749,17 @@ export const AppProvider: React.FC<{
     return () => {
       unsubscribe();
     };
-  }, [firestoreMigrationReady]);
+  }, []);
+
+  // =========================================================
+  // FIRESTORE REALTIME - VIDEOS
+  // =========================================================
 
   useEffect(() => {
     const unsubscribe =
       onSnapshot(
         collection(db, "videos"),
         (snapshot) => {
-          if (
-            snapshot.empty &&
-            !firestoreMigrationReady
-          ) {
-            return;
-          }
-
           const items =
             snapshot.docs.map(
               (itemDoc) =>
@@ -954,10 +776,15 @@ export const AppProvider: React.FC<{
           );
 
           setVideos(items);
+
+          console.log(
+            "🔥 Videos:",
+            items.length
+          );
         },
         (error) => {
           console.error(
-            "Firestore videos listener error:",
+            "❌ Firestore videos listener error:",
             error
           );
         }
@@ -966,20 +793,17 @@ export const AppProvider: React.FC<{
     return () => {
       unsubscribe();
     };
-  }, [firestoreMigrationReady]);
+  }, []);
+
+  // =========================================================
+  // FIRESTORE REALTIME - TESTIMONIALS
+  // =========================================================
 
   useEffect(() => {
     const unsubscribe =
       onSnapshot(
         collection(db, "testimonials"),
         (snapshot) => {
-          if (
-            snapshot.empty &&
-            !firestoreMigrationReady
-          ) {
-            return;
-          }
-
           const items =
             snapshot.docs.map(
               (itemDoc) =>
@@ -990,10 +814,15 @@ export const AppProvider: React.FC<{
             );
 
           setTestimonials(items);
+
+          console.log(
+            "🔥 Testimonials:",
+            items.length
+          );
         },
         (error) => {
           console.error(
-            "Firestore testimonials listener error:",
+            "❌ Firestore testimonials listener error:",
             error
           );
         }
@@ -1002,20 +831,17 @@ export const AppProvider: React.FC<{
     return () => {
       unsubscribe();
     };
-  }, [firestoreMigrationReady]);
+  }, []);
+
+  // =========================================================
+  // FIRESTORE REALTIME - OFFERS
+  // =========================================================
 
   useEffect(() => {
     const unsubscribe =
       onSnapshot(
         collection(db, "offers"),
         (snapshot) => {
-          if (
-            snapshot.empty &&
-            !firestoreMigrationReady
-          ) {
-            return;
-          }
-
           const items =
             snapshot.docs.map(
               (itemDoc) =>
@@ -1026,10 +852,15 @@ export const AppProvider: React.FC<{
             );
 
           setOffers(items);
+
+          console.log(
+            "🔥 Offers:",
+            items.length
+          );
         },
         (error) => {
           console.error(
-            "Firestore offers listener error:",
+            "❌ Firestore offers listener error:",
             error
           );
         }
@@ -1038,284 +869,10 @@ export const AppProvider: React.FC<{
     return () => {
       unsubscribe();
     };
-  }, [firestoreMigrationReady]);
+  }, []);
 
   // =========================================================
-  // ONE-TIME MIGRATION
-  //
-  // ينقل البيانات الحالية الموجودة في localStorage
-  // إلى Firestore فقط إذا كانت مجموعة Firestore فارغة.
-  // =========================================================
-
-  useEffect(() => {
-    if (!currentUser) {
-      return;
-    }
-
-    let cancelled = false;
-
-    const migrateToFirestore =
-      async () => {
-        try {
-          console.log(
-            "🔥 بدء نقل بيانات Ibra إلى Firestore..."
-          );
-
-          // -------------------------
-          // Settings
-          // -------------------------
-
-          const settingsRef =
-            doc(
-              db,
-              "siteSettings",
-              "main"
-            );
-
-          const settingsSnapshot =
-            await getDocs(
-              collection(
-                db,
-                "siteSettings"
-              )
-            );
-
-          if (
-            settingsSnapshot.empty
-          ) {
-            await setDoc(
-              settingsRef,
-              settings
-            );
-
-            console.log(
-              "✅ Settings migrated"
-            );
-          }
-
-          // -------------------------
-          // Services
-          // -------------------------
-
-          const servicesSnapshot =
-            await getDocs(
-              collection(
-                db,
-                "services"
-              )
-            );
-
-          if (
-            servicesSnapshot.empty
-          ) {
-            for (const item of services) {
-              await setDoc(
-                doc(
-                  db,
-                  "services",
-                  item.id
-                ),
-                item
-              );
-            }
-
-            console.log(
-              "✅ Services migrated"
-            );
-          }
-
-          // -------------------------
-          // Packages
-          // -------------------------
-
-          const packagesSnapshot =
-            await getDocs(
-              collection(
-                db,
-                "packages"
-              )
-            );
-
-          if (
-            packagesSnapshot.empty
-          ) {
-            for (const item of packages) {
-              await setDoc(
-                doc(
-                  db,
-                  "packages",
-                  item.id
-                ),
-                item
-              );
-            }
-
-            console.log(
-              "✅ Packages migrated"
-            );
-          }
-
-          // -------------------------
-          // Portfolio
-          // -------------------------
-
-          const portfolioSnapshot =
-            await getDocs(
-              collection(
-                db,
-                "portfolio"
-              )
-            );
-
-          if (
-            portfolioSnapshot.empty
-          ) {
-            for (const item of portfolio) {
-              await setDoc(
-                doc(
-                  db,
-                  "portfolio",
-                  item.id
-                ),
-                item
-              );
-            }
-
-            console.log(
-              "✅ Portfolio migrated"
-            );
-          }
-
-          // -------------------------
-          // Videos
-          // -------------------------
-
-          const videosSnapshot =
-            await getDocs(
-              collection(
-                db,
-                "videos"
-              )
-            );
-
-          if (
-            videosSnapshot.empty
-          ) {
-            for (const item of videos) {
-              await setDoc(
-                doc(
-                  db,
-                  "videos",
-                  item.id
-                ),
-                item
-              );
-            }
-
-            console.log(
-              "✅ Videos migrated"
-            );
-          }
-
-          // -------------------------
-          // Testimonials
-          // -------------------------
-
-          const testimonialsSnapshot =
-            await getDocs(
-              collection(
-                db,
-                "testimonials"
-              )
-            );
-
-          if (
-            testimonialsSnapshot.empty
-          ) {
-            for (const item of testimonials) {
-              await setDoc(
-                doc(
-                  db,
-                  "testimonials",
-                  item.id
-                ),
-                item
-              );
-            }
-
-            console.log(
-              "✅ Testimonials migrated"
-            );
-          }
-
-          // -------------------------
-          // Offers
-          // -------------------------
-
-          const offersSnapshot =
-            await getDocs(
-              collection(
-                db,
-                "offers"
-              )
-            );
-
-          if (
-            offersSnapshot.empty
-          ) {
-            for (const item of offers) {
-              await setDoc(
-                doc(
-                  db,
-                  "offers",
-                  item.id
-                ),
-                item
-              );
-            }
-
-            console.log(
-              "✅ Offers migrated"
-            );
-          }
-
-          if (!cancelled) {
-            localStorage.setItem(
-              "ibra_firestore_migration_v2",
-              "true"
-            );
-
-            setFirestoreMigrationReady(
-              true
-            );
-
-            console.log(
-              "🔥 Ibra Firestore migration completed successfully"
-            );
-          }
-        } catch (error) {
-          console.error(
-            "❌ Firestore migration error:",
-            error
-          );
-
-          if (!cancelled) {
-            setFirestoreMigrationReady(
-              true
-            );
-          }
-        }
-      };
-
-    migrateToFirestore();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [currentUser]);
-
-  // =========================================================
-  // Services - Firestore
+  // SERVICES - CRUD
   // =========================================================
 
   const addService = (
@@ -1326,11 +883,6 @@ export const AppProvider: React.FC<{
       id: "s_" + Date.now(),
     };
 
-    setServices((prev) => [
-      ...prev,
-      newItem,
-    ]);
-
     setDoc(
       doc(
         db,
@@ -1338,17 +890,26 @@ export const AppProvider: React.FC<{
         newItem.id
       ),
       newItem
-    ).catch((error) => {
-      console.error(
-        "Firestore add service error:",
-        error
-      );
-    });
+    )
+      .then(() => {
+        console.log(
+          "✅ Service added to Firestore"
+        );
+        logActivity(
+          `تمت إضافة خدمة جديدة: ${service.titleAr}`,
+          "create"
+        );
+      })
+      .catch((error) => {
+        console.error(
+          "❌ Firestore add service error:",
+          error
+        );
 
-    logActivity(
-      `تمت إضافة خدمة جديدة: ${service.titleAr}`,
-      "create"
-    );
+        alert(
+          "فشل حفظ الخدمة في Firestore."
+        );
+      });
   };
 
   const updateService = (
@@ -1370,14 +931,6 @@ export const AppProvider: React.FC<{
       id,
     };
 
-    setServices((prev) =>
-      prev.map((s) =>
-        s.id === id
-          ? updated
-          : s
-      )
-    );
-
     setDoc(
       doc(
         db,
@@ -1385,49 +938,61 @@ export const AppProvider: React.FC<{
         id
       ),
       updated
-    ).catch((error) => {
-      console.error(
-        "Firestore update service error:",
-        error
-      );
-    });
+    )
+      .then(() => {
+        console.log(
+          "✅ Service updated in Firestore"
+        );
+        logActivity(
+          `تم تحديث الخدمة ID: ${id}`,
+          "update"
+        );
+      })
+      .catch((error) => {
+        console.error(
+          "❌ Firestore update service error:",
+          error
+        );
 
-    logActivity(
-      `تم تحديث الخدمة ID: ${id}`,
-      "update"
-    );
+        alert(
+          "فشل حفظ تعديل الخدمة في Firestore."
+        );
+      });
   };
 
   const deleteService = (
     id: string
   ) => {
-    setServices((prev) =>
-      prev.filter(
-        (s) => s.id !== id
-      )
-    );
-
     deleteDoc(
       doc(
         db,
         "services",
         id
       )
-    ).catch((error) => {
-      console.error(
-        "Firestore delete service error:",
-        error
-      );
-    });
+    )
+      .then(() => {
+        console.log(
+          "✅ Service deleted from Firestore"
+        );
+        logActivity(
+          `تم حذف الخدمة ID: ${id}`,
+          "delete"
+        );
+      })
+      .catch((error) => {
+        console.error(
+          "❌ Firestore delete service error:",
+          error
+        );
 
-    logActivity(
-      `تم حذف الخدمة ID: ${id}`,
-      "delete"
-    );
+        alert(
+          "فشل حذف الخدمة من Firestore."
+        );
+      });
   };
 
   // =========================================================
-  // Packages - Firestore
+  // PACKAGES - CRUD
   // =========================================================
 
   const addPackage = (
@@ -1438,11 +1003,6 @@ export const AppProvider: React.FC<{
       id: "p_" + Date.now(),
     };
 
-    setPackages((prev) => [
-      ...prev,
-      newItem,
-    ]);
-
     setDoc(
       doc(
         db,
@@ -1450,17 +1010,26 @@ export const AppProvider: React.FC<{
         newItem.id
       ),
       newItem
-    ).catch((error) => {
-      console.error(
-        "Firestore add package error:",
-        error
-      );
-    });
+    )
+      .then(() => {
+        console.log(
+          "✅ Package added to Firestore"
+        );
+        logActivity(
+          `تمت إضافة باقة جديدة: ${pkg.nameAr}`,
+          "create"
+        );
+      })
+      .catch((error) => {
+        console.error(
+          "❌ Firestore add package error:",
+          error
+        );
 
-    logActivity(
-      `تمت إضافة باقة جديدة: ${pkg.nameAr}`,
-      "create"
-    );
+        alert(
+          "فشل حفظ الباقة في Firestore."
+        );
+      });
   };
 
   const updatePackage = (
@@ -1482,14 +1051,6 @@ export const AppProvider: React.FC<{
       id,
     };
 
-    setPackages((prev) =>
-      prev.map((p) =>
-        p.id === id
-          ? updated
-          : p
-      )
-    );
-
     setDoc(
       doc(
         db,
@@ -1497,49 +1058,61 @@ export const AppProvider: React.FC<{
         id
       ),
       updated
-    ).catch((error) => {
-      console.error(
-        "Firestore update package error:",
-        error
-      );
-    });
+    )
+      .then(() => {
+        console.log(
+          "✅ Package updated in Firestore"
+        );
+        logActivity(
+          `تم تحديث الباقة ID: ${id}`,
+          "update"
+        );
+      })
+      .catch((error) => {
+        console.error(
+          "❌ Firestore update package error:",
+          error
+        );
 
-    logActivity(
-      `تم تحديث الباقة ID: ${id}`,
-      "update"
-    );
+        alert(
+          "فشل حفظ تعديل الباقة في Firestore."
+        );
+      });
   };
 
   const deletePackage = (
     id: string
   ) => {
-    setPackages((prev) =>
-      prev.filter(
-        (p) => p.id !== id
-      )
-    );
-
     deleteDoc(
       doc(
         db,
         "packages",
         id
       )
-    ).catch((error) => {
-      console.error(
-        "Firestore delete package error:",
-        error
-      );
-    });
+    )
+      .then(() => {
+        console.log(
+          "✅ Package deleted from Firestore"
+        );
+        logActivity(
+          `تم حذف الباقة ID: ${id}`,
+          "delete"
+        );
+      })
+      .catch((error) => {
+        console.error(
+          "❌ Firestore delete package error:",
+          error
+        );
 
-    logActivity(
-      `تم حذف الباقة ID: ${id}`,
-      "delete"
-    );
+        alert(
+          "فشل حذف الباقة من Firestore."
+        );
+      });
   };
 
   // =========================================================
-  // Portfolio - Firestore
+  // PORTFOLIO - CRUD
   // =========================================================
 
   const addPortfolioItem = (
@@ -1550,11 +1123,6 @@ export const AppProvider: React.FC<{
       id: "port_" + Date.now(),
     };
 
-    setPortfolio((prev) => [
-      ...prev,
-      newItem,
-    ]);
-
     setDoc(
       doc(
         db,
@@ -1562,17 +1130,26 @@ export const AppProvider: React.FC<{
         newItem.id
       ),
       newItem
-    ).catch((error) => {
-      console.error(
-        "Firestore add portfolio error:",
-        error
-      );
-    });
+    )
+      .then(() => {
+        console.log(
+          "✅ Portfolio item added to Firestore"
+        );
+        logActivity(
+          `تمت إضافة مشروع جديد للمعرض: ${item.titleAr}`,
+          "create"
+        );
+      })
+      .catch((error) => {
+        console.error(
+          "❌ Firestore add portfolio error:",
+          error
+        );
 
-    logActivity(
-      `تمت إضافة مشروع جديد للمعرض: ${item.titleAr}`,
-      "create"
-    );
+        alert(
+          "فشل حفظ المشروع في Firestore."
+        );
+      });
   };
 
   const updatePortfolioItem = (
@@ -1594,14 +1171,6 @@ export const AppProvider: React.FC<{
       id,
     };
 
-    setPortfolio((prev) =>
-      prev.map((p) =>
-        p.id === id
-          ? updated
-          : p
-      )
-    );
-
     setDoc(
       doc(
         db,
@@ -1609,61 +1178,62 @@ export const AppProvider: React.FC<{
         id
       ),
       updated
-    ).catch((error) => {
-      console.error(
-        "Firestore update portfolio error:",
-        error
-      );
-    });
+    )
+      .then(() => {
+        console.log(
+          "✅ Portfolio item updated in Firestore"
+        );
+        logActivity(
+          `تم تحديث المشروع ID: ${id}`,
+          "update"
+        );
+      })
+      .catch((error) => {
+        console.error(
+          "❌ Firestore update portfolio error:",
+          error
+        );
 
-    logActivity(
-      `تم تحديث المشروع ID: ${id}`,
-      "update"
-    );
+        alert(
+          "فشل حفظ تعديل المشروع في Firestore."
+        );
+      });
   };
 
   const deletePortfolioItem = (
     id: string
   ) => {
-    setPortfolio((prev) =>
-      prev.filter(
-        (p) => p.id !== id
-      )
-    );
-
     deleteDoc(
       doc(
         db,
         "portfolio",
         id
       )
-    ).catch((error) => {
-      console.error(
-        "Firestore delete portfolio error:",
-        error
-      );
-    });
+    )
+      .then(() => {
+        console.log(
+          "✅ Portfolio item deleted from Firestore"
+        );
+        logActivity(
+          `تم حذف المشروع ID: ${id}`,
+          "delete"
+        );
+      })
+      .catch((error) => {
+        console.error(
+          "❌ Firestore delete portfolio error:",
+          error
+        );
 
-    logActivity(
-      `تم حذف المشروع ID: ${id}`,
-      "delete"
-    );
+        alert(
+          "فشل حذف المشروع من Firestore."
+        );
+      });
   };
 
   // =========================================================
-  // Videos - Firestore
+  // VIDEOS - CRUD
   // =========================================================
-
-  const saveVideos = (
-    items: VideoItem[]
-  ) => {
-    setVideos(items);
-
-    localStorage.setItem(
-      "ibra_videos",
-      JSON.stringify(items)
-    );
-  };
 
   const addVideoItem = (
     item: Omit<VideoItem, "id">
@@ -1675,11 +1245,6 @@ export const AppProvider: React.FC<{
         item.visible !== false,
     };
 
-    setVideos((prev) => [
-      ...prev,
-      newItem,
-    ]);
-
     setDoc(
       doc(
         db,
@@ -1687,17 +1252,26 @@ export const AppProvider: React.FC<{
         newItem.id
       ),
       newItem
-    ).catch((error) => {
-      console.error(
-        "Firestore add video error:",
-        error
-      );
-    });
+    )
+      .then(() => {
+        console.log(
+          "✅ Video added to Firestore"
+        );
+        logActivity(
+          `تمت إضافة فيديو جديد: ${item.titleAr}`,
+          "create"
+        );
+      })
+      .catch((error) => {
+        console.error(
+          "❌ Firestore add video error:",
+          error
+        );
 
-    logActivity(
-      `تمت إضافة فيديو جديد: ${item.titleAr}`,
-      "create"
-    );
+        alert(
+          "فشل حفظ الفيديو في Firestore."
+        );
+      });
   };
 
   const updateVideoItem = (
@@ -1719,14 +1293,6 @@ export const AppProvider: React.FC<{
       id,
     };
 
-    saveVideos(
-      videos.map((v) =>
-        v.id === id
-          ? updated
-          : v
-      )
-    );
-
     setDoc(
       doc(
         db,
@@ -1734,52 +1300,61 @@ export const AppProvider: React.FC<{
         id
       ),
       updated
-    ).catch((error) => {
-      console.error(
-        "Firestore update video error:",
-        error
-      );
-    });
+    )
+      .then(() => {
+        console.log(
+          "✅ Video updated in Firestore"
+        );
+        logActivity(
+          `تم تحديث الفيديو ID: ${id}`,
+          "update"
+        );
+      })
+      .catch((error) => {
+        console.error(
+          "❌ Firestore update video error:",
+          error
+        );
 
-    logActivity(
-      `تم تحديث الفيديو ID: ${id}`,
-      "update"
-    );
+        alert(
+          "فشل حفظ تعديل الفيديو في Firestore."
+        );
+      });
   };
 
   const deleteVideoItem = (
     id: string
   ) => {
-    const updatedVideos =
-      videos.filter(
-        (v) => v.id !== id
-      );
-
-    saveVideos(
-      updatedVideos
-    );
-
     deleteDoc(
       doc(
         db,
         "videos",
         id
       )
-    ).catch((error) => {
-      console.error(
-        "Firestore delete video error:",
-        error
-      );
-    });
+    )
+      .then(() => {
+        console.log(
+          "✅ Video deleted from Firestore"
+        );
+        logActivity(
+          `تم حذف الفيديو ID: ${id}`,
+          "delete"
+        );
+      })
+      .catch((error) => {
+        console.error(
+          "❌ Firestore delete video error:",
+          error
+        );
 
-    logActivity(
-      `تم حذف الفيديو ID: ${id}`,
-      "delete"
-    );
+        alert(
+          "فشل حذف الفيديو من Firestore."
+        );
+      });
   };
 
   // =========================================================
-  // Testimonials - Firestore
+  // TESTIMONIALS - CRUD
   // =========================================================
 
   const addTestimonial = (
@@ -1790,11 +1365,6 @@ export const AppProvider: React.FC<{
       id: "t_" + Date.now(),
     };
 
-    setTestimonials((prev) => [
-      ...prev,
-      newItem,
-    ]);
-
     setDoc(
       doc(
         db,
@@ -1802,17 +1372,26 @@ export const AppProvider: React.FC<{
         newItem.id
       ),
       newItem
-    ).catch((error) => {
-      console.error(
-        "Firestore add testimonial error:",
-        error
-      );
-    });
+    )
+      .then(() => {
+        console.log(
+          "✅ Testimonial added to Firestore"
+        );
+        logActivity(
+          `تمت إضافة تقييم للعميل: ${item.clientName}`,
+          "create"
+        );
+      })
+      .catch((error) => {
+        console.error(
+          "❌ Firestore add testimonial error:",
+          error
+        );
 
-    logActivity(
-      `تمت إضافة تقييم للعميل: ${item.clientName}`,
-      "create"
-    );
+        alert(
+          "فشل حفظ التقييم في Firestore."
+        );
+      });
   };
 
   const updateTestimonial = (
@@ -1834,14 +1413,6 @@ export const AppProvider: React.FC<{
       id,
     };
 
-    setTestimonials((prev) =>
-      prev.map((t) =>
-        t.id === id
-          ? updated
-          : t
-      )
-    );
-
     setDoc(
       doc(
         db,
@@ -1849,49 +1420,61 @@ export const AppProvider: React.FC<{
         id
       ),
       updated
-    ).catch((error) => {
-      console.error(
-        "Firestore update testimonial error:",
-        error
-      );
-    });
+    )
+      .then(() => {
+        console.log(
+          "✅ Testimonial updated in Firestore"
+        );
+        logActivity(
+          `تم تحديث التقييم ID: ${id}`,
+          "update"
+        );
+      })
+      .catch((error) => {
+        console.error(
+          "❌ Firestore update testimonial error:",
+          error
+        );
 
-    logActivity(
-      `تم تحديث التقييم ID: ${id}`,
-      "update"
-    );
+        alert(
+          "فشل حفظ تعديل التقييم في Firestore."
+        );
+      });
   };
 
   const deleteTestimonial = (
     id: string
   ) => {
-    setTestimonials((prev) =>
-      prev.filter(
-        (t) => t.id !== id
-      )
-    );
-
     deleteDoc(
       doc(
         db,
         "testimonials",
         id
       )
-    ).catch((error) => {
-      console.error(
-        "Firestore delete testimonial error:",
-        error
-      );
-    });
+    )
+      .then(() => {
+        console.log(
+          "✅ Testimonial deleted from Firestore"
+        );
+        logActivity(
+          `تم حذف التقييم ID: ${id}`,
+          "delete"
+        );
+      })
+      .catch((error) => {
+        console.error(
+          "❌ Firestore delete testimonial error:",
+          error
+        );
 
-    logActivity(
-      `تم حذف التقييم ID: ${id}`,
-      "delete"
-    );
+        alert(
+          "فشل حذف التقييم من Firestore."
+        );
+      });
   };
 
   // =========================================================
-  // Bookings - Firestore
+  // BOOKINGS - FIRESTORE
   // =========================================================
 
   const addBooking = async (
@@ -1936,19 +1519,6 @@ export const AppProvider: React.FC<{
         bookingRef.id
       );
 
-      const newBooking: BookingItem = {
-        ...bookingData,
-        id: bookingRef.id,
-        status: "new",
-        createdAt:
-          new Date().toISOString(),
-      };
-
-      setBookings((prev) => [
-        newBooking,
-        ...prev,
-      ]);
-
       logActivity(
         `حجز جديد: ${bookingData.groomName} والعروس: ${bookingData.brideName}`,
         "create"
@@ -1970,92 +1540,7 @@ export const AppProvider: React.FC<{
   };
 
   // =========================================================
-  // Update Booking Status
-  // =========================================================
-
-  const updateBookingStatus =
-    async (
-      id: string,
-      status: BookingItem["status"]
-    ): Promise<void> => {
-      try {
-        await updateDoc(
-          doc(
-            db,
-            "bookings",
-            id
-          ),
-          {
-            status,
-          }
-        );
-
-        setBookings((prev) =>
-          prev.map(
-            (booking) =>
-              booking.id === id
-                ? {
-                    ...booking,
-                    status,
-                  }
-                : booking
-          )
-        );
-
-        logActivity(
-          `تم تحديث حالة الحجز ID: ${id} إلى ${status}`,
-          "update"
-        );
-      } catch (error) {
-        console.error(
-          "Firestore update booking error:",
-          error
-        );
-
-        throw error;
-      }
-    };
-
-  // =========================================================
-  // Delete Booking
-  // =========================================================
-
-  const deleteBooking =
-    async (
-      id: string
-    ): Promise<void> => {
-      try {
-        await deleteDoc(
-          doc(
-            db,
-            "bookings",
-            id
-          )
-        );
-
-        setBookings((prev) =>
-          prev.filter(
-            (booking) =>
-              booking.id !== id
-          )
-        );
-
-        logActivity(
-          `تم حذف الحجز ID: ${id}`,
-          "delete"
-        );
-      } catch (error) {
-        console.error(
-          "Firestore delete booking error:",
-          error
-        );
-
-        throw error;
-      }
-    };
-
-  // =========================================================
-  // Firestore Realtime Listener - Bookings
+  // BOOKINGS - REALTIME
   // =========================================================
 
   useEffect(() => {
@@ -2066,11 +1551,6 @@ export const AppProvider: React.FC<{
           "bookings"
         ),
         (snapshot) => {
-          console.log(
-            "🔥 Firestore bookings:",
-            snapshot.docs.length
-          );
-
           const firestoreBookings: BookingItem[] =
             snapshot.docs.map(
               (bookingDoc) => {
@@ -2151,6 +1631,11 @@ export const AppProvider: React.FC<{
           setBookings(
             firestoreBookings
           );
+
+          console.log(
+            "🔥 Firestore bookings:",
+            firestoreBookings.length
+          );
         },
         (error) => {
           console.error(
@@ -2166,7 +1651,73 @@ export const AppProvider: React.FC<{
   }, []);
 
   // =========================================================
-  // Offers - Firestore
+  // UPDATE BOOKING STATUS
+  // =========================================================
+
+  const updateBookingStatus =
+    async (
+      id: string,
+      status: BookingItem["status"]
+    ): Promise<void> => {
+      try {
+        await updateDoc(
+          doc(
+            db,
+            "bookings",
+            id
+          ),
+          {
+            status,
+          }
+        );
+
+        logActivity(
+          `تم تحديث حالة الحجز ID: ${id} إلى ${status}`,
+          "update"
+        );
+      } catch (error) {
+        console.error(
+          "❌ Firestore update booking error:",
+          error
+        );
+
+        throw error;
+      }
+    };
+
+  // =========================================================
+  // DELETE BOOKING
+  // =========================================================
+
+  const deleteBooking =
+    async (
+      id: string
+    ): Promise<void> => {
+      try {
+        await deleteDoc(
+          doc(
+            db,
+            "bookings",
+            id
+          )
+        );
+
+        logActivity(
+          `تم حذف الحجز ID: ${id}`,
+          "delete"
+        );
+      } catch (error) {
+        console.error(
+          "❌ Firestore delete booking error:",
+          error
+        );
+
+        throw error;
+      }
+    };
+
+  // =========================================================
+  // OFFERS - CRUD
   // =========================================================
 
   const addOffer = (
@@ -2177,11 +1728,6 @@ export const AppProvider: React.FC<{
       id: "off_" + Date.now(),
     };
 
-    setOffers((prev) => [
-      ...prev,
-      newItem,
-    ]);
-
     setDoc(
       doc(
         db,
@@ -2189,17 +1735,26 @@ export const AppProvider: React.FC<{
         newItem.id
       ),
       newItem
-    ).catch((error) => {
-      console.error(
-        "Firestore add offer error:",
-        error
-      );
-    });
+    )
+      .then(() => {
+        console.log(
+          "✅ Offer added to Firestore"
+        );
+        logActivity(
+          `تمت إضافة عرض جديد: ${offer.titleAr}`,
+          "create"
+        );
+      })
+      .catch((error) => {
+        console.error(
+          "❌ Firestore add offer error:",
+          error
+        );
 
-    logActivity(
-      `تمت إضافة عرض جديد: ${offer.titleAr}`,
-      "create"
-    );
+        alert(
+          "فشل حفظ العرض في Firestore."
+        );
+      });
   };
 
   const updateOffer = (
@@ -2221,14 +1776,6 @@ export const AppProvider: React.FC<{
       id,
     };
 
-    setOffers((prev) =>
-      prev.map((o) =>
-        o.id === id
-          ? updated
-          : o
-      )
-    );
-
     setDoc(
       doc(
         db,
@@ -2236,49 +1783,61 @@ export const AppProvider: React.FC<{
         id
       ),
       updated
-    ).catch((error) => {
-      console.error(
-        "Firestore update offer error:",
-        error
-      );
-    });
+    )
+      .then(() => {
+        console.log(
+          "✅ Offer updated in Firestore"
+        );
+        logActivity(
+          `تم تحديث العرض ID: ${id}`,
+          "update"
+        );
+      })
+      .catch((error) => {
+        console.error(
+          "❌ Firestore update offer error:",
+          error
+        );
 
-    logActivity(
-      `تم تحديث العرض ID: ${id}`,
-      "update"
-    );
+        alert(
+          "فشل حفظ تعديل العرض في Firestore."
+        );
+      });
   };
 
   const deleteOffer = (
     id: string
   ) => {
-    setOffers((prev) =>
-      prev.filter(
-        (o) => o.id !== id
-      )
-    );
-
     deleteDoc(
       doc(
         db,
         "offers",
         id
       )
-    ).catch((error) => {
-      console.error(
-        "Firestore delete offer error:",
-        error
-      );
-    });
+    )
+      .then(() => {
+        console.log(
+          "✅ Offer deleted from Firestore"
+        );
+        logActivity(
+          `تم حذف العرض ID: ${id}`,
+          "delete"
+        );
+      })
+      .catch((error) => {
+        console.error(
+          "❌ Firestore delete offer error:",
+          error
+        );
 
-    logActivity(
-      `تم حذف العرض ID: ${id}`,
-      "delete"
-    );
+        alert(
+          "فشل حذف العرض من Firestore."
+        );
+      });
   };
 
   // =========================================================
-  // Backup
+  // BACKUP
   // =========================================================
 
   const backupData = () => {
@@ -2301,7 +1860,7 @@ export const AppProvider: React.FC<{
   };
 
   // =========================================================
-  // Restore
+  // RESTORE
   // =========================================================
 
   const restoreData = (
@@ -2311,30 +1870,27 @@ export const AppProvider: React.FC<{
       const data =
         JSON.parse(jsonData);
 
-      if (data.settings) {
-        setSettings(
-          data.settings
-        );
+      const promises: Promise<unknown>[] =
+        [];
 
-        setDoc(
-          doc(
-            db,
-            "siteSettings",
-            "main"
-          ),
-          data.settings,
-          { merge: true }
-        ).catch(console.error);
+      if (data.settings) {
+        promises.push(
+          setDoc(
+            doc(
+              db,
+              "siteSettings",
+              "main"
+            ),
+            data.settings,
+            { merge: true }
+          )
+        );
       }
 
-      if (data.services) {
-        setServices(
-          data.services
-        );
-
-        Promise.all(
-          data.services.map(
-            (item: ServiceItem) =>
+      if (Array.isArray(data.services)) {
+        data.services.forEach(
+          (item: ServiceItem) => {
+            promises.push(
               setDoc(
                 doc(
                   db,
@@ -2343,18 +1899,15 @@ export const AppProvider: React.FC<{
                 ),
                 item
               )
-          )
-        ).catch(console.error);
+            );
+          }
+        );
       }
 
-      if (data.packages) {
-        setPackages(
-          data.packages
-        );
-
-        Promise.all(
-          data.packages.map(
-            (item: PackageItem) =>
+      if (Array.isArray(data.packages)) {
+        data.packages.forEach(
+          (item: PackageItem) => {
+            promises.push(
               setDoc(
                 doc(
                   db,
@@ -2363,18 +1916,15 @@ export const AppProvider: React.FC<{
                 ),
                 item
               )
-          )
-        ).catch(console.error);
+            );
+          }
+        );
       }
 
-      if (data.portfolio) {
-        setPortfolio(
-          data.portfolio
-        );
-
-        Promise.all(
-          data.portfolio.map(
-            (item: PortfolioItem) =>
+      if (Array.isArray(data.portfolio)) {
+        data.portfolio.forEach(
+          (item: PortfolioItem) => {
+            promises.push(
               setDoc(
                 doc(
                   db,
@@ -2383,18 +1933,15 @@ export const AppProvider: React.FC<{
                 ),
                 item
               )
-          )
-        ).catch(console.error);
+            );
+          }
+        );
       }
 
-      if (data.videos) {
-        setVideos(
-          data.videos
-        );
-
-        Promise.all(
-          data.videos.map(
-            (item: VideoItem) =>
+      if (Array.isArray(data.videos)) {
+        data.videos.forEach(
+          (item: VideoItem) => {
+            promises.push(
               setDoc(
                 doc(
                   db,
@@ -2403,20 +1950,19 @@ export const AppProvider: React.FC<{
                 ),
                 item
               )
-          )
-        ).catch(console.error);
+            );
+          }
+        );
       }
 
-      if (data.testimonials) {
-        setTestimonials(
+      if (
+        Array.isArray(
           data.testimonials
-        );
-
-        Promise.all(
-          data.testimonials.map(
-            (
-              item: TestimonialItem
-            ) =>
+        )
+      ) {
+        data.testimonials.forEach(
+          (item: TestimonialItem) => {
+            promises.push(
               setDoc(
                 doc(
                   db,
@@ -2425,24 +1971,15 @@ export const AppProvider: React.FC<{
                 ),
                 item
               )
-          )
-        ).catch(console.error);
-      }
-
-      if (data.bookings) {
-        setBookings(
-          data.bookings
+            );
+          }
         );
       }
 
-      if (data.offers) {
-        setOffers(
-          data.offers
-        );
-
-        Promise.all(
-          data.offers.map(
-            (item: OfferItem) =>
+      if (Array.isArray(data.offers)) {
+        data.offers.forEach(
+          (item: OfferItem) => {
+            promises.push(
               setDoc(
                 doc(
                   db,
@@ -2451,19 +1988,37 @@ export const AppProvider: React.FC<{
                 ),
                 item
               )
-          )
-        ).catch(console.error);
+            );
+          }
+        );
       }
 
-      logActivity(
-        "تمت استعادة النسخة الاحتياطية بنجاح",
-        "settings"
-      );
+      Promise.all(promises)
+        .then(() => {
+          console.log(
+            "✅ Backup restored to Firestore"
+          );
+
+          logActivity(
+            "تمت استعادة النسخة الاحتياطية بنجاح",
+            "settings"
+          );
+        })
+        .catch((error) => {
+          console.error(
+            "❌ Restore Firestore error:",
+            error
+          );
+
+          alert(
+            "فشل استعادة النسخة الاحتياطية إلى Firestore."
+          );
+        });
 
       return true;
     } catch (error) {
       console.error(
-        "Restore error:",
+        "❌ Restore error:",
         error
       );
 
@@ -2472,7 +2027,7 @@ export const AppProvider: React.FC<{
   };
 
   // =========================================================
-  // Provider
+  // PROVIDER
   // =========================================================
 
   return (
@@ -2558,3 +2113,4 @@ export const useApp = () => {
 
   return context;
 };
+EOF
