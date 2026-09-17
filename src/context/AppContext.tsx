@@ -1,4 +1,3 @@
-cd /workspaces/ibraproduction12 && cat > src/context/AppContext.tsx <<'EOF'
 import React, {
   createContext,
   useContext,
