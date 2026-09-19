@@ -135,7 +135,7 @@ export const Services: React.FC<ServicesProps> = ({ onSelectService }) => {
             </h4>
 
             <ul className="space-y-2 mb-8">
-              {selectedServiceModal.features.map((feat, idx) => (
+              {(Array.isArray(selectedServiceModal.features) ? selectedServiceModal.features : []).map((feat, idx) => (
                 <li key={idx} className="flex items-center gap-3 text-neutral-300 text-sm">
                   <div className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
                     <Check className="w-3 h-3" />
