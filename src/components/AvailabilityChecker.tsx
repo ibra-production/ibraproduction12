@@ -28,7 +28,7 @@ interface AvailabilityCheckerProps {
 }
 
 export const AvailabilityChecker: React.FC<AvailabilityCheckerProps> = ({ onOpenBooking }) => {
-  const { language } = useApp();
+  const { language, bookings } = useApp();
   const [checkDate, setCheckDate] = useState('');
   const [wilaya, setWilaya] = useState('16');
   const [resultStatus, setResultStatus] = useState<'idle' | 'available' | 'booked'>('idle');
@@ -40,8 +40,58 @@ export const AvailabilityChecker: React.FC<AvailabilityCheckerProps> = ({ onOpen
     e.preventDefault();
     if (!checkDate) return;
 
-    const dateNum = new Date(checkDate).getDate();
-    setResultStatus(dateNum % 3 === 0 ? 'booked' : 'available');
+    const normalizedWilaya = String(wilaya || "").trim();
+
+    const isDateBooked = (booking: any): boolean => {
+      if (!booking || booking.status === "cancelled") {
+        return false;
+      }
+
+      const bookingDates =
+        Array.isArray(booking.eventDates) &&
+        booking.eventDates.length > 0
+          ? booking.eventDates
+          : booking.eventDate
+            ? [booking.eventDate]
+            : [];
+
+      if (!bookingDates.includes(checkDate)) {
+        return false;
+      }
+
+      const bookingWilaya =
+        String(booking.wilaya || "").trim();
+
+      // Old bookings may not have Wilaya saved.
+      // To prevent double booking, treat them as globally occupied.
+      if (!bookingWilaya) {
+        return true;
+      }
+
+      // Support both Wilaya code and Wilaya name.
+      const selected =
+        WILAYAS.find(([code]) => code === normalizedWilaya);
+
+      const selectedAr = selected?.[1] || "";
+      const selectedFr = selected?.[2] || "";
+
+      return (
+        bookingWilaya === normalizedWilaya ||
+        bookingWilaya === selectedAr ||
+        bookingWilaya === selectedFr ||
+        bookingWilaya.includes(`(${normalizedWilaya})`)
+      );
+    };
+
+    const booked = (
+      Array.isArray(bookings)
+        ? bookings
+        : []
+    ).some(isDateBooked);
+
+    setResultStatus(
+      booked ? "booked" : "available"
+    );
   };
 
   return (

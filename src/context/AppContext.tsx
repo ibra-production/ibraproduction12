@@ -23,6 +23,12 @@ import {
 } from "firebase/auth";
 
 import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+} from "firebase/storage";
+
+import {
   SiteSettings,
   StatItem,
   ServiceItem,
@@ -44,7 +50,7 @@ import {
   initialUsers,
 } from "../data/initialData";
 
-import { db, auth } from "../firebase";
+import { db, auth, storage } from "../firebase";
 
 interface AppContextType {
   language: Language;
@@ -114,6 +120,10 @@ interface AppContextType {
   deletePortfolioItem: (
     id: string
   ) => void;
+
+  uploadPortfolioImages: (
+    files: File[]
+  ) => Promise<string[]>;
 
   addVideoItem: (
     item: Omit<VideoItem, "id">
@@ -1111,92 +1121,175 @@ export const AppProvider: React.FC<{
   };
 
   // =========================================================
+  // PORTFOLIO - IMAGE UPLOAD
+  // =========================================================
+
+  const uploadPortfolioImages = async (
+    files: File[]
+  ): Promise<string[]> => {
+    if (!Array.isArray(files) || files.length === 0) {
+      return [];
+    }
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+    ];
+
+    const maxSize = 15 * 1024 * 1024;
+
+    for (const file of files) {
+      if (!allowedTypes.includes(file.type)) {
+        throw new Error(
+          `الملف ${file.name} ليس صورة مدعومة. استعمل JPG أو PNG أو WEBP.`
+        );
+      }
+
+      if (file.size > maxSize) {
+        throw new Error(
+          `الصورة ${file.name} تتجاوز 15MB.`
+        );
+      }
+    }
+
+    const urls: string[] = [];
+
+    for (const file of files) {
+      const safeName = file.name
+        .replace(/[^a-zA-Z0-9._-]/g, "_");
+
+      const path =
+        `portfolio/${Date.now()}_${Math.random()
+          .toString(36)
+          .slice(2)}_${safeName}`;
+
+      const storageRef = ref(storage, path);
+
+      await uploadBytes(storageRef, file, {
+        contentType: file.type,
+      });
+
+      const url = await getDownloadURL(storageRef);
+
+      urls.push(url);
+    }
+
+    return urls;
+  };
+
+  // =========================================================
   // PORTFOLIO - CRUD
   // =========================================================
 
-  const addPortfolioItem = (
+  const addPortfolioItem = async (
     item: Omit<PortfolioItem, "id">
-  ) => {
+  ): Promise<void> => {
     const newItem: PortfolioItem = {
       ...item,
       id: "port_" + Date.now(),
+      image:
+        item.image ||
+        (Array.isArray(item.images) ? item.images[0] : ""),
+      images:
+        Array.isArray(item.images) && item.images.length > 0
+          ? item.images
+          : item.image
+            ? [item.image]
+            : [],
     };
 
-    setDoc(
-      doc(
-        db,
-        "portfolio",
-        newItem.id
-      ),
-      newItem
-    )
-      .then(() => {
-        console.log(
-          "✅ Portfolio item added to Firestore"
-        );
-        logActivity(
-          `تمت إضافة مشروع جديد للمعرض: ${item.titleAr}`,
-          "create"
-        );
-      })
-      .catch((error) => {
-        console.error(
-          "❌ Firestore add portfolio error:",
-          error
-        );
+    try {
+      await setDoc(
+        doc(db, "portfolio", newItem.id),
+        newItem
+      );
 
-        alert(
-          "فشل حفظ المشروع في Firestore."
-        );
-      });
+      console.log(
+        "✅ Portfolio item added to Firestore"
+      );
+
+      logActivity(
+        `تمت إضافة مشروع جديد للمعرض: ${item.titleAr}`,
+        "create"
+      );
+    } catch (error) {
+      console.error(
+        "❌ Firestore add portfolio error:",
+        error
+      );
+
+      alert(
+        "فشل حفظ المشروع في Firestore."
+      );
+
+      throw error;
+    }
   };
 
-  const updatePortfolioItem = (
+  const updatePortfolioItem = async (
     id: string,
     data: Partial<PortfolioItem>
-  ) => {
+  ): Promise<void> => {
     const current =
       portfolio.find(
         (item) => item.id === id
       );
 
     if (!current) {
-      return;
+      throw new Error("Portfolio item not found");
     }
 
-    const updated: PortfolioItem = {
+    const merged: any = {
       ...current,
       ...data,
       id,
     };
 
-    setDoc(
-      doc(
-        db,
-        "portfolio",
-        id
-      ),
-      updated
-    )
-      .then(() => {
-        console.log(
-          "✅ Portfolio item updated in Firestore"
-        );
-        logActivity(
-          `تم تحديث المشروع ID: ${id}`,
-          "update"
-        );
-      })
-      .catch((error) => {
-        console.error(
-          "❌ Firestore update portfolio error:",
-          error
-        );
+    if (
+      (!merged.image || merged.image === "") &&
+      Array.isArray(merged.images) &&
+      merged.images.length > 0
+    ) {
+      merged.image = merged.images[0];
+    }
 
-        alert(
-          "فشل حفظ تعديل المشروع في Firestore."
-        );
-      });
+    if (
+      !Array.isArray(merged.images) ||
+      merged.images.length === 0
+    ) {
+      merged.images = merged.image
+        ? [merged.image]
+        : [];
+    }
+
+    try {
+      await setDoc(
+        doc(db, "portfolio", id),
+        merged
+      );
+
+      console.log(
+        "✅ Portfolio item updated in Firestore"
+      );
+
+      logActivity(
+        `تم تحديث المشروع ID: ${id}`,
+        "update"
+      );
+    } catch (error) {
+      console.error(
+        "❌ Firestore update portfolio error:",
+        error
+      );
+
+      alert(
+        "فشل حفظ تعديل المشروع في Firestore."
+      );
+
+      throw error;
+    }
   };
 
   const deletePortfolioItem = (
@@ -1583,6 +1676,19 @@ export const AppProvider: React.FC<{
                     data.eventDate ||
                     "",
 
+                  eventDates:
+                    Array.isArray(data.eventDates)
+                      ? data.eventDates
+                      : (
+                          data.eventDate
+                            ? [data.eventDate]
+                            : []
+                        ),
+
+                  wilaya:
+                    data.wilaya ||
+                    "",
+
                   eventTime:
                     data.eventTime ||
                     "",
@@ -1601,6 +1707,14 @@ export const AppProvider: React.FC<{
 
                   notes:
                     data.notes ||
+                    "",
+
+                  idCardUrl:
+                    data.idCardUrl ||
+                    "",
+
+                  idCardName:
+                    data.idCardName ||
                     "",
 
                   status:

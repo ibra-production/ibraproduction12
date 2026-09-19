@@ -79,7 +79,11 @@ export const Portfolio: React.FC = () => {
                 className="group relative rounded-2xl overflow-hidden aspect-[4/3] cursor-pointer bg-neutral-900 border border-neutral-800 hover:border-amber-500/50 shadow-xl transition-all duration-500"
               >
                 <img
-                  src={item.image}
+                  src={
+  Array.isArray(item.images) && item.images.length > 0
+    ? item.images[0]
+    : item.image
+}
                   alt={title}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
@@ -126,7 +130,12 @@ export const Portfolio: React.FC = () => {
           <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-3 gap-8 items-center bg-neutral-900/80 border border-neutral-800 rounded-3xl overflow-hidden shadow-2xl">
             <div className="lg:col-span-2 aspect-[16/10] bg-neutral-950">
               <img
-                src={lightboxItem.image}
+                src={
+  Array.isArray(lightboxItem.images) &&
+  lightboxItem.images.length > 0
+    ? lightboxItem.images[0]
+    : lightboxItem.image
+}
                 alt=""
                 className="w-full h-full object-contain"
               />

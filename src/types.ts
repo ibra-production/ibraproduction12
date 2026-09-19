@@ -78,6 +78,7 @@ export interface PortfolioItem {
   date: string;
   location: string;
   image: string;
+  images?: string[];
   videoUrl?: string;
   descriptionAr: string;
   descriptionFr: string;

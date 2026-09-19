@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { enablePushNotifications } from "../pushNotifications";
 import { useApp } from '../context/AppContext';
 import {
   LayoutDashboard,
@@ -52,6 +53,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
     addPortfolioItem,
     updatePortfolioItem,
     deletePortfolioItem,
+    uploadPortfolioImages,
     videos,
       addVideoItem,
       updateVideoItem,
@@ -83,12 +85,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
     | 'logs'
   >('dash');
 
-  const [adminNotes, setAdminNotes] = useState<string>(() => {
-    return (
-      localStorage.getItem('ibra_admin_notes') ||
-      'قائمة المهام اليومية:\n1. تأكيد مواعيد عطلة نهاية الأسبوع\n2. تسليم ألبومات الصور للعرسان\n3. شحن بطاريات كاميرات 4K'
-    );
-  });
+  const [adminNotes, setAdminNotes] = useState<string>(() =>
+    localStorage.getItem('ibra_admin_notes') ||
+    'قائمة المهام اليومية:\n1. تأكيد مواعيد عطلة نهاية الأسبوع\n2. تسليم ألبومات الصور للعرسان\n3. شحن بطاريات كاميرات 4K'
+  );
+
+  const handleEnablePushNotifications = async () => {
+    const token = await enablePushNotifications();
+
+    if (token) {
+      alert("✅ تم تفعيل إشعارات Ibra Production بنجاح.");
+    } else {
+      alert("⚠️ لم يتم تفعيل الإشعارات. تأكد من السماح بالإشعارات في المتصفح.");
+    }
+  };
 
   const [smsModalData, setSmsModalData] = useState<{
     booking: any;
@@ -2470,7 +2480,13 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
                   if (
                     !portfolioModal.titleAr ||
-                    !portfolioModal.image
+                    !(
+                      portfolioModal.image ||
+                      (
+                        Array.isArray(portfolioModal.images) &&
+                        portfolioModal.images.length > 0
+                      )
+                    )
                   ) {
                     alert(
                       'يرجى إدخال عنوان العمل ورابط الصورة على الأقل.'
