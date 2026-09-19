@@ -118,12 +118,28 @@ export interface BookingItem {
   phone: string;
   email: string;
   eventType: string;
+
+  // Main/legacy event date kept for compatibility with old bookings
   eventDate: string;
-  eventTime: string;
+
+  // New multiple-event-dates support
+  eventDates?: string[];
+
+  // Event location
+  wilaya?: string;
   venue: string;
+
+  // Event time must remain unchanged
+  eventTime: string;
+
   serviceId: string;
   packageId?: string;
   notes?: string;
+
+  // Mandatory national ID card copy for new bookings
+  idCardUrl?: string;
+  idCardName?: string;
+
   status: 'new' | 'confirmed' | 'processing' | 'completed' | 'cancelled';
   createdAt: string;
 }

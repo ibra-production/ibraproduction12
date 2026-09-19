@@ -9,6 +9,10 @@ import {
   Mail,
   User,
   MapPin,
+  Upload,
+  FileText,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 
 interface BookingModalProps {
@@ -18,13 +22,91 @@ interface BookingModalProps {
   preselectedPackage?: PackageItem | null;
 }
 
+const WILAYAS = [
+  ['01', 'أدرار', 'Adrar'],
+  ['02', 'الشلف', 'Chlef'],
+  ['03', 'الأغواط', 'Laghouat'],
+  ['04', 'أم البواقي', 'Oum El Bouaghi'],
+  ['05', 'باتنة', 'Batna'],
+  ['06', 'بجاية', 'Béjaïa'],
+  ['07', 'بسكرة', 'Biskra'],
+  ['08', 'بشار', 'Béchar'],
+  ['09', 'البليدة', 'Blida'],
+  ['10', 'البويرة', 'Bouira'],
+  ['11', 'تمنراست', 'Tamanrasset'],
+  ['12', 'تبسة', 'Tébessa'],
+  ['13', 'تلمسان', 'Tlemcen'],
+  ['14', 'تيارت', 'Tiaret'],
+  ['15', 'تيزي وزو', 'Tizi Ouzou'],
+  ['16', 'الجزائر العاصمة', 'Alger'],
+  ['17', 'الجلفة', 'Djelfa'],
+  ['18', 'جيجل', 'Jijel'],
+  ['19', 'سطيف', 'Sétif'],
+  ['20', 'سعيدة', 'Saïda'],
+  ['21', 'سكيكدة', 'Skikda'],
+  ['22', 'سيدي بلعباس', 'Sidi Bel Abbès'],
+  ['23', 'عنابة', 'Annaba'],
+  ['24', 'قالمة', 'Guelma'],
+  ['25', 'قسنطينة', 'Constantine'],
+  ['26', 'المدية', 'Médéa'],
+  ['27', 'مستغانم', 'Mostaganem'],
+  ['28', 'المسيلة', 'M’Sila'],
+  ['29', 'معسكر', 'Mascara'],
+  ['30', 'ورقلة', 'Ouargla'],
+  ['31', 'وهران', 'Oran'],
+  ['32', 'البيض', 'El Bayadh'],
+  ['33', 'إليزي', 'Illizi'],
+  ['34', 'برج بوعريريج', 'Bordj Bou Arréridj'],
+  ['35', 'بومرداس', 'Boumerdès'],
+  ['36', 'الطارف', 'El Tarf'],
+  ['37', 'تندوف', 'Tindouf'],
+  ['38', 'تيسمسيلت', 'Tissemsilt'],
+  ['39', 'الوادي', 'El Oued'],
+  ['40', 'خنشلة', 'Khenchela'],
+  ['41', 'سوق أهراس', 'Souk Ahras'],
+  ['42', 'تيبازة', 'Tipaza'],
+  ['43', 'ميلة', 'Mila'],
+  ['44', 'عين الدفلى', 'Aïn Defla'],
+  ['45', 'النعامة', 'Naâma'],
+  ['46', 'عين تموشنت', 'Aïn Témouchent'],
+  ['47', 'غرداية', 'Ghardaïa'],
+  ['48', 'غليزان', 'Relizane'],
+  ['49', 'تيميمون', 'Timimoun'],
+  ['50', 'برج باجي مختار', 'Bordj Badji Mokhtar'],
+  ['51', 'أولاد جلال', 'Ouled Djellal'],
+  ['52', 'بني عباس', 'Béni Abbès'],
+  ['53', 'إن صالح', 'In Salah'],
+  ['54', 'إن قزام', 'In Guezzam'],
+  ['55', 'تقرت', 'Touggourt'],
+  ['56', 'جانت', 'Djanet'],
+  ['57', 'المغير', 'El Meghaier'],
+  ['58', 'المنيعة', 'El Meniaa'],
+  ['59', 'آفلو', 'Aflou'],
+  ['60', 'بريكة', 'Barika'],
+  ['61', 'القنطرة', 'El Kantara'],
+  ['62', 'بئر العاتر', 'Bir El Ater'],
+  ['63', 'العريشة', 'El Aricha'],
+  ['64', 'قصر الشلالة', 'Ksar Chellala'],
+  ['65', 'عين وسارة', 'Aïn Oussara'],
+  ['66', 'مسعد', 'Messaad'],
+  ['67', 'قصر البخاري', 'Ksar El Boukhari'],
+  ['68', 'بوسعادة', 'Bou Saâda'],
+  ['69', 'الأبيض سيدي الشيخ', 'El Bayadh Sidi Cheikh'],
+];
+
 export const BookingModal: React.FC<BookingModalProps> = ({
   isOpen,
   onClose,
   preselectedService,
   preselectedPackage,
 }) => {
-  const { language, services, packages, addBooking } = useApp();
+  const {
+    language,
+    services,
+    packages,
+    addBooking,
+    bookings,
+  } = useApp();
 
   const [groomName, setGroomName] = useState('');
   const [brideName, setBrideName] = useState('');
@@ -35,8 +117,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     preselectedPackage ? 'حفل زفاف (باقة)' : 'تصوير أعراس'
   );
 
-  const [eventDate, setEventDate] = useState('');
+  const [eventDates, setEventDates] = useState<string[]>(['']);
   const [eventTime, setEventTime] = useState('16:00');
+  const [wilaya, setWilaya] = useState('');
   const [venue, setVenue] = useState('');
 
   const [serviceId, setServiceId] = useState(
@@ -48,11 +131,108 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   );
 
   const [notes, setNotes] = useState('');
+
+  const [idCardFile, setIdCardFile] = useState<File | null>(null);
+  const [idCardUrl, setIdCardUrl] = useState('');
+  const [idCardName, setIdCardName] = useState('');
+
   const [submitted, setSubmitted] = useState(false);
 
   if (!isOpen) {
     return null;
   }
+
+  const updateEventDate = (index: number, value: string) => {
+    setEventDates((current) =>
+      current.map((date, i) => (i === index ? value : date))
+    );
+  };
+
+  const addEventDate = () => {
+    setEventDates((current) => [...current, '']);
+  };
+
+  const removeEventDate = (index: number) => {
+    setEventDates((current) => {
+      if (current.length === 1) {
+        return [''];
+      }
+
+      return current.filter((_, i) => i !== index);
+    });
+  };
+
+  const isDateBlocked = (date: string) => {
+    if (!date) return false;
+
+    return bookings.some((booking) => {
+      if (booking.status === 'cancelled') {
+        return false;
+      }
+
+      const dates =
+        booking.eventDates && booking.eventDates.length > 0
+          ? booking.eventDates
+          : booking.eventDate
+          ? [booking.eventDate]
+          : [];
+
+      return dates.includes(date);
+    });
+  };
+
+  const handleIdCardChange = (file: File | null) => {
+    if (!file) {
+      setIdCardFile(null);
+      setIdCardUrl('');
+      setIdCardName('');
+      return;
+    }
+
+    const allowedTypes = [
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'application/pdf',
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      alert(
+        language === 'ar'
+          ? 'يرجى اختيار صورة JPG أو PNG أو ملف PDF.'
+          : language === 'fr'
+          ? 'Veuillez sélectionner une image JPG, PNG ou un fichier PDF.'
+          : 'Please select a JPG, PNG image or PDF file.'
+      );
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert(
+        language === 'ar'
+          ? 'حجم الملف يجب ألا يتجاوز 5 ميغابايت.'
+          : language === 'fr'
+          ? 'La taille du fichier ne doit pas dépasser 5 Mo.'
+          : 'File size must not exceed 5 MB.'
+      );
+      return;
+    }
+
+    setIdCardFile(file);
+    setIdCardName(file.name);
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const result = reader.result;
+
+      if (typeof result === 'string') {
+        setIdCardUrl(result);
+      }
+    };
+
+    reader.readAsDataURL(file);
+  };
 
   const handleResetAndClose = () => {
     setGroomName('');
@@ -64,8 +244,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       preselectedPackage ? 'حفل زفاف (باقة)' : 'تصوير أعراس'
     );
 
-    setEventDate('');
+    setEventDates(['']);
     setEventTime('16:00');
+    setWilaya('');
     setVenue('');
 
     setServiceId(
@@ -74,6 +255,11 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
     setPackageId(preselectedPackage?.id || '');
     setNotes('');
+
+    setIdCardFile(null);
+    setIdCardUrl('');
+    setIdCardName('');
+
     setSubmitted(false);
 
     onClose();
@@ -82,13 +268,55 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!groomName || !phone || !eventDate) {
+    const cleanDates = Array.from(
+      new Set(eventDates.filter(Boolean))
+    ).sort();
+
+    if (!groomName || !phone || !wilaya || cleanDates.length === 0) {
       alert(
         language === 'ar'
-          ? 'يرجى ملء الحقول الإجبارية: اسم العريس، رقم الهاتف، تاريخ المناسبة'
+          ? 'يرجى ملء الحقول الإجبارية: اسم العريس، رقم الهاتف، الولاية وتاريخ المناسبة.'
           : language === 'fr'
-          ? 'Veuillez remplir les champs obligatoires.'
-          : 'Please fill in the required fields.'
+          ? 'Veuillez remplir les champs obligatoires : nom, téléphone, wilaya et date.'
+          : 'Please fill in the required fields: groom name, phone, wilaya and event date.'
+      );
+
+      return;
+    }
+
+    if (!idCardFile || !idCardUrl) {
+      alert(
+        language === 'ar'
+          ? 'نسخة بطاقة التعريف الوطنية إجبارية لإرسال طلب الحجز.'
+          : language === 'fr'
+          ? "La copie de la carte d'identité nationale est obligatoire."
+          : 'A copy of the national ID card is required.'
+      );
+
+      return;
+    }
+
+    if (cleanDates.length !== eventDates.filter(Boolean).length) {
+      alert(
+        language === 'ar'
+          ? 'لا يمكن تكرار نفس تاريخ المناسبة.'
+          : language === 'fr'
+          ? 'La même date ne peut pas être sélectionnée plusieurs fois.'
+          : 'The same event date cannot be selected more than once.'
+      );
+
+      return;
+    }
+
+    const blockedDates = cleanDates.filter(isDateBlocked);
+
+    if (blockedDates.length > 0) {
+      alert(
+        language === 'ar'
+          ? `التواريخ التالية محجوزة مسبقاً: ${blockedDates.join('، ')}`
+          : language === 'fr'
+          ? `Les dates suivantes sont déjà réservées : ${blockedDates.join(', ')}`
+          : `The following dates are already booked: ${blockedDates.join(', ')}`
       );
 
       return;
@@ -101,12 +329,23 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         phone,
         email,
         eventType,
-        eventDate,
+
+        // Keep first date for compatibility with existing system
+        eventDate: cleanDates[0],
+
+        // New multi-date field
+        eventDates: cleanDates,
+
         eventTime,
+        wilaya,
         venue,
         serviceId,
         packageId: packageId || undefined,
         notes,
+
+        // Required ID card
+        idCardUrl,
+        idCardName,
       });
 
       setSubmitted(true);
@@ -138,7 +377,6 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
         {submitted ? (
           <div className="text-center py-12">
-
             <div className="w-20 h-20 rounded-full bg-amber-500/20 border-2 border-amber-500 text-amber-400 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-amber-500/20">
               <CheckCircle2 className="w-10 h-10" />
             </div>
@@ -170,11 +408,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 ? 'Retour au site'
                 : 'Return to Website'}
             </button>
-
           </div>
         ) : (
           <div>
-
             <div className="text-center mb-8">
               <span className="text-amber-400 text-xs font-semibold uppercase tracking-widest block mb-2 font-cinzel">
                 IBRA PRODUCTION
@@ -192,7 +428,6 @@ export const BookingModal: React.FC<BookingModalProps> = ({
             <form onSubmit={handleSubmit} className="space-y-5">
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
                 <div>
                   <label className="block text-xs font-medium text-neutral-300 mb-1.5">
                     {language === 'ar'
@@ -237,11 +472,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                     />
                   </div>
                 </div>
-
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
                 <div>
                   <label className="block text-xs font-medium text-neutral-300 mb-1.5">
                     {language === 'ar'
@@ -286,45 +519,112 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                     />
                   </div>
                 </div>
-
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-neutral-300 mb-1.5">
+                  {language === 'ar'
+                    ? 'نوع المناسبة'
+                    : language === 'fr'
+                    ? "Type d'événement"
+                    : 'Event Type'}
+                </label>
 
-                <div>
-                  <label className="block text-xs font-medium text-neutral-300 mb-1.5">
-                    {language === 'ar'
-                      ? 'نوع المناسبة'
-                      : language === 'fr'
-                      ? "Type d'événement"
-                      : 'Event Type'}
-                  </label>
+                <input
+                  type="text"
+                  value={eventType}
+                  onChange={(e) => setEventType(e.target.value)}
+                  placeholder="حفل زفاف"
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white text-sm focus:border-amber-500 focus:outline-none"
+                />
+              </div>
 
-                  <input
-                    type="text"
-                    value={eventType}
-                    onChange={(e) => setEventType(e.target.value)}
-                    placeholder="حفل زفاف"
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white text-sm focus:border-amber-500 focus:outline-none"
-                  />
+              <div>
+                <label className="block text-xs font-medium text-neutral-300 mb-1.5">
+                  {language === 'ar'
+                    ? 'تواريخ المناسبة *'
+                    : language === 'fr'
+                    ? "Dates de l'événement *"
+                    : 'Event Dates *'}
+                </label>
+
+                <div className="space-y-3">
+                  {eventDates.map((date, index) => (
+                    <div
+                      key={index}
+                      className="flex gap-2"
+                    >
+                      <input
+                        type="date"
+                        required
+                        value={date}
+                        onChange={(e) =>
+                          updateEventDate(index, e.target.value)
+                        }
+                        className="flex-1 bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white text-sm focus:border-amber-500 focus:outline-none"
+                      />
+
+                      {eventDates.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeEventDate(index)}
+                          className="px-3 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                          title="Remove date"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
 
+                <button
+                  type="button"
+                  onClick={addEventDate}
+                  className="mt-3 inline-flex items-center gap-2 text-amber-400 hover:text-amber-300 text-sm font-semibold"
+                >
+                  <Plus className="w-4 h-4" />
+                  {language === 'ar'
+                    ? 'إضافة تاريخ آخر'
+                    : language === 'fr'
+                    ? 'Ajouter une autre date'
+                    : 'Add another date'}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-neutral-300 mb-1.5">
                     {language === 'ar'
-                      ? 'تاريخ المناسبة *'
+                      ? 'الولاية *'
                       : language === 'fr'
-                      ? "Date de l'événement *"
-                      : 'Event Date *'}
+                      ? 'Wilaya *'
+                      : 'Wilaya *'}
                   </label>
 
-                  <input
-                    type="date"
+                  <select
                     required
-                    value={eventDate}
-                    onChange={(e) => setEventDate(e.target.value)}
+                    value={wilaya}
+                    onChange={(e) => setWilaya(e.target.value)}
                     className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white text-sm focus:border-amber-500 focus:outline-none"
-                  />
+                  >
+                    <option value="">
+                      {language === 'ar'
+                        ? '-- اختر الولاية --'
+                        : language === 'fr'
+                        ? '-- Choisir la wilaya --'
+                        : '-- Select wilaya --'}
+                    </option>
+
+                    {WILAYAS.map(([code, ar, fr]) => (
+                      <option
+                        key={code}
+                        value={`${code} - ${ar}`}
+                      >
+                        {code} - {language === 'ar' ? ar : fr}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
@@ -343,11 +643,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                     className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white text-sm focus:border-amber-500 focus:outline-none"
                   />
                 </div>
-
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
                 <div>
                   <label className="block text-xs font-medium text-neutral-300 mb-1.5">
                     {language === 'ar'
@@ -391,7 +689,6 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                     ))}
                   </select>
                 </div>
-
               </div>
 
               <div>
@@ -422,6 +719,62 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-neutral-300 mb-1.5">
+                  {language === 'ar'
+                    ? 'نسخة بطاقة التعريف الوطنية *'
+                    : language === 'fr'
+                    ? "Copie de la carte d'identité nationale *"
+                    : 'National ID Card Copy *'}
+                </label>
+
+                <label className="flex items-center gap-3 w-full cursor-pointer bg-neutral-950 border border-dashed border-amber-500/40 hover:border-amber-500 rounded-xl px-4 py-4 transition-colors">
+                  <div className="w-10 h-10 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0">
+                    {idCardFile ? (
+                      <FileText className="w-5 h-5" />
+                    ) : (
+                      <Upload className="w-5 h-5" />
+                    )}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm text-white font-medium truncate">
+                      {idCardFile
+                        ? idCardName
+                        : language === 'ar'
+                        ? 'اضغط لرفع نسخة بطاقة التعريف'
+                        : language === 'fr'
+                        ? "Cliquez pour joindre la carte d'identité"
+                        : 'Click to upload ID card copy'}
+                    </div>
+
+                    <div className="text-xs text-neutral-500 mt-1">
+                      JPG / PNG / PDF — 5 MB maximum
+                    </div>
+                  </div>
+
+                  <input
+                    type="file"
+                    required
+                    accept="image/jpeg,image/jpg,image/png,application/pdf"
+                    className="hidden"
+                    onChange={(e) =>
+                      handleIdCardChange(
+                        e.target.files?.[0] || null
+                      )
+                    }
+                  />
+                </label>
+
+                <p className="text-xs text-amber-400/80 mt-2">
+                  {language === 'ar'
+                    ? 'رفع نسخة بطاقة التعريف إلزامي لإرسال الحجز.'
+                    : language === 'fr'
+                    ? "La copie de la carte d'identité est obligatoire pour envoyer la réservation."
+                    : 'The ID card copy is required to submit the booking.'}
+                </p>
               </div>
 
               <div>
