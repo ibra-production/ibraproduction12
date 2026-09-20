@@ -1,25 +1,3 @@
-
-// Ibra Production - force refresh old local data once
-if (typeof window !== "undefined") {
-  const VERSION = "ibra-production-v20260919";
-  if (localStorage.getItem("ibra_app_version") !== VERSION) {
-    const keys = [
-      "ibra_services",
-      "ibra_packages",
-      "ibra_portfolio",
-      "ibra_videos",
-      "ibra_testimonials",
-      "ibra_offers",
-      "ibra_messages",
-      "ibra_admin_notes"
-    ];
-
-    keys.forEach((key) => localStorage.removeItem(key));
-    localStorage.setItem("ibra_app_version", VERSION);
-    window.location.reload();
-  }
-}
-
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
