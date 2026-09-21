@@ -1132,33 +1132,33 @@ export const AppProvider: React.FC<{
     const maxSize = 15 * 1024 * 1024;
 
     for (const file of files) {
-      if (!allowed.includes(file.type)) {
-        throw new Error("الصورة يجب أن تكون JPG أو PNG أو WEBP.");
-      }
-      if (file.size > maxSize) {
-        throw new Error("حجم الصورة يتجاوز 15MB.");
-      }
+      if (!allowed.includes(file.type)) throw new Error("الصورة يجب أن تكون JPG أو PNG أو WEBP.");
+      if (file.size > maxSize) throw new Error("حجم الصورة يتجاوز 15MB.");
     }
 
     const uploadOne = async (file: File): Promise<string> => {
-      const storageRef = ref(
-        storage,
-        `portfolio/${Date.now()}_${Math.random().toString(36).slice(2)}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`
-      );
+      const bucket = "ibra-production-web.firebasestorage.app";
+      const objectName = `portfolio/${Date.now()}_${Math.random().toString(36).slice(2)}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+      const token = await auth.currentUser!.getIdToken();
+      const uploadUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o?uploadType=media&name=${encodeURIComponent(objectName)}`;
 
-      const uploadPromise = uploadBytes(storageRef, file, {
-        contentType: file.type,
+      const response = await fetch(uploadUrl, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": file.type,
+        },
+        body: file,
       });
 
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        window.setTimeout(
-          () => reject(new Error("انتهت مهلة رفع الصورة. تحقق من Firebase Storage والاتصال بالإنترنت.")),
-          30000
-        )
-      );
+      if (!response.ok) {
+        const message = await response.text();
+        throw new Error(`فشل رفع الصورة: ${message.slice(0, 300)}`);
+      }
 
-      await Promise.race([uploadPromise, timeoutPromise]);
-      return await getDownloadURL(storageRef);
+      const data = await response.json();
+      const downloadToken = data.downloadTokens || "";
+      return `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURIComponent(objectName)}?alt=media&token=${encodeURIComponent(downloadToken)}`;
     };
 
     return Promise.all(files.map(uploadOne));
