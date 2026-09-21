@@ -28,6 +28,7 @@ import { ServiceItem, PackageItem } from './types';
 
 function MainContent() {
   const { currentUser, settings, language } = useApp();
+  const maintenance = settings.maintenanceMode === true;
 
   useEffect(() => {
     const title = settings.seoTitle || settings.agencyName || 'IBRA PRODUCTION';
