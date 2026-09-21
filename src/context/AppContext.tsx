@@ -1180,7 +1180,7 @@ export const AppProvider: React.FC<{
 
         const data = await response.json();
         const encodedPath = encodeURIComponent(data.name);
-        return `https://firebasestorage.googleapis.com/v0/b/${encodeURIComponent(bucket)}/o/${encodedPath}?alt=media&token=${data.downloadTokens || ""}`;
+        return `https://firebasestorage.googleapis.com/v0/b/${encodeURIComponent(bucket)}/o/${encodedPath}?alt=media&token=${downloadToken}`;
       } finally {
         clearTimeout(timeout);
       }
