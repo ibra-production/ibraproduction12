@@ -1167,9 +1167,6 @@ export const AppProvider: React.FC<{
   return Promise.all(files.map(uploadOne));
 };
 
-    return Promise.all(files.map(uploadOne));
-  };
-
   // =========================================================
   // PORTFOLIO - CRUD
   // =========================================================
