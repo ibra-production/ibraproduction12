@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
@@ -27,7 +27,18 @@ import { ClientExperience } from './components/ClientExperience';
 import { ServiceItem, PackageItem } from './types';
 
 function MainContent() {
-  const { currentUser } = useApp();
+  const { currentUser, settings, language } = useApp();
+
+  useEffect(() => {
+    const title = settings.seoTitle || settings.agencyName || 'IBRA PRODUCTION';
+    document.title = title;
+    const description = settings.seoDescription || settings.taglineAr || '';
+    let meta = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
+    if (!meta) { meta = document.createElement('meta'); meta.name = 'description'; document.head.appendChild(meta); }
+    meta.content = description;
+    document.documentElement.lang = language;
+    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+  }, [settings, language]);
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [adminLoginOpen, setAdminLoginOpen] = useState(false);
   const [adminDashboardOpen, setAdminDashboardOpen] = useState(false);
@@ -63,21 +74,35 @@ function MainContent() {
         }}
       />
 
-      <main>
-        <Hero onOpenBooking={() => setBookingModalOpen(true)} />
-        <About />
-        <Services onSelectService={handleOpenBookingWithService} />
-        <AvailabilityChecker onOpenBooking={() => setBookingModalOpen(true)} />
-        <Portfolio />
-        <VideosSection />
-        <OffersSection onOpenBooking={() => setBookingModalOpen(true)} />
-        <PackagesSection onSelectPackage={handleOpenBookingWithPackage} />
-        <PackageCustomizer onOpenBooking={() => setBookingModalOpen(true)} />
-        <TestimonialsSection />
-        <WhyUsSection />
-        <ClientExperience onOpenBooking={() => setBookingModalOpen(true)} />
-        <ContactSection />
-      </main>
+      {maintenance ? (
+        <main className="min-h-screen flex items-center justify-center px-6 bg-neutral-950">
+          <div className="max-w-xl text-center">
+            <div className="w-20 h-20 mx-auto mb-7 rounded-3xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 text-3xl font-bold">I</div>
+            <h1 className="text-3xl sm:text-5xl font-bold text-white font-cinzel mb-5">
+              {language === 'ar' ? 'الموقع قيد الصيانة' : language === 'fr' ? 'Site en maintenance' : 'Website under maintenance'}
+            </h1>
+            <p className="text-neutral-400 leading-8">
+              {language === 'ar' ? 'نعمل على تطوير الموقع وتحسين تجربة العملاء. سنعود قريباً.' : language === 'fr' ? 'Nous améliorons actuellement le site et l’expérience client. À bientôt.' : 'We are improving the website and client experience. We will be back soon.'}
+            </p>
+          </div>
+        </main>
+      ) : (
+        <main>
+          <Hero onOpenBooking={() => setBookingModalOpen(true)} />
+          <About />
+          <Services onSelectService={handleOpenBookingWithService} />
+          <AvailabilityChecker onOpenBooking={() => setBookingModalOpen(true)} />
+          <Portfolio />
+          <VideosSection />
+          <OffersSection onOpenBooking={() => setBookingModalOpen(true)} />
+          <PackagesSection onSelectPackage={handleOpenBookingWithPackage} />
+          <PackageCustomizer onOpenBooking={() => setBookingModalOpen(true)} />
+          <TestimonialsSection />
+          <WhyUsSection />
+          <ClientExperience onOpenBooking={() => setBookingModalOpen(true)} />
+          <ContactSection />
+        </main>
+      )}
 
       <Footer
         onOpenAdmin={() => {
