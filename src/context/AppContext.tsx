@@ -1129,43 +1129,65 @@ export const AppProvider: React.FC<{
   // =========================================================
 
   const uploadPortfolioImages = async (files: File[]): Promise<string[]> => {
-  if (!files.length) return [];
-  if (!auth.currentUser) throw new Error("انتهت جلسة الإدارة. أعد تسجيل الدخول.");
+    if (!files.length) return [];
+    if (!auth.currentUser) throw new Error("انتهت جلسة الإدارة. أعد تسجيل الدخول.");
 
-  const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-  const maxSize = 15 * 1024 * 1024;
+    const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    const maxSize = 15 * 1024 * 1024;
 
-  for (const file of files) {
-    if (!allowed.includes(file.type)) throw new Error("الصورة يجب أن تكون JPG أو PNG أو WEBP.");
-    if (file.size > maxSize) throw new Error("حجم الصورة يتجاوز 15MB.");
-  }
+    for (const file of files) {
+      if (!allowed.includes(file.type)) throw new Error("الصورة يجب أن تكون JPG أو PNG أو WEBP.");
+      if (file.size > maxSize) throw new Error("حجم الصورة يتجاوز 15MB.");
+    }
 
-  const uploadOne = (file: File) => new Promise<string>((resolve, reject) => {
-    const path = `portfolio/${Date.now()}_${Math.random().toString(36).slice(2)}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
-    const task = uploadBytesResumable(ref(storage, path), file, { contentType: file.type });
+    const uploadOne = async (file: File): Promise<string> => {
+      const token = await auth.currentUser!.getIdToken(true);
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `portfolio/${Date.now()}_${Math.random().toString(36).slice(2)}_${safeName}`;
+      const bucket = "ibra-production-web.firebasestorage.app";
+      const metadata = JSON.stringify({
+        name: path,
+        contentType: file.type
+      });
 
-    const timeout = window.setTimeout(() => {
-      task.cancel();
-      reject(new Error("تعذر رفع الصورة. تحقق من Firebase Storage."));
-    }, 30000);
+      const boundary = "----IbraUpload" + Math.random().toString(36).slice(2);
+      const body = new Blob([
+        `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: ${file.type}\r\n\r\n`,
+        file,
+        `\r\n--${boundary}--`
+      ], { type: `multipart/related; boundary=${boundary}` });
 
-    task.on("state_changed", undefined, error => {
-      clearTimeout(timeout);
-      reject(error);
-    }, async () => {
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 30000);
+
       try {
-        const url = await getDownloadURL(task.snapshot.ref);
-        clearTimeout(timeout);
-        resolve(url);
-      } catch (error) {
-        clearTimeout(timeout);
-        reject(error);
-      }
-    });
-  });
+        const response = await fetch(
+          `https://firebasestorage.googleapis.com/v0/b/${encodeURIComponent(bucket)}/o?uploadType=multipart&name=${encodeURIComponent(path)}`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`
+            },
+            body,
+            signal: controller.signal
+          }
+        );
 
-  return Promise.all(files.map(uploadOne));
-};
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`فشل رفع الصورة: ${response.status} ${errorText}`);
+        }
+
+        const data = await response.json();
+        const encodedPath = encodeURIComponent(data.name);
+        return `https://firebasestorage.googleapis.com/v0/b/${encodeURIComponent(bucket)}/o/${encodedPath}?alt=media&token=${data.downloadTokens || ""}`;
+      } finally {
+        clearTimeout(timeout);
+      }
+    };
+
+    return Promise.all(files.map(uploadOne));
+  };
 
   // =========================================================
   // PORTFOLIO - CRUD
