@@ -92,13 +92,17 @@ export const VideosSection: React.FC = () => {
 
           <div className="max-w-4xl w-full bg-neutral-900 border border-neutral-800 rounded-3xl overflow-hidden shadow-2xl">
             <div className="relative aspect-video w-full bg-black">
-              <iframe
-                src={`${activeVideo.videoUrl}?autoplay=0`}
-                title={activeVideo.titleAr}
-                className="w-full h-full border-0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
+              {/\.(mp4|webm|mov)(\?|$)/i.test(activeVideo.videoUrl) ? (
+                <video src={activeVideo.videoUrl} poster={activeVideo.thumbnail} controls playsInline className="w-full h-full object-contain" />
+              ) : (
+                <iframe
+                  src={activeVideo.videoUrl.includes('youtube.com/watch?v=') ? activeVideo.videoUrl.replace('watch?v=', 'embed/') : activeVideo.videoUrl}
+                  title={activeVideo.titleAr}
+                  className="w-full h-full border-0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              )}
             </div>
             <div className="p-6">
               <h3 className="text-2xl font-bold font-cinzel text-white mb-2">
