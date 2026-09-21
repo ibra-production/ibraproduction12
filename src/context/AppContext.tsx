@@ -1139,22 +1139,24 @@ export const AppProvider: React.FC<{
     const uploadOne = async (file: File): Promise<string> => {
       const storageRef = storageApi.ref(
         storage,
-        `portfolio/${Date.now()}_${Math.random().toString(36).slice(2)}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`
+        "portfolio/" + Date.now() + "_" + Math.random().toString(36).slice(2) + "_" + file.name.replace(/[^a-zA-Z0-9._-]/g, "_")
       );
 
-      const uploadPromise = storageApi.uploadBytes(storageRef, file, {
-        contentType: file.type,
+      const operation = (async () => {
+        await storageApi.uploadBytes(storageRef, file, {
+          contentType: file.type,
+        });
+        return await storageApi.getDownloadURL(storageRef);
+      })();
+
+      const timeout = new Promise<never>((_, reject) => {
+        window.setTimeout(
+          () => reject(new Error("انتهت مهلة رفع الصورة أو جلب رابطها. تحقق من Firebase Storage.")),
+          30000
+        );
       });
 
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        window.setTimeout(
-          () => reject(new Error("انتهت مهلة رفع الصورة. تحقق من Firebase Storage والاتصال بالإنترنت.")),
-          30000
-        )
-      );
-
-      await Promise.race([uploadPromise, timeoutPromise]);
-      return await storageApi.getDownloadURL(storageRef);
+      return await Promise.race([operation, timeout]);
     };
 
     return Promise.all(files.map(uploadOne));
