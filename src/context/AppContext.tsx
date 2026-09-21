@@ -1133,6 +1133,10 @@ export const AppProvider: React.FC<{
   ): Promise<string[]> => {
     if (!Array.isArray(files) || files.length === 0) return [];
 
+    if (!auth.currentUser) {
+      throw new Error("انتهت جلسة الإدارة. أعد تسجيل الدخول ثم حاول رفع الصورة.");
+    }
+
     const allowedTypes = [
       "image/jpeg",
       "image/jpg",
@@ -1150,46 +1154,51 @@ export const AppProvider: React.FC<{
       }
     }
 
-    const uploadOne = (file: File): Promise<string> =>
-      new Promise((resolve, reject) => {
-        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-        const path = "portfolio/" + Date.now() + "_" + Math.random().toString(36).slice(2) + "_" + safeName;
-        const storageRef = ref(storage, path);
-        const task = uploadBytesResumable(storageRef, file, {
-          contentType: file.type,
-          cacheControl: "public,max-age=31536000",
-        });
+    const uploadOne = async (file: File): Promise<string> => {
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = "portfolio/" + Date.now() + "_" + Math.random().toString(36).slice(2) + "_" + safeName;
+      const storageRef = ref(storage, path);
 
+      const uploadPromise = uploadBytesResumable(storageRef, file, {
+        contentType: file.type,
+        cacheControl: "public,max-age=31536000",
+      });
+
+      return await new Promise<string>((resolve, reject) => {
         let settled = false;
-        const timeout = setTimeout(() => {
-          task.cancel();
-          if (!settled) {
-            settled = true;
-            reject(new Error("انتهى وقت رفع الصورة: " + file.name + ". تحقق من الإنترنت وFirebase Storage."));
-          }
-        }, 10 * 60 * 1000);
-
-        const finish = (callback: () => void) => {
+        const timeout = window.setTimeout(() => {
           if (settled) return;
           settled = true;
-          clearTimeout(timeout);
-          callback();
-        };
+          uploadPromise.cancel();
+          reject(new Error("تعذر رفع الصورة خلال 45 ثانية. تحقق من Firebase Storage ثم حاول مرة أخرى."));
+        }, 45000);
 
-        task.on(
+        uploadPromise.on(
           "state_changed",
           () => {},
-          (error) => finish(() => reject(error)),
+          (error) => {
+            if (settled) return;
+            settled = true;
+            window.clearTimeout(timeout);
+            reject(new Error("فشل رفع الصورة: " + (error?.message || "خطأ Firebase Storage")));
+          },
           async () => {
             try {
-              const url = await getDownloadURL(task.snapshot.ref);
-              finish(() => resolve(url));
-            } catch (error) {
-              finish(() => reject(error));
+              const url = await getDownloadURL(uploadPromise.snapshot.ref);
+              if (settled) return;
+              settled = true;
+              window.clearTimeout(timeout);
+              resolve(url);
+            } catch (error: any) {
+              if (settled) return;
+              settled = true;
+              window.clearTimeout(timeout);
+              reject(new Error("تم رفع الصورة لكن تعذر الحصول على الرابط: " + (error?.message || "خطأ غير معروف")));
             }
           }
         );
       });
+    };
 
     return Promise.all(files.map(uploadOne));
   };
