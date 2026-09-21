@@ -24,7 +24,7 @@ import {
 
 import {
   ref,
-  uploadBytes,
+  uploadBytesResumable,
   getDownloadURL,
 } from "firebase/storage";
 
@@ -1131,9 +1131,7 @@ export const AppProvider: React.FC<{
   const uploadPortfolioImages = async (
     files: File[]
   ): Promise<string[]> => {
-    if (!Array.isArray(files) || files.length === 0) {
-      return [];
-    }
+    if (!Array.isArray(files) || files.length === 0) return [];
 
     const allowedTypes = [
       "image/jpeg",
@@ -1141,46 +1139,59 @@ export const AppProvider: React.FC<{
       "image/png",
       "image/webp",
     ];
-
     const maxSize = 15 * 1024 * 1024;
 
     for (const file of files) {
       if (!allowedTypes.includes(file.type)) {
-        throw new Error(
-          `الملف ${file.name} ليس صورة مدعومة. استعمل JPG أو PNG أو WEBP.`
-        );
+        throw new Error("الملف " + file.name + " ليس صورة مدعومة. استعمل JPG أو PNG أو WEBP.");
       }
-
       if (file.size > maxSize) {
-        throw new Error(
-          `الصورة ${file.name} تتجاوز 15MB.`
-        );
+        throw new Error("الصورة " + file.name + " تتجاوز 15MB.");
       }
     }
 
-    const urls: string[] = [];
+    const uploadOne = (file: File): Promise<string> =>
+      new Promise((resolve, reject) => {
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const path = "portfolio/" + Date.now() + "_" + Math.random().toString(36).slice(2) + "_" + safeName;
+        const storageRef = ref(storage, path);
+        const task = uploadBytesResumable(storageRef, file, {
+          contentType: file.type,
+          cacheControl: "public,max-age=31536000",
+        });
 
-    for (const file of files) {
-      const safeName = file.name
-        .replace(/[^a-zA-Z0-9._-]/g, "_");
+        let settled = false;
+        const timeout = setTimeout(() => {
+          task.cancel();
+          if (!settled) {
+            settled = true;
+            reject(new Error("انتهى وقت رفع الصورة: " + file.name + ". تحقق من الإنترنت وFirebase Storage."));
+          }
+        }, 10 * 60 * 1000);
 
-      const path =
-        `portfolio/${Date.now()}_${Math.random()
-          .toString(36)
-          .slice(2)}_${safeName}`;
+        const finish = (callback: () => void) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timeout);
+          callback();
+        };
 
-      const storageRef = ref(storage, path);
-
-      await uploadBytes(storageRef, file, {
-        contentType: file.type,
+        task.on(
+          "state_changed",
+          () => {},
+          (error) => finish(() => reject(error)),
+          async () => {
+            try {
+              const url = await getDownloadURL(task.snapshot.ref);
+              finish(() => resolve(url));
+            } catch (error) {
+              finish(() => reject(error));
+            }
+          }
+        );
       });
 
-      const url = await getDownloadURL(storageRef);
-
-      urls.push(url);
-    }
-
-    return urls;
+    return Promise.all(files.map(uploadOne));
   };
 
   // =========================================================
