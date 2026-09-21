@@ -75,11 +75,16 @@ export const AvailabilityChecker: React.FC<AvailabilityCheckerProps> = ({ onOpen
       const selectedAr = selected?.[1] || "";
       const selectedFr = selected?.[2] || "";
 
+      const bookingCode =
+        bookingWilaya.match(/^([0-9]{2})/)?.[1] || "";
+
       return (
         bookingWilaya === normalizedWilaya ||
         bookingWilaya === selectedAr ||
         bookingWilaya === selectedFr ||
-        bookingWilaya.includes(`(${normalizedWilaya})`)
+        bookingWilaya.includes(`(${normalizedWilaya})`) ||
+        bookingCode === normalizedWilaya ||
+        bookingWilaya.startsWith(`${normalizedWilaya} -`)
       );
     };
 
