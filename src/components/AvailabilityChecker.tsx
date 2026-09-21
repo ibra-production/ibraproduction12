@@ -55,36 +55,9 @@ export const AvailabilityChecker: React.FC<AvailabilityCheckerProps> = ({ onOpen
             ? [booking.eventDate]
             : [];
 
-      if (!bookingDates.includes(checkDate)) {
-        return false;
-      }
-
-      const bookingWilaya =
-        String(booking.wilaya || "").trim();
-
-      // Old bookings may not have Wilaya saved.
-      // To prevent double booking, treat them as globally occupied.
-      if (!bookingWilaya) {
-        return true;
-      }
-
-      // Support both Wilaya code and Wilaya name.
-      const selected =
-        WILAYAS.find(([code]) => code === normalizedWilaya);
-
-      const selectedAr = selected?.[1] || "";
-      const selectedFr = selected?.[2] || "";
-
-      const bookingCode =
-        bookingWilaya.match(/^([0-9]{2})/)?.[1] || "";
-
-      return (
-        bookingWilaya === normalizedWilaya ||
-        bookingWilaya === selectedAr ||
-        bookingWilaya === selectedFr ||
-        bookingWilaya.includes(`(${normalizedWilaya})`) ||
-        bookingCode === normalizedWilaya ||
-        bookingWilaya.startsWith(`${normalizedWilaya} -`)
+      return bookingDates.some(
+        (date: any) =>
+          String(date || "").trim() === checkDate
       );
     };
 
