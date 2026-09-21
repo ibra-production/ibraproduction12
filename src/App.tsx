@@ -23,6 +23,7 @@ import { AdminLogin } from './components/AdminLogin';
 import { AdminDashboard } from './components/AdminDashboard';
 import { AvailabilityChecker } from './components/AvailabilityChecker';
 import { PackageCustomizer } from './components/PackageCustomizer';
+import { ClientExperience } from './components/ClientExperience';
 import { ServiceItem, PackageItem } from './types';
 
 function MainContent() {
@@ -74,6 +75,7 @@ function MainContent() {
         <PackageCustomizer onOpenBooking={() => setBookingModalOpen(true)} />
         <TestimonialsSection />
         <WhyUsSection />
+        <ClientExperience onOpenBooking={() => setBookingModalOpen(true)} />
         <ContactSection />
       </main>
 
