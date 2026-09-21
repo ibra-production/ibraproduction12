@@ -125,6 +125,10 @@ interface AppContextType {
     files: File[]
   ) => Promise<string[]>;
 
+  uploadVideoFile: (
+    file: File
+  ) => Promise<string>;
+
   addVideoItem: (
     item: Omit<VideoItem, "id">
   ) => void;
@@ -1321,6 +1325,28 @@ export const AppProvider: React.FC<{
           "فشل حذف المشروع من Firestore."
         );
       });
+  };
+
+  // =========================================================
+  // VIDEO - FILE UPLOAD
+  // =========================================================
+
+  const uploadVideoFile = async (
+    file: File
+  ): Promise<string> => {
+    if (!file) throw new Error("لم يتم اختيار فيديو.");
+    const allowedTypes = ["video/mp4", "video/webm", "video/quicktime"];
+    if (!allowedTypes.includes(file.type)) {
+      throw new Error("صيغة الفيديو غير مدعومة. استعمل MP4 أو WEBM أو MOV.");
+    }
+    if (file.size > 500 * 1024 * 1024) {
+      throw new Error("حجم الفيديو يتجاوز 500MB.");
+    }
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = "videos/" + Date.now() + "_" + Math.random().toString(36).slice(2) + "_" + safeName;
+    const storageRef = ref(storage, path);
+    await uploadBytes(storageRef, file, { contentType: file.type });
+    return await getDownloadURL(storageRef);
   };
 
   // =========================================================
