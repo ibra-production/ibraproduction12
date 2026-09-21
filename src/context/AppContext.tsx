@@ -1136,54 +1136,33 @@ export const AppProvider: React.FC<{
     const maxSize = 15 * 1024 * 1024;
 
     for (const file of files) {
-      if (!allowed.includes(file.type)) throw new Error("الصورة يجب أن تكون JPG أو PNG أو WEBP.");
-      if (file.size > maxSize) throw new Error("حجم الصورة يتجاوز 15MB.");
+      if (!allowed.includes(file.type)) {
+        throw new Error("الصورة يجب أن تكون JPG أو PNG أو WEBP.");
+      }
+      if (file.size > maxSize) {
+        throw new Error("حجم الصورة يتجاوز 15MB.");
+      }
     }
 
     const uploadOne = async (file: File): Promise<string> => {
-      const token = await auth.currentUser!.getIdToken(true);
-      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const path = `portfolio/${Date.now()}_${Math.random().toString(36).slice(2)}_${safeName}`;
-      const bucket = "ibra-production-web.firebasestorage.app";
-      const metadata = JSON.stringify({
-        name: path,
-        contentType: file.type
+      const storageRef = ref(
+        storage,
+        `portfolio/${Date.now()}_${Math.random().toString(36).slice(2)}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`
+      );
+
+      const uploadPromise = uploadBytes(storageRef, file, {
+        contentType: file.type,
       });
 
-      const boundary = "----IbraUpload" + Math.random().toString(36).slice(2);
-      const body = new Blob([
-        `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: ${file.type}\r\n\r\n`,
-        file,
-        `\r\n--${boundary}--`
-      ], { type: `multipart/related; boundary=${boundary}` });
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        window.setTimeout(
+          () => reject(new Error("انتهت مهلة رفع الصورة. تحقق من Firebase Storage والاتصال بالإنترنت.")),
+          30000
+        )
+      );
 
-      const controller = new AbortController();
-      const timeout = window.setTimeout(() => controller.abort(), 30000);
-
-      try {
-        const response = await fetch(
-          `https://firebasestorage.googleapis.com/v0/b/${encodeURIComponent(bucket)}/o?uploadType=multipart&name=${encodeURIComponent(path)}`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`
-            },
-            body,
-            signal: controller.signal
-          }
-        );
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`فشل رفع الصورة: ${response.status} ${errorText}`);
-        }
-
-        const data = await response.json();
-        const encodedPath = encodeURIComponent(data.name);
-        return `https://firebasestorage.googleapis.com/v0/b/${encodeURIComponent(bucket)}/o/${encodedPath}?alt=media&token=${downloadToken}`;
-      } finally {
-        clearTimeout(timeout);
-      }
+      await Promise.race([uploadPromise, timeoutPromise]);
+      return await getDownloadURL(storageRef);
     };
 
     return Promise.all(files.map(uploadOne));
