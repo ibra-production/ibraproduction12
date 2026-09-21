@@ -27,7 +27,10 @@ import {
   BarChart3,
   CalendarDays,
   FileText,
-  CheckSquare
+  CheckSquare,
+  Eye,
+  FileImage,
+  FileVideo
 } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -56,6 +59,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
     uploadPortfolioImages,
     videos,
       addVideoItem,
+      uploadVideoFile,
       updateVideoItem,
       deleteVideoItem,
     testimonials,
@@ -110,6 +114,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
   const [packageModal, setPackageModal] = useState<any | null>(null);
   const [portfolioModal, setPortfolioModal] = useState<any | null>(null);
 const [videoModal, setVideoModal] = useState<any | null>(null);
+  const [portfolioUploading, setPortfolioUploading] = useState(false);
+  const [videoUploading, setVideoUploading] = useState(false);
 
   const safeBookings = Array.isArray(bookings)
     ? bookings.filter(b => b && typeof b === 'object')
@@ -305,6 +311,11 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               id: 'offers',
               label: 'العروض الخاصة',
               icon: <Tag className="w-4 h-4" />
+            },
+            {
+              id: 'idcards',
+              label: 'بطاقات التعريف',
+              icon: <FileText className="w-4 h-4" />
             },
             {
               id: 'settings',
@@ -1288,17 +1299,15 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
             className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"
           />
 
-          <input
-            value={videoModal.videoUrl || ''}
-            onChange={e =>
-              setVideoModal({
-                ...videoModal,
-                videoUrl: e.target.value
-              })
-            }
-            placeholder="رابط الفيديو MP4"
-            className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"
-          />
+          <div className="space-y-3">
+            <label className="flex items-center gap-3 w-full cursor-pointer bg-neutral-950 border border-dashed border-amber-500/40 rounded-xl px-4 py-4">
+              <FileVideo className="w-5 h-5 text-amber-400" />
+              <div className="flex-1"><div className="text-sm text-white font-semibold">رفع فيديو من الحاسوب</div><div className="text-xs text-neutral-500">MP4 / WEBM / MOV — حتى 500MB</div></div>
+              <input type="file" accept="video/mp4,video/webm,video/quicktime" className="hidden" disabled={videoUploading} onChange={async e=>{const file=e.target.files?.[0];if(!file)return;try{setVideoUploading(true);const url=await uploadVideoFile(file);setVideoModal((m:any)=>({...m,videoUrl:url}));}catch(error){alert(error instanceof Error?error.message:'فشل رفع الفيديو.');}finally{setVideoUploading(false);e.target.value='';}}}/>
+            </label>
+            {videoUploading && <div className="text-xs text-amber-400">جارٍ رفع الفيديو...</div>}
+            <input value={videoModal.videoUrl || ''} onChange={e=>setVideoModal({...videoModal,videoUrl:e.target.value})} placeholder="أو أدخل رابط الفيديو" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+          </div>
 
           <input
             value={videoModal.thumbnail || ''}
@@ -1592,6 +1601,23 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
               </div>
 
+            </div>
+          )}
+          {activeTab === 'idcards' && (
+            <div className="space-y-6">
+              <div><h2 className="text-2xl font-bold text-white">بطاقات التعريف المسجلة</h2><p className="text-xs text-neutral-400 mt-2">عرض وتحميل جميع البطاقات المرفوعة مع الحجوزات.</p></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                {safeBookings.filter((b:any)=>b.idCardUrl).map((b:any)=>(
+                  <div key={b.id} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5">
+                    <h3 className="font-bold text-white">{b.groomName || '-'}{b.brideName ? ' & '+b.brideName : ''}</h3>
+                    <p className="text-xs text-neutral-500 mt-1">#{String(b.id||'').slice(-6)}</p>
+                    <div className="text-xs text-neutral-400 mt-4 space-y-1"><div>الهاتف: {b.phone || '-'}</div><div>التاريخ: {b.eventDate || '-'}</div><div>الملف: {b.idCardName || 'بطاقة التعريف'}</div></div>
+                    {String(b.idCardUrl).startsWith('data:image/') && <img src={b.idCardUrl} className="w-full h-48 object-contain bg-neutral-950 rounded-xl mt-4" />}
+                    <div className="flex gap-2 mt-4"><a href={b.idCardUrl} download={b.idCardName || 'id-card'} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-amber-500 text-neutral-950 rounded-xl text-xs font-bold"><Download className="w-4 h-4"/>تحميل البطاقة</a><a href={b.idCardUrl} target="_blank" rel="noreferrer" className="px-4 py-3 bg-neutral-800 text-white rounded-xl"><Eye className="w-4 h-4"/></a></div>
+                  </div>
+                ))}
+                {safeBookings.filter((b:any)=>b.idCardUrl).length===0 && <div className="col-span-full bg-neutral-900 border border-neutral-800 rounded-2xl p-10 text-center text-neutral-500">لا توجد بطاقات تعريف مسجلة.</div>}
+              </div>
             </div>
           )}
            {activeTab === 'settings' && (
@@ -2415,17 +2441,21 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 <option value="other">أخرى</option>
               </select>
 
-              <input
-                placeholder="رابط صورة العمل"
-                value={portfolioModal.image || ''}
-                onChange={e =>
-                  setPortfolioModal({
-                    ...portfolioModal,
-                    image: e.target.value
-                  })
-                }
-                className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"
-              />
+              <div className="md:col-span-2 space-y-3">
+                <label className="flex items-center gap-3 w-full cursor-pointer bg-neutral-950 border border-dashed border-amber-500/40 rounded-xl px-4 py-4">
+                  <FileImage className="w-5 h-5 text-amber-400" />
+                  <div className="flex-1"><div className="text-sm text-white font-semibold">رفع صور من الحاسوب</div><div className="text-xs text-neutral-500">JPG / PNG / WEBP — عدة صور مسموحة</div></div>
+                  <input type="file" multiple accept="image/jpeg,image/png,image/webp" className="hidden" disabled={portfolioUploading} onChange={async e => {
+                    const files = Array.from(e.target.files || []); if (!files.length) return;
+                    try { setPortfolioUploading(true); const urls = await uploadPortfolioImages(files); setPortfolioModal((m:any) => ({...m, image: m?.image || urls[0] || '', images: [...(Array.isArray(m?.images) ? m.images : []), ...urls]})); }
+                    catch(error){ alert(error instanceof Error ? error.message : 'فشل رفع الصور.'); }
+                    finally { setPortfolioUploading(false); e.target.value=''; }
+                  }} />
+                </label>
+                {portfolioUploading && <div className="text-xs text-amber-400">جارٍ رفع الصور...</div>}
+                {Array.isArray(portfolioModal.images) && portfolioModal.images.length > 0 && <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">{portfolioModal.images.map((url:string,i:number)=><div key={url+i} className="relative aspect-square rounded-xl overflow-hidden"><img src={url} className="w-full h-full object-cover" /><button type="button" onClick={()=>{const images=portfolioModal.images.filter((_:string,n:number)=>n!==i);setPortfolioModal({...portfolioModal,images,image:images[0]||''})}} className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full"><X className="w-3 h-3"/></button></div>)}</div>}
+                <input placeholder="أو أدخل رابط الصورة يدويًا" value={portfolioModal.image || ''} onChange={e=>setPortfolioModal({...portfolioModal,image:e.target.value})} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+              </div>
 
               <textarea
                 placeholder="وصف العمل"
@@ -2489,7 +2519,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                     )
                   ) {
                     alert(
-                      'يرجى إدخال عنوان العمل ورابط الصورة على الأقل.'
+                      'يرجى إدخال عنوان العمل وصورة واحدة على الأقل.'
                     );
                     return;
                   }
