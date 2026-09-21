@@ -1128,77 +1128,44 @@ export const AppProvider: React.FC<{
   // PORTFOLIO - IMAGE UPLOAD
   // =========================================================
 
-  const uploadPortfolioImages = async (
-    files: File[]
-  ): Promise<string[]> => {
-    if (!Array.isArray(files) || files.length === 0) return [];
+  const uploadPortfolioImages = async (files: File[]): Promise<string[]> => {
+  if (!files.length) return [];
+  if (!auth.currentUser) throw new Error("انتهت جلسة الإدارة. أعد تسجيل الدخول.");
 
-    if (!auth.currentUser) {
-      throw new Error("انتهت جلسة الإدارة. أعد تسجيل الدخول ثم حاول رفع الصورة.");
-    }
+  const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+  const maxSize = 15 * 1024 * 1024;
 
-    const allowedTypes = [
-      "image/jpeg",
-      "image/jpg",
-      "image/png",
-      "image/webp",
-    ];
-    const maxSize = 15 * 1024 * 1024;
+  for (const file of files) {
+    if (!allowed.includes(file.type)) throw new Error("الصورة يجب أن تكون JPG أو PNG أو WEBP.");
+    if (file.size > maxSize) throw new Error("حجم الصورة يتجاوز 15MB.");
+  }
 
-    for (const file of files) {
-      if (!allowedTypes.includes(file.type)) {
-        throw new Error("الملف " + file.name + " ليس صورة مدعومة. استعمل JPG أو PNG أو WEBP.");
+  const uploadOne = (file: File) => new Promise<string>((resolve, reject) => {
+    const path = `portfolio/${Date.now()}_${Math.random().toString(36).slice(2)}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+    const task = uploadBytesResumable(ref(storage, path), file, { contentType: file.type });
+
+    const timeout = window.setTimeout(() => {
+      task.cancel();
+      reject(new Error("تعذر رفع الصورة. تحقق من Firebase Storage."));
+    }, 30000);
+
+    task.on("state_changed", undefined, error => {
+      clearTimeout(timeout);
+      reject(error);
+    }, async () => {
+      try {
+        const url = await getDownloadURL(task.snapshot.ref);
+        clearTimeout(timeout);
+        resolve(url);
+      } catch (error) {
+        clearTimeout(timeout);
+        reject(error);
       }
-      if (file.size > maxSize) {
-        throw new Error("الصورة " + file.name + " تتجاوز 15MB.");
-      }
-    }
+    });
+  });
 
-    const uploadOne = async (file: File): Promise<string> => {
-      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const path = "portfolio/" + Date.now() + "_" + Math.random().toString(36).slice(2) + "_" + safeName;
-      const storageRef = ref(storage, path);
-
-      const uploadPromise = uploadBytesResumable(storageRef, file, {
-        contentType: file.type,
-        cacheControl: "public,max-age=31536000",
-      });
-
-      return await new Promise<string>((resolve, reject) => {
-        let settled = false;
-        const timeout = window.setTimeout(() => {
-          if (settled) return;
-          settled = true;
-          uploadPromise.cancel();
-          reject(new Error("تعذر رفع الصورة خلال 45 ثانية. تحقق من Firebase Storage ثم حاول مرة أخرى."));
-        }, 45000);
-
-        uploadPromise.on(
-          "state_changed",
-          () => {},
-          (error) => {
-            if (settled) return;
-            settled = true;
-            window.clearTimeout(timeout);
-            reject(new Error("فشل رفع الصورة: " + (error?.message || "خطأ Firebase Storage")));
-          },
-          async () => {
-            try {
-              const url = await getDownloadURL(uploadPromise.snapshot.ref);
-              if (settled) return;
-              settled = true;
-              window.clearTimeout(timeout);
-              resolve(url);
-            } catch (error: any) {
-              if (settled) return;
-              settled = true;
-              window.clearTimeout(timeout);
-              reject(new Error("تم رفع الصورة لكن تعذر الحصول على الرابط: " + (error?.message || "خطأ غير معروف")));
-            }
-          }
-        );
-      });
-    };
+  return Promise.all(files.map(uploadOne));
+};
 
     return Promise.all(files.map(uploadOne));
   };
