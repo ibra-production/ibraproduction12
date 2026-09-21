@@ -22,11 +22,7 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 
-import {
-  ref,
-  uploadBytesResumable,
-  getDownloadURL,
-} from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 import {
   SiteSettings,
