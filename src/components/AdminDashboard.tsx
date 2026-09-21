@@ -85,6 +85,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
     | 'messages'
     | 'analytics'
     | 'calendar'
+    | 'idcards'
     | 'settings'
     | 'logs'
   >('dash');
