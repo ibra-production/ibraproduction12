@@ -2204,6 +2204,7 @@ export const AppProvider: React.FC<{
 
         addPortfolioItem,
         updatePortfolioItem,
+        uploadPortfolioImages,
         deletePortfolioItem,
 
         addVideoItem,
