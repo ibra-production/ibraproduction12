@@ -38,9 +38,10 @@ export const TestimonialsSection: React.FC = () => {
             return (
               <div
                 key={t.id}
-                className="glass-card rounded-3xl p-8 border border-neutral-800 hover:border-amber-500/40 transition-all duration-500 flex flex-col justify-between relative shadow-xl group"
+                className="glass-card rounded-3xl p-8 border border-neutral-800 hover:border-amber-500/60 transition-all duration-700 hover:-translate-y-2 hover:shadow-2xl flex flex-col justify-between relative shadow-xl group"
               >
-                <div className="absolute top-6 right-6 text-amber-500/20 group-hover:text-amber-500/40 transition-colors">
+                <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full bg-amber-500/5 blur-2xl group-hover:bg-amber-500/15 transition-all duration-700" />
+                <div className="absolute top-6 right-6 text-amber-500/20 group-hover:text-amber-400/60 group-hover:scale-110 transition-all duration-500">
                   <Quote className="w-10 h-10" />
                 </div>
 
@@ -48,7 +49,7 @@ export const TestimonialsSection: React.FC = () => {
                   {/* Star Rating */}
                   <div className="flex items-center gap-1 mb-6">
                     {[...Array(t.rating)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400" />
+                      <Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400 transition-transform duration-300 group-hover:scale-110" />
                     ))}
                   </div>
 
