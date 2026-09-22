@@ -201,7 +201,9 @@ export interface AdminUser {
 export interface WorkflowTimelineItem { id: string; title: string; status: 'pending' | 'done'; date?: string; note?: string; }
 export interface WorkflowChecklistItem { id: string; title: string; completed: boolean; dueDate?: string; assignee?: string; }
 export interface WorkflowPayment { id: string; title: string; amount: number; paidAmount: number; dueDate?: string; status: 'pending' | 'paid'; note?: string; }
-export interface BookingWorkflow { bookingId: string; portalCode?: string; timeline: WorkflowTimelineItem[]; checklist: WorkflowChecklistItem[]; payments: WorkflowPayment[]; automations: { onStatusChange: boolean; onPaymentDue: boolean; onEventReminder: boolean; }; updatedAt: string; }
+export interface WorkflowQuestion { id: string; question: string; answer: string; required?: boolean; }
+export interface WorkflowContract { title: string; body: string; signatureName?: string; signedAt?: string; }
+export interface BookingWorkflow { bookingId: string; portalCode?: string; timeline: WorkflowTimelineItem[]; checklist: WorkflowChecklistItem[]; payments: WorkflowPayment[]; automations: { onStatusChange: boolean; onPaymentDue: boolean; onEventReminder: boolean; }; questionnaire?: WorkflowQuestion[]; contract?: WorkflowContract; updatedAt: string; }
 
 export interface ContactMessage {
   id: string;
