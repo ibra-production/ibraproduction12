@@ -21,6 +21,10 @@ export const BookingWorkflowPanel: React.FC<Props> = ({ booking, onClose }) => {
   const [newTimeline, setNewTimeline] = useState('');
   const [newTask, setNewTask] = useState('');
   const [newPayment, setNewPayment] = useState({ title: '', amount: '', dueDate: '' });
+  const [newQuestion, setNewQuestion] = useState('');
+  const [contractTitle, setContractTitle] = useState('عقد خدمات Ibra Production');
+  const [contractBody, setContractBody] = useState('تم الاتفاق بين Ibra Production والعميل على تنفيذ الخدمات الموضحة في الحجز وفق البيانات والمواعيد المعتمدة.');
+  const [signatureName, setSignatureName] = useState('');
 
   useEffect(() => {
     const ref = doc(db, 'bookingWorkflows', booking.id);
@@ -33,6 +37,9 @@ export const BookingWorkflowPanel: React.FC<Props> = ({ booking, onClose }) => {
       }
     });
   }, [booking.id]);
+
+  const questionnaire = data.questionnaire || [];
+  const contract = data.contract || { title: contractTitle, body: contractBody };
 
   const totals = useMemo(() => {
     const paid = data.payments.reduce((s, p) => s + Number(p.paidAmount || 0), 0);
@@ -48,7 +55,7 @@ export const BookingWorkflowPanel: React.FC<Props> = ({ booking, onClose }) => {
     setSaving(true);
     try {
       const portalCode = ensurePortalCode();
-      const next = { ...data, bookingId: booking.id, portalCode, updatedAt: new Date().toISOString() };
+      const next = { ...data, bookingId: booking.id, portalCode, questionnaire, contract: { title: contractTitle, body: contractBody, signatureName, signedAt: signatureName.trim() ? new Date().toISOString() : undefined }, updatedAt: new Date().toISOString() };
       await setDoc(doc(db, 'bookingWorkflows', booking.id), { ...next, updatedAt: Timestamp.now() }, { merge: true });
       await setDoc(doc(db, 'clientPortals', portalCode), {
         bookingId: booking.id,
@@ -163,6 +170,20 @@ export const BookingWorkflowPanel: React.FC<Props> = ({ booking, onClose }) => {
               <div className="bg-neutral-950 rounded-xl p-3"><div className="text-neutral-500">المدفوع</div><b>{totals.paid.toLocaleString()} DA</b></div>
               <div className="bg-neutral-950 rounded-xl p-3"><div className="text-neutral-500">المتبقي</div><b>{totals.remaining.toLocaleString()} DA</b></div>
             </div>
+          </section>
+
+          <section className="lg:col-span-2 bg-neutral-900 border border-neutral-800 rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-4"><ListChecks className="w-5 h-5 text-amber-400"/><h3 className="font-bold">Questionnaire</h3></div>
+            <div className="space-y-2">{questionnaire.map((q,i)=><div key={q.id} className="flex gap-2"><input value={q.question} onChange={e=>setData(d=>({...d,questionnaire:(d.questionnaire||[]).map((x,n)=>n===i?{...x,question:e.target.value}:x)}))} className="flex-1 bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2"/><input value={q.answer} onChange={e=>setData(d=>({...d,questionnaire:(d.questionnaire||[]).map((x,n)=>n===i?{...x,answer:e.target.value}:x)}))} placeholder="إجابة العميل" className="flex-1 bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2"/><button onClick={()=>setData(d=>({...d,questionnaire:(d.questionnaire||[]).filter(x=>x.id!==q.id)}))} className="text-red-400"><Trash2 className="w-4 h-4"/></button></div>)}</div>
+            <div className="flex gap-2 mt-4"><input value={newQuestion} onChange={e=>setNewQuestion(e.target.value)} placeholder="سؤال جديد" className="flex-1 bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2"/><button onClick={()=>{if(!newQuestion.trim())return;setData(d=>({...d,questionnaire:[...(d.questionnaire||[]),{id:crypto.randomUUID(),question:newQuestion.trim(),answer:''}]}));setNewQuestion('')}} className="px-4 rounded-xl bg-amber-500 text-black"><Plus className="w-4 h-4"/></button></div>
+          </section>
+
+          <section className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-4"><Check className="w-5 h-5 text-amber-400"/><h3 className="font-bold">Contract + Signature</h3></div>
+            <input value={contractTitle} onChange={e=>setContractTitle(e.target.value)} placeholder="عنوان العقد" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 mb-2"/>
+            <textarea value={contractBody} onChange={e=>setContractBody(e.target.value)} rows={5} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2"/>
+            <input value={signatureName} onChange={e=>setSignatureName(e.target.value)} placeholder="اسم التوقيع الإلكتروني" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 mt-2"/>
+            <div className="text-xs text-neutral-500 mt-2">{signatureName.trim() ? 'تم إدخال توقيع إلكتروني نصي وسيُحفظ مع وقت التوقيع.' : 'لم يتم توقيع العقد بعد.'}</div>
           </section>
 
           <section className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4">
