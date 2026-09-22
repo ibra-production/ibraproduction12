@@ -3,6 +3,7 @@ import { auth } from '../firebase';
 import { enablePushNotifications } from "../pushNotifications";
 import { useApp } from '../context/AppContext';
 import { TeamManagement } from './TeamManagement';
+import { BookingWorkflowPanel } from './BookingWorkflowPanel';
 import {
   LayoutDashboard,
   Calendar,
@@ -93,6 +94,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
     | 'team'
     | 'settings'
     | 'logs'
+    | 'workflow'
   >('dash');
 
   const [adminNotes, setAdminNotes] = useState<string>(() =>
@@ -118,6 +120,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
   const [invoiceModalData, setInvoiceModalData] = useState<any | null>(null);
   const [bookingEditModal, setBookingEditModal] = useState<any | null>(null);
   const [bookingEditSaving, setBookingEditSaving] = useState(false);
+  const [workflowBooking, setWorkflowBooking] = useState<any | null>(null);
   const [bookingSearch, setBookingSearch] = useState('');
   const [bookingStatusFilter, setBookingStatusFilter] = useState('all');
   const [bookingWilayaFilter, setBookingWilayaFilter] = useState('all');
@@ -438,6 +441,11 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               icon: <Users className="w-4 h-4" />
             },
             {
+              id: 'workflow',
+              label: 'سير عمل الحجوزات',
+              icon: <CheckSquare className="w-4 h-4" />
+            },
+            {
               id: 'settings',
               label: 'إعدادات الموقع',
               icon: <Settings className="w-4 h-4" />
@@ -484,6 +492,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               <option value="offers">العروض الخاصة</option>
               <option value="idcards">بطاقات التعريف</option>
               <option value="team">إدارة فريق العمل</option>
+              <option value="workflow">سير عمل الحجوزات</option>
               <option value="settings">إعدادات الموقع</option>
               <option value="logs">سجل العمليات</option>
             </select>
@@ -798,6 +807,13 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                                 >
                                   <Edit className="w-4 h-4" />
                                 </button>
+                                <button
+                                  onClick={() => setWorkflowBooking(b)}
+                                  className="p-2 bg-neutral-800 text-amber-400 rounded-lg"
+                                  title="سير عمل الحجز"
+                                >
+                                  <CheckSquare className="w-4 h-4" />
+                                </button>
 
                                 <a
                                   href={b.phone ? `tel:${b.phone}` : '#'}
@@ -834,7 +850,26 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
             </div>
           )}
-           {activeTab === 'analytics' && (
+           {activeTab === 'workflow' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold text-white">سير عمل الحجوزات</h2>
+                <p className="text-xs text-neutral-400 mt-2">اختر حجزاً لإدارة Timeline و Checklist و Payment Schedule و Automation.</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {safeBookings.filter((b:any)=>b.status!=='cancelled').map((b:any)=>(
+                  <button key={b.id} onClick={()=>setWorkflowBooking(b)} className="text-right bg-neutral-900 border border-neutral-800 rounded-2xl p-5 hover:border-amber-500/40 transition-all">
+                    <div className="font-bold text-white">{b.groomName || 'بدون اسم'} {b.brideName ? '× '+b.brideName : ''}</div>
+                    <div className="text-xs text-neutral-500 mt-2">#{b.id} • {b.eventDate || 'بدون تاريخ'}</div>
+                    <div className="text-xs text-amber-400 mt-3">فتح سير العمل ←</div>
+                  </button>
+                ))}
+                {!safeBookings.filter((b:any)=>b.status!=='cancelled').length && <div className="text-neutral-500">لا توجد حجوزات نشطة.</div>}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'analytics' && (
             <div className="space-y-6">
 
               <div>
@@ -2904,6 +2939,8 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
         </div>
       )}
+
+      {workflowBooking && <BookingWorkflowPanel booking={workflowBooking} onClose={() => setWorkflowBooking(null)} />}
 
       {portfolioModal && (
         <div className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm flex items-center justify-center p-5 overflow-y-auto">
