@@ -34,6 +34,7 @@ import {
   BookingItem,
   OfferItem,
   AdminUser,
+  TeamMember,
   Language,
   ActivityLog,
   ContactMessage,
@@ -67,6 +68,11 @@ interface AppContextType {
   offers: OfferItem[];
   activityLogs: ActivityLog[];
   users: AdminUser[];
+  teamMembers: TeamMember[];
+
+  addTeamMember: (member: Omit<TeamMember, 'id'>) => Promise<void>;
+  updateTeamMember: (id: string, member: Partial<TeamMember>) => Promise<void>;
+  deleteTeamMember: (id: string) => Promise<void>;
 
   currentUser: AdminUser | null;
 
@@ -279,6 +285,8 @@ export const AppProvider: React.FC<{
     useState<AdminUser[]>(
       initialUsers
     );
+
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
 
   // =========================================================
   // Firestore Data
@@ -626,6 +634,54 @@ export const AppProvider: React.FC<{
       unsubscribe();
     };
   }, []);
+
+  // =========================================================
+  // FIRESTORE REALTIME - TEAM
+  // =========================================================
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      collection(db, "teamMembers"),
+      (snapshot) => {
+        const items = snapshot.docs.map((teamDoc) => ({
+          id: teamDoc.id,
+          ...teamDoc.data(),
+        }) as TeamMember);
+
+        items.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        setTeamMembers(items);
+      },
+      (error) => {
+        console.error("❌ Firestore team listener error:", error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
+
+  // =========================================================
+  // TEAM - CRUD
+  // =========================================================
+
+  const addTeamMember = async (member: Omit<TeamMember, "id">): Promise<void> => {
+    const id = "team_" + Date.now();
+    const item: TeamMember = { ...member, id };
+    await setDoc(doc(db, "teamMembers", id), item);
+    logActivity(`تمت إضافة عضو للفريق: ${member.fullName}`, "create");
+  };
+
+  const updateTeamMember = async (id: string, member: Partial<TeamMember>): Promise<void> => {
+    const current = teamMembers.find((item) => item.id === id);
+    if (!current) throw new Error("Team member not found");
+    const updated = { ...current, ...member, id };
+    await setDoc(doc(db, "teamMembers", id), updated);
+    logActivity(`تم تحديث ملف عضو الفريق: ${id}`, "update");
+  };
+
+  const deleteTeamMember = async (id: string): Promise<void> => {
+    await deleteDoc(doc(db, "teamMembers", id));
+    logActivity(`تم حذف عضو الفريق: ${id}`, "delete");
+  };
 
   // =========================================================
   // FIRESTORE REALTIME - SERVICES
@@ -2212,6 +2268,10 @@ export const AppProvider: React.FC<{
         offers,
         activityLogs,
         users,
+        teamMembers,
+        addTeamMember,
+        updateTeamMember,
+        deleteTeamMember,
 
         currentUser,
         login,
