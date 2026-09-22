@@ -523,3 +523,155 @@ body { font-family:'Alexandria','Plus Jakarta Sans',sans-serif; }
   .ibra-quick-book { grid-column:1/-1; }
   .ibra-contact-shortcut { right:14px; bottom:14px; }
 }
+
+/* =========================================================
+   IBRA 2026 — COMPLETE INTERNAL SECTIONS REDESIGN
+   ========================================================= */
+section[id="about"], section[id="services"], section[id="packages"],
+section[id="portfolio"], section[id="videos"], section[id="testimonials"],
+section[id="contact"], footer {
+  scroll-margin-top: 90px;
+}
+section[id="about"], section[id="packages"], section[id="testimonials"] {
+  background:
+    radial-gradient(circle at 10% 15%, rgba(196,122,82,.07), transparent 28rem),
+    linear-gradient(180deg, #130c11 0%, #1a1016 50%, #110b0f 100%) !important;
+}
+section[id="services"], section[id="portfolio"], section[id="videos"], section[id="contact"] {
+  background:
+    linear-gradient(180deg, #0f090d 0%, #160d13 100%) !important;
+}
+section[id="about"] > div:first-child,
+section[id="services"] > div:first-child,
+section[id="packages"] > div:first-child,
+section[id="portfolio"] > div:first-child,
+section[id="videos"] > div:first-child,
+section[id="testimonials"] > div:first-child,
+section[id="contact"] > div:first-child {
+  position:relative;
+}
+section[id="about"] > div:first-child::before,
+section[id="services"] > div:first-child::before,
+section[id="packages"] > div:first-child::before,
+section[id="portfolio"] > div:first-child::before,
+section[id="videos"] > div:first-child::before,
+section[id="testimonials"] > div:first-child::before,
+section[id="contact"] > div:first-child::before {
+  content:"";
+  position:absolute;
+  left:5%;
+  right:5%;
+  top:0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,var(--ibra-line),transparent);
+}
+section[id="about"] h2, section[id="services"] h2, section[id="packages"] h2,
+section[id="portfolio"] h2, section[id="videos"] h2, section[id="testimonials"] h2,
+section[id="contact"] h2 {
+  font-family:'Cinzel','Alexandria',serif !important;
+  letter-spacing:-.035em;
+}
+section[id="about"] .glass-panel,
+section[id="contact"] .glass-card,
+section[id="packages"] .glass-panel,
+section[id="testimonials"] .glass-card {
+  background:linear-gradient(145deg,rgba(46,26,37,.82),rgba(18,10,15,.86)) !important;
+  border:1px solid var(--ibra-line) !important;
+  box-shadow:0 20px 60px rgba(0,0,0,.16);
+}
+section[id="about"] img {
+  filter:saturate(.82) contrast(1.05);
+}
+section[id="about"] img:hover {
+  filter:saturate(1) contrast(1.06);
+}
+section[id="services"] .glass-card,
+section[id="portfolio"] .group,
+section[id="videos"] .group {
+  border-color:rgba(224,162,125,.12) !important;
+  box-shadow:0 18px 55px rgba(0,0,0,.18);
+  transform-style:preserve-3d;
+}
+section[id="services"] .glass-card:hover,
+section[id="portfolio"] .group:hover,
+section[id="videos"] .group:hover {
+  border-color:rgba(224,162,125,.48) !important;
+  box-shadow:0 28px 75px rgba(143,63,89,.22);
+}
+section[id="packages"] .glass-panel {
+  position:relative;
+  isolation:isolate;
+}
+section[id="packages"] .glass-panel::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(120deg,transparent 25%,rgba(255,255,255,.07) 48%,transparent 70%);
+  transform:translateX(-120%);
+  transition:transform .9s cubic-bezier(.22,1,.36,1);
+}
+section[id="packages"] .glass-panel:hover::after { transform:translateX(120%); }
+section[id="portfolio"] img,
+section[id="videos"] img {
+  filter:saturate(.84);
+  transition:filter .6s ease,transform .8s cubic-bezier(.22,1,.36,1);
+}
+section[id="portfolio"] .group:hover img,
+section[id="videos"] .group:hover img { filter:saturate(1.05); }
+section[id="testimonials"] .glass-card {
+  min-height:310px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+section[id="contact"] input,
+section[id="contact"] textarea,
+section[id="contact"] select {
+  background:rgba(10,6,9,.62) !important;
+  border-color:rgba(224,162,125,.14) !important;
+  border-radius:16px !important;
+}
+section[id="contact"] input:focus,
+section[id="contact"] textarea:focus,
+section[id="contact"] select:focus {
+  border-color:rgba(224,162,125,.65) !important;
+  box-shadow:0 0 0 4px rgba(196,122,82,.08),0 16px 40px rgba(0,0,0,.22) !important;
+}
+footer {
+  background:
+    radial-gradient(circle at 50% 0%,rgba(196,122,82,.09),transparent 28rem),
+    #0b070a !important;
+  border-top:1px solid rgba(224,162,125,.18) !important;
+}
+footer a { transition:color .3s ease,transform .3s ease; }
+footer a:hover { color:var(--ibra-copper-light) !important; transform:translateX(2px); }
+
+/* Scroll progress + subtle ambient light */
+body::marker { display:none; }
+@supports (animation-timeline: scroll()) {
+  body::before {
+    border-top:2px solid var(--ibra-copper);
+    transform-origin:left center;
+    animation:ibraScrollProgress linear;
+    animation-timeline:scroll(root);
+  }
+}
+@keyframes ibraScrollProgress { from{transform:scaleX(0)} to{transform:scaleX(1)} }
+
+/* Premium section separators */
+.ibra-section-title { position:relative; }
+.ibra-section-title::after {
+  content:"";
+  display:block;
+  width:58px;
+  height:2px;
+  margin:18px auto 0;
+  background:linear-gradient(90deg,var(--ibra-copper),var(--ibra-wine));
+}
+
+/* Accessibility / performance */
+@media (prefers-reduced-motion: reduce) {
+  .ibra-hero-slide { transition:none !important; transform:none !important; }
+  section[id] *, footer * { scroll-behavior:auto !important; }
+}
