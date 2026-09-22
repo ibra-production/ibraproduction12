@@ -22,7 +22,6 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 
-import * as storageApi from "firebase/storage";
 
 import {
   SiteSettings,
@@ -46,7 +45,7 @@ import {
   initialUsers,
 } from "../data/initialData";
 
-import { db, auth, storage } from "../firebase";
+import { db, auth } from "../firebase";
 
 interface AppContextType {
   language: Language;
@@ -1126,37 +1125,47 @@ export const AppProvider: React.FC<{
 
   const uploadPortfolioImages = async (files: File[]): Promise<string[]> => {
     if (!files.length) return [];
-    if (!auth.currentUser) throw new Error("انتهت جلسة الإدارة. أعد تسجيل الدخول.");
+    if (!auth.currentUser) {
+      throw new Error("انتهت جلسة الإدارة. أعد تسجيل الدخول.");
+    }
 
     const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
     const maxSize = 15 * 1024 * 1024;
-
-    for (const file of files) {
-      if (!allowed.includes(file.type)) throw new Error("الصورة يجب أن تكون JPG أو PNG أو WEBP.");
-      if (file.size > maxSize) throw new Error("حجم الصورة يتجاوز 15MB.");
-    }
+    const workerUrl =
+      "https://yellow-bar-9020ibra-id-card-upload.bahibarhouma15.workers.dev";
 
     const uploadOne = async (file: File): Promise<string> => {
-      const storageRef = storageApi.ref(
-        storage,
-        "portfolio/" + Date.now() + "_" + Math.random().toString(36).slice(2) + "_" + file.name.replace(/[^a-zA-Z0-9._-]/g, "_")
-      );
+      if (!allowed.includes(file.type)) {
+        throw new Error("الصورة يجب أن تكون JPG أو PNG أو WEBP.");
+      }
 
-      const operation = (async () => {
-        await storageApi.uploadBytes(storageRef, file, {
-          contentType: file.type,
-        });
-        return await storageApi.getDownloadURL(storageRef);
-      })();
+      if (file.size > maxSize) {
+        throw new Error("حجم الصورة يتجاوز 15MB.");
+      }
 
-      const timeout = new Promise<never>((_, reject) => {
-        window.setTimeout(
-          () => reject(new Error("انتهت مهلة رفع الصورة أو جلب رابطها. تحقق من Firebase Storage.")),
-          30000
-        );
+      const token = await auth.currentUser!.getIdToken();
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("type", "portfolio");
+
+      const response = await fetch(workerUrl, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
       });
 
-      return await Promise.race([operation, timeout]);
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok || !data?.success || !data?.key) {
+        throw new Error(
+          data?.message || "فشل رفع الصورة إلى التخزين."
+        );
+      }
+
+      return `${workerUrl}/?key=${encodeURIComponent(data.key)}`;
     };
 
     return Promise.all(files.map(uploadOne));
@@ -1314,18 +1323,53 @@ export const AppProvider: React.FC<{
     file: File
   ): Promise<string> => {
     if (!file) throw new Error("لم يتم اختيار فيديو.");
-    const allowedTypes = ["video/mp4", "video/webm", "video/quicktime"];
+
+    if (!auth.currentUser) {
+      throw new Error("انتهت جلسة الإدارة. أعد تسجيل الدخول.");
+    }
+
+    const allowedTypes = [
+      "video/mp4",
+      "video/webm",
+      "video/quicktime",
+      "video/x-msvideo",
+      "video/x-matroska",
+    ];
+
     if (!allowedTypes.includes(file.type)) {
       throw new Error("صيغة الفيديو غير مدعومة. استعمل MP4 أو WEBM أو MOV.");
     }
+
     if (file.size > 500 * 1024 * 1024) {
       throw new Error("حجم الفيديو يتجاوز 500MB.");
     }
-    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const path = "videos/" + Date.now() + "_" + Math.random().toString(36).slice(2) + "_" + safeName;
-    const storageRef = ref(storage, path);
-    await uploadBytes(storageRef, file, { contentType: file.type });
-    return await getDownloadURL(storageRef);
+
+    const workerUrl =
+      "https://yellow-bar-9020ibra-id-card-upload.bahibarhouma15.workers.dev";
+
+    const token = await auth.currentUser.getIdToken();
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("type", "video");
+
+    const response = await fetch(workerUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok || !data?.success || !data?.key) {
+      throw new Error(
+        data?.message || "فشل رفع الفيديو إلى التخزين."
+      );
+    }
+
+    return `${workerUrl}/?key=${encodeURIComponent(data.key)}`;
   };
 
   // =========================================================
