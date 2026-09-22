@@ -16,18 +16,25 @@ export const TeamManagement: React.FC = () => {
   const [form, setForm] = useState<Omit<TeamMember, 'id'>>(emptyMember);
   const [skillsText, setSkillsText] = useState('');
   const [search, setSearch] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
 
   const filtered = useMemo(() => teamMembers.filter(m =>
     [m.fullName, m.role, m.phone, m.email].join(' ').toLowerCase().includes(search.toLowerCase())
   ), [teamMembers, search]);
 
   const openNew = () => {
-    setEditing(null); setForm({ ...emptyMember, order: teamMembers.length + 1 }); setSkillsText('');
+    setEditing(null);
+    setForm({ ...emptyMember, order: teamMembers.length + 1 });
+    setSkillsText('');
+    setModalOpen(true);
   };
   const openEdit = (m: TeamMember) => {
-    setEditing(m); setForm({ ...m }); setSkillsText((m.skills || []).join(', '));
+    setEditing(m);
+    setForm({ ...m });
+    setSkillsText((m.skills || []).join(', '));
+    setModalOpen(true);
   };
-  const close = () => { setEditing(null); setForm(emptyMember); setSkillsText(''); };
+  const close = () => { setEditing(null); setForm({ ...emptyMember }); setSkillsText(''); setModalOpen(false); };
 
   const save = async () => {
     if (!form.fullName.trim() || !form.role.trim() || !form.phone.trim()) {
@@ -62,7 +69,7 @@ export const TeamManagement: React.FC = () => {
       </div>
     </article>)}</div>}
 
-    {editing !== null || form.fullName !== '' ? <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+    {modalOpen ? <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
       <div className="w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-3xl bg-neutral-950 border border-amber-500/20 shadow-2xl p-6 sm:p-8">
         <div className="flex items-center justify-between mb-6"><div><h3 className="text-2xl font-bold text-white">{editing?'تعديل ملف عضو':'إضافة عضو للفريق'}</h3><p className="text-sm text-neutral-500 mt-1">الملف الكامل للعضو</p></div><button onClick={close} className="p-2 rounded-full bg-neutral-900 text-neutral-400 hover:text-white"><X/></button></div>
         <div className="grid md:grid-cols-2 gap-4">
