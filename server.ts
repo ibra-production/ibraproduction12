@@ -67,15 +67,6 @@ app.post("/api/automation/run", async (req, res) => {
   }
 
   try {
-    
-      const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
-      if (!serviceAccountJson) {
-        return res.status(500).json({ success: false, error: "Firebase service account is not configured." });
-      }
-
-      initializeApp({ credential: cert(JSON.parse(serviceAccountJson)) });
-    }
-
     if (!getApps().length) {
       const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
       if (!serviceAccountJson) {
@@ -97,8 +88,6 @@ app.post("/api/automation/run", async (req, res) => {
       const data = item.data();
 
       try {
-        // WhatsApp actions are intentionally kept as queue items.
-        // Actual WhatsApp Business API sending requires provider credentials.
         if (data.type === "whatsapp_manual") {
           await item.ref.update({
             status: "ready",
@@ -109,7 +98,6 @@ app.post("/api/automation/run", async (req, res) => {
           continue;
         }
 
-        // SMS delivery uses Twilio only when explicitly configured.
         if (data.type === "status_change" || data.type === "event_reminder" || data.type === "payment_due") {
           const accountSid = process.env.TWILIO_ACCOUNT_SID;
           const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -124,7 +112,6 @@ app.post("/api/automation/run", async (req, res) => {
             continue;
           }
 
-          const client = twilio(accountSid, authToken);
           const to = String(data.phone || "").trim();
           const body = String(data.message || "").trim();
 
@@ -138,11 +125,8 @@ app.post("/api/automation/run", async (req, res) => {
             continue;
           }
 
-          const response = await client.messages.create({
-            body,
-            from: fromNumber,
-            to,
-          });
+          const client = twilio(accountSid, authToken);
+          const response = await client.messages.create({ body, from: fromNumber, to });
 
           await item.ref.update({
             status: "sent",
