@@ -33,8 +33,14 @@ export const BookingWorkflowPanel: React.FC<Props> = ({ booking, onClose }) => {
       if (snap.exists()) {
         const raw = snap.data() as Partial<BookingWorkflow>;
         setData({ ...emptyWorkflow(booking.id), ...raw, bookingId: booking.id });
+        setContractTitle(raw.contract?.title || 'عقد خدمات Ibra Production');
+        setContractBody(raw.contract?.body || 'تم الاتفاق بين Ibra Production والعميل على تنفيذ الخدمات الموضحة في الحجز وفق البيانات والمواعيد المعتمدة.');
+        setSignatureName(raw.contract?.signatureName || '');
       } else {
         setData(emptyWorkflow(booking.id));
+        setContractTitle('عقد خدمات Ibra Production');
+        setContractBody('تم الاتفاق بين Ibra Production والعميل على تنفيذ الخدمات الموضحة في الحجز وفق البيانات والمواعيد المعتمدة.');
+        setSignatureName('');
       }
     });
   }, [booking.id]);
