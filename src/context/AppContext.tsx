@@ -2071,15 +2071,16 @@ export const AppProvider: React.FC<{
 
       await updateDoc(doc(db, "bookings", id), cleanBooking);
 
-      const portalEventDates = Array.isArray(cleanBooking.eventDates)
-        ? cleanBooking.eventDates
-        : cleanBooking.eventDate
-          ? [cleanBooking.eventDate]
-          : undefined;
+      const previous = bookings.find(item => item.id === id);
+      const hasClientChanges = ["groomName", "brideName", "phone", "email"].some(key => cleanBooking[key] !== undefined);
+      const hasEventChanges = ["eventDates", "eventDate", "eventTime", "venue", "wilaya", "eventType", "serviceId", "packageId"].some(key => cleanBooking[key] !== undefined);
       const portalPatch: Record<string, unknown> = {};
-      if (cleanBooking.status !== undefined) portalPatch.status = cleanBooking.status;
-      if (cleanBooking.groomName !== undefined || cleanBooking.brideName !== undefined || cleanBooking.phone !== undefined || cleanBooking.email !== undefined) {
-        const previous = bookings.find(item => item.id === id);
+
+      if (cleanBooking.status !== undefined) {
+        portalPatch.status = cleanBooking.status;
+      }
+
+      if (hasClientChanges) {
         portalPatch.client = {
           groomName: cleanBooking.groomName ?? previous?.groomName ?? "",
           brideName: cleanBooking.brideName ?? previous?.brideName ?? "",
@@ -2087,16 +2088,32 @@ export const AppProvider: React.FC<{
           email: cleanBooking.email ?? previous?.email ?? ""
         };
       }
-      if (portalEventDates) portalPatch.event = {
-        eventDates: portalEventDates,
-        eventTime: cleanBooking.eventTime || "",
-        venue: cleanBooking.venue || "",
-        wilaya: cleanBooking.wilaya || "",
-        eventType: cleanBooking.eventType || "",
-        serviceId: cleanBooking.serviceId || "",
-        packageId: cleanBooking.packageId || ""
-      };
-      if (Object.keys(portalPatch).length) await syncClientPortal(id, portalPatch);
+
+      if (hasEventChanges) {
+        const eventDates = Array.isArray(cleanBooking.eventDates)
+          ? cleanBooking.eventDates
+          : cleanBooking.eventDate
+            ? [cleanBooking.eventDate]
+            : previous?.eventDates?.length
+              ? previous.eventDates
+              : previous?.eventDate
+                ? [previous.eventDate]
+                : [];
+
+        portalPatch.event = {
+          eventDates,
+          eventTime: cleanBooking.eventTime ?? previous?.eventTime ?? "",
+          venue: cleanBooking.venue ?? previous?.venue ?? "",
+          wilaya: cleanBooking.wilaya ?? previous?.wilaya ?? "",
+          eventType: cleanBooking.eventType ?? previous?.eventType ?? "",
+          serviceId: cleanBooking.serviceId ?? previous?.serviceId ?? "",
+          packageId: cleanBooking.packageId ?? previous?.packageId ?? ""
+        };
+      }
+
+      if (Object.keys(portalPatch).length) {
+        await syncClientPortal(id, portalPatch);
+      }
 
       logActivity(
         "تم تعديل بيانات الحجز ID: " + id,
