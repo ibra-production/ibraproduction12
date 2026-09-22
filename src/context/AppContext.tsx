@@ -1752,6 +1752,111 @@ export const AppProvider: React.FC<{
   };
 
   // =========================================================
+  // AUTOMATION ENGINE
+  // =========================================================
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const unsubscribe = onSnapshot(
+      collection(db, "bookingWorkflows"),
+      async (snapshot) => {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        for (const workflowDoc of snapshot.docs) {
+          const workflow = workflowDoc.data() as any;
+          const booking = bookings.find((item) => item.id === workflow.bookingId);
+          if (!booking || booking.status === "cancelled") continue;
+
+          const dates = Array.isArray(booking.eventDates) && booking.eventDates.length
+            ? booking.eventDates
+            : booking.eventDate
+              ? [booking.eventDate]
+              : [];
+
+          if (workflow.automations?.onEventReminder) {
+            for (const eventDate of dates) {
+              const event = new Date(eventDate + "T00:00:00");
+              if (Number.isNaN(event.getTime())) continue;
+
+              const diffDays = Math.round(
+                (event.getTime() - today.getTime()) / 86400000
+              );
+
+              if ([7, 3, 1, 0].includes(diffDays)) {
+                const queueId = `event_reminder_${workflow.bookingId}_${eventDate}_${diffDays}`;
+                await setDoc(
+                  doc(db, "automationQueue", queueId),
+                  {
+                    bookingId: workflow.bookingId,
+                    type: "event_reminder",
+                    action: "reminder",
+                    daysBefore: diffDays,
+                    phone: booking.phone || "",
+                    groomName: booking.groomName || "",
+                    eventDate,
+                    eventTime: booking.eventTime || "",
+                    venue: booking.venue || "",
+                    message: diffDays === 0
+                      ? `اليوم موعد مناسبتكم مع Ibra Production بتاريخ ${eventDate} على الساعة ${booking.eventTime || "—"} في ${booking.venue || "—"}.`
+                      : `تذكير من Ibra Production: تبقى ${diffDays} أيام على مناسبتكم بتاريخ ${eventDate} على الساعة ${booking.eventTime || "—"}.`,
+                    createdAt: serverTimestamp(),
+                    status: "queued"
+                  },
+                  { merge: true }
+                );
+              }
+            }
+          }
+
+          if (workflow.automations?.onPaymentDue && Array.isArray(workflow.payments)) {
+            for (const payment of workflow.payments) {
+              if (payment.status === "paid" || !payment.dueDate) continue;
+              const due = new Date(payment.dueDate + "T00:00:00");
+              if (Number.isNaN(due.getTime())) continue;
+
+              const diffDays = Math.round(
+                (due.getTime() - today.getTime()) / 86400000
+              );
+
+              if ([3, 1, 0, -1].includes(diffDays)) {
+                const queueId = `payment_due_${workflow.bookingId}_${payment.id}_${payment.dueDate}`;
+                await setDoc(
+                  doc(db, "automationQueue", queueId),
+                  {
+                    bookingId: workflow.bookingId,
+                    type: "payment_due",
+                    action: "payment",
+                    phone: booking.phone || "",
+                    groomName: booking.groomName || "",
+                    paymentId: payment.id,
+                    paymentTitle: payment.title || "دفعة",
+                    amount: Number(payment.amount || 0),
+                    paidAmount: Number(payment.paidAmount || 0),
+                    dueDate: payment.dueDate,
+                    daysUntilDue: diffDays,
+                    message: diffDays < 0
+                      ? `تنبيه من Ibra Production: الدفعة "${payment.title || "دفعة"}" مستحقة منذ ${Math.abs(diffDays)} يوم.`
+                      : diffDays === 0
+                        ? `تنبيه من Ibra Production: الدفعة "${payment.title || "دفعة"}" مستحقة اليوم.`
+                        : `تذكير من Ibra Production: الدفعة "${payment.title || "دفعة"}" تستحق بعد ${diffDays} أيام.`,
+                    createdAt: serverTimestamp(),
+                    status: "queued"
+                  },
+                  { merge: true }
+                );
+              }
+            }
+          }
+        }
+      },
+      (error) => console.error("❌ Automation engine error:", error)
+    );
+
+    return () => unsubscribe();
+  }, [currentUser, bookings]);
+
+  // =========================================================
   // BOOKINGS - REALTIME
   // =========================================================
 
@@ -1893,6 +1998,7 @@ export const AppProvider: React.FC<{
       status: BookingItem["status"]
     ): Promise<void> => {
       try {
+        const previousBooking = bookings.find((item) => item.id === id);
         await updateDoc(
           doc(
             db,
@@ -1903,6 +2009,23 @@ export const AppProvider: React.FC<{
             status,
           }
         );
+
+        if (
+          previousBooking &&
+          previousBooking.status !== status
+        ) {
+          await addDoc(collection(db, "automationQueue"), {
+            bookingId: id,
+            type: "status_change",
+            action: "status_change",
+            phone: previousBooking.phone || "",
+            groomName: previousBooking.groomName || "",
+            fromStatus: previousBooking.status,
+            toStatus: status,
+            createdAt: serverTimestamp(),
+            status: "queued"
+          });
+        }
 
         logActivity(
           `تم تحديث حالة الحجز ID: ${id} إلى ${status}`,
