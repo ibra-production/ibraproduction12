@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { auth, db } from '../firebase';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { enablePushNotifications } from "../pushNotifications";
 import { useApp } from '../context/AppContext';
 import { TeamManagement } from './TeamManagement';
@@ -133,6 +133,57 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
   const [videoUploading, setVideoUploading] = useState(false);
   const [idCardPreview, setIdCardPreview] = useState(null);
   const [idCardLoading, setIdCardLoading] = useState(false);
+  const [automationNotifications, setAutomationNotifications] = useState<any[]>([]);
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
+  const [calendarView, setCalendarView] = useState<'month' | 'list'>('month');
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'automationQueue'), snapshot => {
+      const items = snapshot.docs
+        .map(item => ({ id: item.id, ...item.data() }))
+        .sort((a: any, b: any) => {
+          const at = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+          const bt = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+          return bt - at;
+        })
+        .slice(0, 50);
+      setAutomationNotifications(items);
+    }, error => {
+      console.error('Automation notifications error:', error);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const openWhatsAppAutomation = async (booking: any, action: 'confirmation' | 'reminder' | 'payment') => {
+    const rawPhone = String(booking?.phone || '').replace(/\\D/g, '');
+    if (!rawPhone) return alert('رقم هاتف العميل غير موجود.');
+    const phone = rawPhone.startsWith('213') ? rawPhone : rawPhone.startsWith('0') ? '213' + rawPhone.slice(1) : rawPhone;
+    const dateText = getBookingDates(booking).join(' • ') || booking.eventDate || '—';
+    const messages = {
+      confirmation: `مرحباً ${booking.groomName || ''}، معكم Ibra Production. تم تأكيد حجزكم رقم #${String(booking.id).slice(-6)}. التاريخ: ${dateText}. الوقت: ${booking.eventTime || '—'}. المكان: ${booking.venue || '—'}. شكراً لثقتكم بنا.`,
+      reminder: `مرحباً ${booking.groomName || ''}، تذكير من Ibra Production بخصوص مناسبتكم بتاريخ ${dateText} على الساعة ${booking.eventTime || '—'} في ${booking.venue || '—'}.`,
+      payment: `مرحباً ${booking.groomName || ''}، هذا تذكير من Ibra Production بخصوص الدفعة المستحقة لحجزكم #${String(booking.id).slice(-6)}. يرجى التواصل معنا لتأكيد الدفع.`
+    };
+    const message = messages[action];
+    try {
+      await addDoc(collection(db, 'automationQueue'), {
+        bookingId: booking.id,
+        type: 'whatsapp_manual',
+        action,
+        phone: booking.phone || '',
+        groomName: booking.groomName || '',
+        message,
+        createdAt: serverTimestamp(),
+        status: 'opened'
+      });
+    } catch (error) {
+      console.error('WhatsApp queue error:', error);
+    }
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
+  };
 
   const safeBookings = Array.isArray(bookings)
     ? bookings.filter(b => b && typeof b === 'object')
@@ -1032,99 +1083,81 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
           {activeTab === 'calendar' && (
             <div className="space-y-6">
-
-              <div>
-                <h2 className="text-2xl font-bold text-white">
-                  تقويم المواعيد
-                </h2>
-                <p className="text-xs text-neutral-400 mt-2">
-                  مواعيد الحجوزات المسجلة في الموقع.
-                </p>
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-white">تقويم المواعيد المتطور</h2>
+                  <p className="text-xs text-neutral-400 mt-2">عرض شهري للمواعيد، تعدد تواريخ الحجز، الحالات والتعارضات.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setCalendarView('month')} className={`px-3 py-2 rounded-xl text-xs font-bold ${calendarView==='month'?'bg-amber-500 text-black':'bg-neutral-900 text-neutral-300'}`}>شهري</button>
+                  <button onClick={() => setCalendarView('list')} className={`px-3 py-2 rounded-xl text-xs font-bold ${calendarView==='list'?'bg-amber-500 text-black':'bg-neutral-900 text-neutral-300'}`}>قائمة</button>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-
-                {calendarBookings.length === 0 ? (
-                  <div className="col-span-full bg-neutral-900 border border-neutral-800 rounded-2xl p-10 text-center text-neutral-500">
-                    لا توجد مواعيد نشطة حالياً.
-                  </div>
-                ) : (
-                  calendarBookings.map((b: any) => (
-                    <div
-                      key={b.id}
-                      className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5"
-                    >
-
-                      <div className="flex items-center justify-between mb-4">
-
-                        <div className="flex items-center gap-2">
-                          <CalendarDays className="w-5 h-5 text-amber-400" />
-                          <span className="font-bold text-white">
-                            {getBookingDates(b)[0] || 'بدون تاريخ'}
-                          </span>
-                        </div>
-
-                        <span className="text-xs text-neutral-400">
-                          {b.eventTime || ''}
-                        </span>
-                      </div>
-
-                      {getBookingDates(b).length > 1 && (
-                        <div className="flex flex-wrap gap-1.5 mb-4">
-                          {getBookingDates(b).map((date: string, index: number) => (
-                            <span key={date + index} className="px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[11px] font-bold">
-                              {date}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                      <div className="space-y-2 text-sm">
-
-                        <div>
-                          <span className="text-neutral-500">
-                            العروس والعريس:
-                          </span>
-                          <span className="text-white mr-2">
-                            {b.groomName || '-'} & {b.brideName || '-'}
-                          </span>
-                        </div>
-
-                        <div>
-                          <span className="text-neutral-500">
-                            المناسبة:
-                          </span>
-                          <span className="text-white mr-2">
-                            {b.eventType || '-'}
-                          </span>
-                        </div>
-
-                        <div>
-                          <span className="text-neutral-500">
-                            المكان:
-                          </span>
-                          <span className="text-white mr-2">
-                            {b.venue || '-'}
-                          </span>
-                        </div>
-
-                        <div>
-                          <span className="text-neutral-500">
-                            الهاتف:
-                          </span>
-                          <span className="text-amber-400 mr-2">
-                            {b.phone || '-'}
-                          </span>
-                        </div>
-
-                      </div>
-
+              {calendarView === 'month' ? (() => {
+                const year = calendarMonth.getFullYear();
+                const month = calendarMonth.getMonth();
+                const firstDay = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const cells = Array.from({ length: firstDay + daysInMonth }, (_, i) => i < firstDay ? null : i - firstDay + 1);
+                const dayBookings = (day: number) => calendarBookings.filter((b:any) =>
+                  getBookingDates(b).some((d:string) => d === `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`)
+                );
+                return (
+                  <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <button onClick={() => setCalendarMonth(new Date(year, month - 1, 1))} className="px-3 py-2 bg-neutral-800 rounded-xl">‹</button>
+                      <h3 className="font-bold text-white">{calendarMonth.toLocaleDateString('ar-DZ',{month:'long',year:'numeric'})}</h3>
+                      <button onClick={() => setCalendarMonth(new Date(year, month + 1, 1))} className="px-3 py-2 bg-neutral-800 rounded-xl">›</button>
                     </div>
-                  ))
-                )}
+                    <div className="grid grid-cols-7 gap-2 text-center text-xs text-neutral-500 mb-2">
+                      {['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'].map(d=><div key={d}>{d}</div>)}
+                    </div>
+                    <div className="grid grid-cols-7 gap-2">
+                      {cells.map((day, i) => {
+                        if (!day) return <div key={i} className="min-h-28 bg-neutral-950/40 rounded-xl" />;
+                        const items = dayBookings(day);
+                        return <div key={day} className="min-h-28 bg-neutral-950 border border-neutral-800 rounded-xl p-2 text-right">
+                          <div className="text-xs font-bold text-neutral-400 mb-2">{day}</div>
+                          <div className="space-y-1">
+                            {items.slice(0,3).map((b:any)=><button key={b.id} onClick={()=>setWorkflowBooking(b)} className="w-full text-right truncate px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[10px] text-amber-300">{b.eventTime || '—'} • {b.groomName || 'حجز'}</button>)}
+                            {items.length>3 && <div className="text-[10px] text-neutral-500">+{items.length-3} حجوزات</div>}
+                          </div>
+                        </div>;
+                      })}
+                    </div>
+                  </div>
+                );
+              })() : (
+                <div className="space-y-3">
+                  {calendarBookings.map((b:any)=><div key={b.id} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
+                    <div><div className="font-bold">{b.groomName || '—'} × {b.brideName || '—'}</div><div className="text-xs text-neutral-500 mt-1">{getBookingDates(b).join(' • ')} • {b.eventTime || '—'} • {b.venue || '—'}</div></div>
+                    <div className="flex items-center gap-2"><span className="text-xs text-amber-400">{b.status || 'new'}</span><button onClick={()=>setWorkflowBooking(b)} className="px-3 py-2 bg-neutral-800 rounded-xl text-xs">سير العمل</button><button onClick={()=>openWhatsAppAutomation(b,'reminder')} className="px-3 py-2 bg-emerald-600/20 text-emerald-300 rounded-xl text-xs">WhatsApp</button></div>
+                  </div>)}
+                </div>
+              )}
+            </div>
+          )}
 
+          {activeTab === 'workflow' && (
+            <div className="space-y-6">
+              <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5">
+                <h2 className="text-2xl font-bold">Automation Center</h2>
+                <p className="text-xs text-neutral-400 mt-2">طابور الأتمتة والإجراءات التي تم إنشاؤها للحجوزات.</p>
               </div>
-
+              <div className="grid gap-3">
+                {automationNotifications.length === 0 ? (
+                  <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 text-center text-neutral-500">لا توجد عمليات أتمتة بعد.</div>
+                ) : automationNotifications.map((item:any) => (
+                  <div key={item.id} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <div className="font-bold">{item.type === 'whatsapp_manual' ? 'WhatsApp' : item.type === 'status_change' ? 'تغيير حالة' : item.type}</div>
+                      <div className="text-xs text-neutral-400 mt-1">{item.groomName || '—'} • {item.phone || '—'} • {item.toStatus ? `${item.fromStatus} → ${item.toStatus}` : item.action || ''}</div>
+                    </div>
+                    {item.message && <button onClick={() => { navigator.clipboard?.writeText(item.message); alert('تم نسخ الرسالة.'); }} className="px-3 py-2 bg-neutral-800 rounded-xl text-xs">نسخ الرسالة</button>}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
