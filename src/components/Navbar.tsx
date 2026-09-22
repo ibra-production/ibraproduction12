@@ -36,6 +36,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onOpenAdmin }) =>
     { href: '#about', label: language === 'ar' ? 'من نحن' : language === 'fr' ? 'À propos' : 'About' },
     { href: '#services', label: language === 'ar' ? 'الخدمات' : language === 'fr' ? 'Services' : 'Services' },
     { href: '#experience', label: language === 'ar' ? 'التجربة' : language === 'fr' ? 'Expérience' : 'Experience' },
+    { href: '#client-experience', label: language === 'ar' ? 'خدمة العملاء' : language === 'fr' ? 'Espace client' : 'Client' },
     { href: '#portfolio', label: language === 'ar' ? 'أعمالنا' : language === 'fr' ? 'Portfolio' : 'Portfolio' },
     { href: '#videos', label: language === 'ar' ? 'الفيديو' : language === 'fr' ? 'Vidéos' : 'Videos' },
     { href: '#packages', label: language === 'ar' ? 'الباقات' : language === 'fr' ? 'Packs' : 'Packages' },
