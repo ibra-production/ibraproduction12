@@ -1,123 +1,86 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Calendar, Play, Sparkles, ArrowDown, ShieldCheck, Zap } from 'lucide-react';
+import { ArrowDown, ArrowUpRight, CalendarCheck, ChevronLeft, ChevronRight, Play, Sparkles, Star } from 'lucide-react';
 
-interface HeroProps {
-  onOpenBooking: () => void;
-}
+interface HeroProps { onOpenBooking: () => void; }
 
 export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
   const { language, settings, stats } = useApp();
+  const [index, setIndex] = useState(0);
+  const ar = language === 'ar';
+  const fr = language === 'fr';
 
-  const getTagline = () => {
-    if (language === 'fr') return settings.taglineFr;
-    if (language === 'en') return settings.taglineEn;
-    return settings.taglineAr;
-  };
+  const slides = [
+    'https://i.postimg.cc/9Q9hfwgJ/B329C383-85BC-4E9E-BB5B-486150EBC3E9.png',
+    'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=2200&q=90',
+    'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=2200&q=90'
+  ];
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setIndex(i => (i + 1) % slides.length), 6500);
+    return () => window.clearInterval(timer);
+  }, [slides.length]);
+
+  const next = () => setIndex(i => (i + 1) % slides.length);
+  const prev = () => setIndex(i => (i - 1 + slides.length) % slides.length);
+
+  const tagline = fr ? settings.taglineFr : language === 'en' ? settings.taglineEn : settings.taglineAr;
 
   return (
-    <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24 pb-12 sm:pb-16">
-      {/* Background Cinematic Image / Overlay */}
-      <div className="absolute inset-0 z-0">
-        <img
-          src="https://i.postimg.cc/9Q9hfwgJ/B329C383-85BC-4E9E-BB5B-486150EBC3E9.png"
-          alt="IBRA PRODUCTION Luxury Wedding"
-          className="w-full h-full object-cover object-center scale-105 hero-kenburns"
-        />
-        <div className="absolute inset-0 ibra-hero-overlay" />
-        <div className="absolute inset-0 ibra-hero-side" />
-        <div className="absolute inset-0 ibra-hero-vignette" />
+    <section id="home" className="ibra-hero">
+      <div className="ibra-hero-media">
+        {slides.map((src, i) => (
+          <img key={src} src={src} alt="Ibra Production" className={`ibra-hero-slide ${i === index ? 'is-active' : ''}`} />
+        ))}
+        <div className="ibra-hero-shade" />
+        <div className="ibra-hero-grid" />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mt-12">
-        
-        {/* Logo Badge */}
-        <div className="flex justify-center mb-6">
-          <div className="relative w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden shadow-2xl shadow-amber-500/30 bg-neutral-900 animate-fade-in p-1 ring-1 ring-amber-400/40 ring-offset-4 ring-offset-neutral-950">
-            <img src="/logo.jpg" alt="IBRA PRODUCTION" className="w-full h-full object-cover rounded-full" />
+      <div className="ibra-hero-content">
+        <div className="ibra-hero-copy">
+          <div className="ibra-eyebrow"><Sparkles className="w-4 h-4" /> {ar ? 'وكالة تصوير وإنتاج متكاملة' : fr ? 'Agence photo & production' : 'Photography & production agency'}</div>
+          <div className="ibra-hero-kicker">{ar ? 'IBRA PRODUCTION' : 'IBRA PRODUCTION'} <span>—</span> {ar ? 'من الماء الأبيض إلى كامل الجزائر' : fr ? 'De El Ma Labiod à toute l’Algérie' : 'From El Ma Labiod across Algeria'}</div>
+          <h1>{settings.agencyName}</h1>
+          <p className="ibra-hero-tagline">{tagline}</p>
+          <p className="ibra-hero-description">
+            {ar ? 'تصوير، فيديو، صناعة محتوى وتنظيم مناسبات — بتجربة رقمية مصممة من أول استفسار حتى تسليم العمل.' : fr ? 'Photo, vidéo, contenu et événementiel — une expérience pensée du premier contact à la livraison.' : 'Photography, video, content and events — a digital experience from first contact to final delivery.'}
+          </p>
+
+          <div className="ibra-hero-actions">
+            <button onClick={onOpenBooking} className="ibra-btn ibra-btn-primary ibra-btn-large">
+              <CalendarCheck className="w-5 h-5" /> {ar ? 'احجز موعدك' : fr ? 'Réserver ma date' : 'Book your date'}
+            </button>
+            <a href="#portfolio" className="ibra-btn ibra-btn-ghost ibra-btn-large">
+              <Play className="w-5 h-5" /> {ar ? 'اكتشف أعمالنا' : fr ? 'Découvrir nos travaux' : 'Explore our work'} <ArrowUpRight className="w-4 h-4" />
+            </a>
+          </div>
+
+          <div className="ibra-trust-row">
+            <span><Star className="w-4 h-4 fill-current" /> {ar ? 'خدمة احترافية' : fr ? 'Service premium' : 'Premium service'}</span>
+            <span>{ar ? '69 ولاية' : fr ? '69 wilayas' : '69 wilayas'}</span>
+            <span>{ar ? 'حجز إلكتروني' : fr ? 'Réservation en ligne' : 'Online booking'}</span>
           </div>
         </div>
 
-        {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full animate-fade-in-up bg-amber-500/10 border border-amber-500/30 backdrop-blur-md mb-8 animate-fade-in">
-          <Sparkles className="w-4 h-4 text-amber-400" />
-          <span className="text-xs sm:text-sm font-semibold text-amber-300 tracking-widest uppercase font-cinzel">
-            Professional Wedding & Media Production
-          </span>
+        <div className="ibra-hero-side-panel">
+          <div className="ibra-side-label">{ar ? 'استوديو متنقل' : fr ? 'Studio mobile' : 'Mobile studio'}</div>
+          <div className="ibra-side-title">{ar ? 'نجيـوك وين تكون مناسبتك.' : fr ? 'Nous venons là où votre événement se trouve.' : 'We go where your event happens.'}</div>
+          <div className="ibra-side-line" />
+          <div className="ibra-side-meta"><span>01</span><span>{String(index + 1).padStart(2,'0')} / {String(slides.length).padStart(2,'0')}</span></div>
+          <div className="ibra-slider-controls">
+            <button onClick={prev} aria-label="Previous"><ChevronLeft className="w-5 h-5" /></button>
+            <button onClick={next} aria-label="Next"><ChevronRight className="w-5 h-5" /></button>
+          </div>
         </div>
+      </div>
 
-        {/* Main Title */}
-        <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-bold font-cinzel tracking-wider text-white mb-6 drop-shadow-2xl animate-fade-in-up">
-          <span className="bg-gradient-to-b from-white via-white to-amber-200 bg-clip-text text-transparent cinematic-shimmer">
-          {settings.agencyName}
-          </span>
-        </h1>
-
-        {/* Tagline */}
-        <p className="text-xl sm:text-2xl md:text-3xl text-neutral-200 font-light max-w-3xl mx-auto mb-4 tracking-wide leading-relaxed animate-fade-in-up">
-          "{getTagline()}"
-        </p>
-
-        {/* Sub-tagline */}
-        <div className="flex flex-wrap items-center justify-center gap-3 text-amber-400/90 text-sm sm:text-base font-medium mb-10 sm:mb-12 tracking-widest uppercase">
-          <span>{language === 'ar' ? 'تصوير' : 'Photography'}</span>
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-          <span>{language === 'ar' ? 'فيديو' : 'Videography'}</span>
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-          <span>{language === 'ar' ? 'إنتاج' : 'Production'}</span>
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-          <span>{language === 'ar' ? 'صناعة محتوى' : 'Content Creation'}</span>
+      <div className="ibra-hero-bottom">
+        <div className="ibra-stat-strip">
+          {stats.slice(0, 4).map((stat, i) => (
+            <div key={stat.id || i}><strong>{stat.value}</strong><span>{fr ? stat.labelFr : language === 'en' ? stat.labelEn : stat.labelAr}</span></div>
+          ))}
         </div>
-
-        {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-5 mb-20">
-          <button
-            onClick={onOpenBooking}
-            className="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-neutral-950 font-bold text-base tracking-wider uppercase shadow-xl shadow-amber-500/30 hover:shadow-amber-500/50 hover:from-amber-400 hover:to-amber-500 transition-all transform hover:-translate-y-1 hover:scale-[1.02] gold-pulse flex items-center justify-center gap-3"
-          >
-            <Calendar className="w-5 h-5" />
-            <span>{language === 'ar' ? 'احجز موعدك' : language === 'fr' ? 'Réserver Votre Date' : 'Book Your Date'}</span>
-          </button>
-
-          <a
-            href="#portfolio"
-            className="w-full sm:w-auto px-8 py-4 rounded-full bg-neutral-900/80 hover:bg-neutral-800 text-white border border-neutral-700/80 hover:border-amber-500/50 font-semibold hover:-translate-y-1 hover:scale-[1.02] text-base tracking-wider uppercase backdrop-blur-md transition-all flex items-center justify-center gap-3"
-          >
-            <Play className="w-5 h-5 text-amber-400 fill-amber-400" />
-            <span>{language === 'ar' ? 'شاهد أعمالنا' : language === 'fr' ? 'Découvrir Nos Œuvres' : 'Explore Portfolio'}</span>
-          </a>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-center gap-3 mb-8 text-xs sm:text-sm text-neutral-300">
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-4 py-2 backdrop-blur-md"><ShieldCheck className="w-4 h-4 text-amber-400" /> {language === 'ar' ? 'فريق محترف وموثوق' : language === 'fr' ? 'Équipe professionnelle et fiable' : 'Professional & trusted team'}</span>
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-4 py-2 backdrop-blur-md"><Zap className="w-4 h-4 text-amber-400" /> {language === 'ar' ? 'حجز سريع ومتابعة مباشرة' : language === 'fr' ? 'Réservation rapide' : 'Fast booking & follow-up'}</span>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
-          {stats.map((stat, idx) => {
-            const label = language === 'fr' ? stat.labelFr : language === 'en' ? stat.labelEn : stat.labelAr;
-            return (
-              <div
-                key={stat.id || idx}
-                className="glass-card p-6 rounded-2xl border border-amber-500/10 text-center hover:border-amber-500/30 transition-all group"
-              >
-                <div className="text-3xl sm:text-4xl font-bold font-cinzel text-amber-400 mb-1 group-hover:scale-105 transition-transform">
-                  {stat.value}
-                </div>
-                <div className="text-xs sm:text-sm text-neutral-400 font-medium tracking-wide">
-                  {label}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <a href="#about" className="inline-flex items-center gap-2 mt-10 text-neutral-400 hover:text-amber-400 transition-colors text-xs tracking-[0.25em] uppercase">
-          <span>{language === 'ar' ? 'اكتشف إبرا برودكشن' : language === 'fr' ? 'Découvrir Ibra Production' : 'Discover Ibra Production'}</span>
-          <ArrowDown className="w-4 h-4 animate-bounce" />
-        </a>
-
+        <a href="#about" className="ibra-scroll-cue"><span>{ar ? 'اكتشف' : fr ? 'Découvrir' : 'Discover'}</span><ArrowDown className="w-4 h-4" /></a>
       </div>
     </section>
   );
