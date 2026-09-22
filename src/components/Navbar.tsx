@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { Menu, X, Phone, Globe, Lock, Calendar } from 'lucide-react';
+import { Menu, X, Globe, Lock, Calendar, ChevronDown } from 'lucide-react';
 
 interface NavbarProps {
   onOpenBooking: () => void;
@@ -11,6 +11,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onOpenAdmin }) =>
   const { language, setLanguage, settings } = useApp();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('home');
+
+  useEffect(() => {
+    const sections = navLinks.map(link => link.href.slice(1));
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries.filter(entry => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (visible) setActiveSection(visible.target.id);
+    }, { rootMargin: '-25% 0px -60% 0px', threshold: [0.05, 0.2, 0.5] });
+    sections.forEach(id => { const el = document.getElementById(id); if (el) observer.observe(el); });
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -59,9 +70,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onOpenAdmin }) =>
               <a
                 key={link.href}
                 href={link.href}
-                className="text-sm font-medium text-neutral-300 hover:text-amber-400 transition-colors tracking-wide"
+                className={`relative text-sm font-medium transition-colors tracking-wide py-2 ${activeSection === link.href.slice(1) ? 'text-amber-400' : 'text-neutral-300 hover:text-amber-400'}`}
               >
                 {link.label}
+                <span className={`absolute left-1/2 -bottom-0.5 h-px -translate-x-1/2 bg-amber-400 transition-all duration-300 ${activeSection === link.href.slice(1) ? 'w-full' : 'w-0'}`} />
               </a>
             ))}
           </nav>
@@ -139,9 +151,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onOpenAdmin }) =>
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-lg font-medium text-neutral-200 hover:text-amber-400 border-b border-neutral-900 pb-2"
+                className={`flex items-center justify-between text-lg font-medium border-b border-neutral-900 pb-3 ${activeSection === link.href.slice(1) ? 'text-amber-400' : 'text-neutral-200 hover:text-amber-400'}`}
               >
                 {link.label}
+                {activeSection === link.href.slice(1) && <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />}
               </a>
             ))}
 
