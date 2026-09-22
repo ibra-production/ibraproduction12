@@ -31,6 +31,8 @@ export const Portfolio: React.FC = () => {
     };
   }, [lightboxItem, filteredItems.length]);
 
+  const currentLightboxItem = lightboxItem ? filteredItems[lightboxIndex] || lightboxItem : null;
+
   const categories = [
     { id: 'all', labelAr: 'الكل', labelFr: 'Tous', labelEn: 'All' },
     { id: 'weddings', labelAr: 'الأعراس', labelFr: 'Mariages', labelEn: 'Weddings' },
