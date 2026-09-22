@@ -66,6 +66,8 @@ export const BookingWorkflowPanel: React.FC<Props> = ({ booking, onClose }) => {
         timeline: next.timeline,
         checklist: next.checklist,
         payments: next.payments,
+        questionnaire: next.questionnaire,
+        contract: next.contract,
         updatedAt: Timestamp.now()
       }, { merge: true });
       setData(next);
