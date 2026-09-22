@@ -168,6 +168,11 @@ interface AppContextType {
     status: BookingItem["status"]
   ) => Promise<void>;
 
+  updateBooking: (
+    id: string,
+    booking: Partial<BookingItem> & Record<string, unknown>
+  ) => Promise<void>;
+
   deleteBooking: (
     id: string
   ) => Promise<void>;
@@ -1914,6 +1919,31 @@ export const AppProvider: React.FC<{
     };
 
   // =========================================================
+  // UPDATE BOOKING - FULL EDIT
+  // =========================================================
+
+  const updateBooking = async (
+    id: string,
+    booking: Partial<BookingItem> & Record<string, unknown>
+  ): Promise<void> => {
+    try {
+      const cleanBooking = Object.fromEntries(
+        Object.entries(booking).filter(([, value]) => value !== undefined)
+      );
+
+      await updateDoc(doc(db, "bookings", id), cleanBooking);
+
+      logActivity(
+        "تم تعديل بيانات الحجز ID: " + id,
+        "update"
+      );
+    } catch (error) {
+      console.error("❌ Firestore full booking update error:", error);
+      throw error;
+    }
+  };
+
+  // =========================================================
   // DELETE BOOKING
   // =========================================================
 
@@ -2311,6 +2341,7 @@ export const AppProvider: React.FC<{
 
         addBooking,
         updateBookingStatus,
+        updateBooking,
         deleteBooking,
 
         addOffer,
