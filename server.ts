@@ -52,6 +52,126 @@ app.post("/api/send-sms", async (req, res) => {
   }
 });
 
+
+// =========================================================
+// Ibra Production — server-side automation runner
+// Call POST /api/automation/run from a trusted scheduler.
+// Never expose provider secrets to the browser.
+// =========================================================
+app.post("/api/automation/run", async (req, res) => {
+  const expected = process.env.AUTOMATION_CRON_SECRET;
+  if (!expected || req.headers.authorization !== `Bearer ${expected}`) {
+    return res.status(401).json({ success: false, error: "Unauthorized" });
+  }
+
+  try {
+    const { default: admin } = await import("firebase-admin");
+
+    if (!admin.apps.length) {
+      const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+      if (!serviceAccountJson) {
+        return res.status(500).json({ success: false, error: "Firebase service account is not configured." });
+      }
+
+      admin.initializeApp({
+        credential: admin.credential.cert(JSON.parse(serviceAccountJson)),
+      });
+    }
+
+    const db = admin.firestore();
+    const snapshot = await db.collection("automationQueue")
+      .where("status", "==", "queued")
+      .limit(50)
+      .get();
+
+    let processed = 0;
+    let failed = 0;
+
+    for (const item of snapshot.docs) {
+      const data = item.data();
+
+      try {
+        // WhatsApp actions are intentionally kept as queue items.
+        // Actual WhatsApp Business API sending requires provider credentials.
+        if (data.type === "whatsapp_manual") {
+          await item.ref.update({
+            status: "ready",
+            processedAt: admin.firestore.FieldValue.serverTimestamp(),
+            processor: "server",
+          });
+          processed++;
+          continue;
+        }
+
+        // SMS delivery uses Twilio only when explicitly configured.
+        if (data.type === "status_change" || data.type === "event_reminder" || data.type === "payment_due") {
+          const accountSid = process.env.TWILIO_ACCOUNT_SID;
+          const authToken = process.env.TWILIO_AUTH_TOKEN;
+          const fromNumber = process.env.TWILIO_PHONE_NUMBER;
+
+          if (!accountSid || !authToken || !fromNumber) {
+            await item.ref.update({
+              status: "waiting_provider",
+              lastError: "Twilio is not configured.",
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+            continue;
+          }
+
+          const client = twilio(accountSid, authToken);
+          const to = String(data.phone || "").trim();
+          const body = String(data.message || "").trim();
+
+          if (!to || !body) {
+            await item.ref.update({
+              status: "failed",
+              lastError: "Missing phone or message.",
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+            failed++;
+            continue;
+          }
+
+          const response = await client.messages.create({
+            body,
+            from: fromNumber,
+            to,
+          });
+
+          await item.ref.update({
+            status: "sent",
+            provider: "twilio",
+            messageSid: response.sid,
+            sentAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+          processed++;
+        }
+      } catch (error: any) {
+        failed++;
+        await item.ref.update({
+          status: "failed",
+          lastError: error?.message || "Automation processing failed.",
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      }
+    }
+
+    return res.json({
+      success: true,
+      processed,
+      failed,
+      checked: snapshot.size,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    console.error("Automation runner error:", error);
+    return res.status(500).json({
+      success: false,
+      error: error?.message || "Automation runner failed.",
+    });
+  }
+});
+
 // Health check endpoint
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
