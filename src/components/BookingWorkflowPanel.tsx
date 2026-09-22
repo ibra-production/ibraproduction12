@@ -3,6 +3,7 @@ import { doc, onSnapshot, setDoc, Timestamp } from 'firebase/firestore';
 import { Check, Plus, Trash2, Save, Clock3, CreditCard, ListChecks, Zap } from 'lucide-react';
 import { db, auth } from '../firebase';
 import { BookingWorkflow, WorkflowChecklistItem, WorkflowTimelineItem, WorkflowPayment } from '../types';
+import { printBookingFile } from '../utils/bookingFile';
 
 interface Props { booking: any; onClose: () => void; }
 
@@ -60,8 +61,8 @@ export const BookingWorkflowPanel: React.FC<Props> = ({ booking, onClose }) => {
       await setDoc(doc(db, 'clientPortals', portalCode), {
         bookingId: booking.id,
         portalCode,
-        client: { groomName: booking.groomName || '', brideName: booking.brideName || '', phone: booking.phone || '' },
-        event: { eventType: booking.eventType || '', eventDates: Array.isArray(booking.eventDates) ? booking.eventDates : (booking.eventDate ? [booking.eventDate] : []), eventTime: booking.eventTime || '', venue: booking.venue || '', wilaya: booking.wilaya || '' },
+        client: { groomName: booking.groomName || '', brideName: booking.brideName || '', phone: booking.phone || '', email: booking.email || '' },
+        event: { eventType: booking.eventType || '', eventDates: Array.isArray(booking.eventDates) ? booking.eventDates : (booking.eventDate ? [booking.eventDate] : []), eventTime: booking.eventTime || '', venue: booking.venue || '', wilaya: booking.wilaya || '', serviceId: booking.serviceId || '', packageId: booking.packageId || '' },
         status: booking.status || 'new',
         timeline: next.timeline,
         checklist: next.checklist,
@@ -205,6 +206,12 @@ export const BookingWorkflowPanel: React.FC<Props> = ({ booking, onClose }) => {
         <div className="flex flex-wrap justify-between items-center gap-3 mt-6">
           <button onClick={async()=>{ try { const code=ensurePortalCode(); const url=window.location.origin+'/?portal='+encodeURIComponent(code); await navigator.clipboard.writeText(url); setData(d=>({...d,portalCode:code})); alert('تم نسخ رابط بوابة العميل.'); } catch { alert('تعذر نسخ الرابط. احفظ سير العمل أولاً.'); } }} className="px-5 py-3 bg-neutral-800 text-white rounded-xl font-bold">نسخ رابط العميل</button>
           <div className="text-xs text-neutral-500">رابط خاص بالعميل — شاركه معه فقط.</div>
+        </div>
+
+        <div className="flex flex-wrap gap-2 mt-5">
+          <button onClick={() => { const code = ensurePortalCode(); setData(d=>({...d,portalCode:code})); window.open(window.location.origin+'/?portal='+encodeURIComponent(code), '_blank', 'noopener,noreferrer'); }} className="px-4 py-2.5 bg-neutral-800 rounded-xl font-bold">فتح بوابة العميل</button>
+          <button onClick={() => { const code = ensurePortalCode(); setData(d=>({...d,portalCode:code})); printBookingFile(booking, {...data, portalCode:code}, code); }} className="px-4 py-2.5 bg-white text-black rounded-xl font-bold">إصدار ملف PDF</button>
+          <button onClick={async()=>{ const code=ensurePortalCode(); await navigator.clipboard.writeText(code); alert('تم نسخ كود ملف العميل: '+code); }} className="px-4 py-2.5 bg-neutral-800 rounded-xl font-bold">نسخ كود الباركود</button>
         </div>
 
         <div className="flex justify-end mt-6">
