@@ -32,6 +32,7 @@ export const AvailabilityChecker: React.FC<AvailabilityCheckerProps> = ({ onOpen
   const [checkDate, setCheckDate] = useState('');
   const [wilaya, setWilaya] = useState('16');
   const [resultStatus, setResultStatus] = useState<'idle' | 'available' | 'booked'>('idle');
+  const [isChecking, setIsChecking] = useState(false);
 
   const selectedWilaya = WILAYAS.find(([code]) => code === wilaya);
   const wilayaName = selectedWilaya ? (language === 'ar' ? selectedWilaya[1] : selectedWilaya[2]) : wilaya;
@@ -39,6 +40,7 @@ export const AvailabilityChecker: React.FC<AvailabilityCheckerProps> = ({ onOpen
   const handleCheck = (e: React.FormEvent) => {
     e.preventDefault();
     if (!checkDate) return;
+    setIsChecking(true);
 
     const normalizedWilaya = String(wilaya || "").trim();
 
@@ -67,9 +69,10 @@ export const AvailabilityChecker: React.FC<AvailabilityCheckerProps> = ({ onOpen
         : []
     ).some(isDateBooked);
 
-    setResultStatus(
-      booked ? "booked" : "available"
-    );
+    setTimeout(() => {
+      setResultStatus(booked ? 'booked' : 'available');
+      setIsChecking(false);
+    }, 350);
   };
 
   return (
@@ -104,6 +107,7 @@ export const AvailabilityChecker: React.FC<AvailabilityCheckerProps> = ({ onOpen
                 <Calendar className="absolute top-3.5 right-3.5 w-4 h-4 text-neutral-500" />
                 <input
                   type="date"
+                  min={new Date().toISOString().split('T')[0]}
                   required
                   value={checkDate}
                   onChange={e => {
@@ -145,11 +149,15 @@ export const AvailabilityChecker: React.FC<AvailabilityCheckerProps> = ({ onOpen
                 type="submit"
                 className="w-full py-3.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold rounded-xl text-sm transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
               >
-                <Search className="w-4 h-4" />
-                <span>{language === 'ar' ? 'تحقق من التوفر' : 'Vérifier'}</span>
+                {isChecking ? <span className="w-4 h-4 rounded-full border-2 border-neutral-950/30 border-t-neutral-950 animate-spin" /> : <Search className="w-4 h-4" />}
+                <span>{isChecking ? (language === 'ar' ? 'جاري الفحص...' : language === 'fr' ? 'Vérification...' : 'Checking...') : (language === 'ar' ? 'تحقق من التوفر' : language === 'fr' ? 'Vérifier' : 'Check availability')}</span>
               </button>
             </div>
           </form>
+
+          {resultStatus === 'idle' && checkDate && (
+            <div className="mt-6 text-center text-xs text-neutral-500 animate-fade-in">{language === 'ar' ? 'اضغط على «تحقق من التوفر» لمعرفة حالة الموعد.' : language === 'fr' ? 'Cliquez sur « Vérifier » pour connaître la disponibilité.' : 'Click Check availability to see the date status.'}</div>
+          )}
 
           {resultStatus === 'available' && (
             <div className="mt-6 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between gap-4 animate-fade-in">
