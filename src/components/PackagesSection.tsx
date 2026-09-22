@@ -140,7 +140,7 @@ export const PackagesSection: React.FC<PackagesProps> = ({
             return (
               <div
                 key={pkg.id}
-                className={`relative rounded-3xl p-6 sm:p-8 flex flex-col justify-between transition-all duration-500 ${
+                className={`relative rounded-3xl p-6 sm:p-8 flex flex-col justify-between overflow-hidden group glass-panel transition-all duration-700 hover:-translate-y-3 hover:shadow-2xl ${
                   isPopular
                     ? 'bg-gradient-to-b from-neutral-900 via-neutral-900/90 to-neutral-950 border-2 border-amber-500 shadow-2xl shadow-amber-500/10 transform lg:-translate-y-4'
                     : 'glass-card border border-neutral-800 hover:border-amber-500/40'
@@ -165,7 +165,7 @@ export const PackagesSection: React.FC<PackagesProps> = ({
                 <div>
 
                   {/* Package Name */}
-                  <h3 className="text-xl font-bold font-cinzel text-white mb-2 text-center">
+                  <h3 className="text-xl font-bold font-cinzel text-white mb-2 text-center group-hover:text-amber-300 transition-colors duration-300">
                     {name || '-'}
                   </h3>
 
@@ -204,7 +204,7 @@ export const PackagesSection: React.FC<PackagesProps> = ({
                       (Array.isArray(features) ? features : []).map((feat, idx) => (
                         <li
                           key={`${pkg.id}-feature-${idx}`}
-                          className="flex items-start gap-3 text-sm text-neutral-300"
+                          className="flex items-start gap-3 text-sm text-neutral-300 transition-transform duration-300 group-hover:translate-x-1"
                         >
                           <div className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
                             <Check className="w-3 h-3" />
@@ -229,13 +229,13 @@ export const PackagesSection: React.FC<PackagesProps> = ({
                 {/* Select Package */}
                 <button
                   onClick={() => onSelectPackage(pkg)}
-                  className={`w-full py-3.5 rounded-xl font-bold text-sm tracking-wider uppercase transition-all flex items-center justify-center gap-2 ${
+                  className={`group/cta w-full py-3.5 rounded-xl font-bold text-sm tracking-wider uppercase transition-all flex items-center justify-center gap-2 ${
                     isPopular
                       ? 'bg-amber-500 hover:bg-amber-400 text-neutral-950 shadow-lg shadow-amber-500/25'
                       : 'bg-neutral-800 hover:bg-amber-500 text-white hover:text-neutral-950 border border-neutral-700'
                   }`}
                 >
-                  <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                  <ArrowUpRight className="w-4 h-4 transition-transform group-hover/cta:translate-x-1 group-hover/cta:-translate-y-1" />
 
                   <span>
                     {language === 'ar'
