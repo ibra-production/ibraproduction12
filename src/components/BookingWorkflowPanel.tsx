@@ -56,7 +56,16 @@ export const BookingWorkflowPanel: React.FC<Props> = ({ booking, onClose }) => {
     setSaving(true);
     try {
       const portalCode = ensurePortalCode();
-      const next = { ...data, bookingId: booking.id, portalCode, questionnaire, contract: { title: contractTitle, body: contractBody, signatureName, signedAt: signatureName.trim() ? new Date().toISOString() : undefined }, updatedAt: new Date().toISOString() };
+      const signature = signatureName.trim();
+      const contractData = signature
+        ? { title: contractTitle.trim() || 'عقد خدمات Ibra Production', body: contractBody, signatureName: signature, signedAt: new Date().toISOString() }
+        : { title: contractTitle.trim() || 'عقد خدمات Ibra Production', body: contractBody };
+      const normalizedPayments = data.payments.map(p => {
+        const amount = Math.max(0, Number(p.amount) || 0);
+        const paidAmount = Math.min(amount, Math.max(0, Number(p.paidAmount) || 0));
+        return { ...p, amount, paidAmount, status: paidAmount >= amount && amount > 0 ? 'paid' : 'pending' as const };
+      });
+      const next = { ...data, bookingId: booking.id, portalCode, payments: normalizedPayments, questionnaire, contract: contractData, updatedAt: new Date().toISOString() };
       await setDoc(doc(db, 'bookingWorkflows', booking.id), { ...next, updatedAt: Timestamp.now() }, { merge: true });
       await setDoc(doc(db, 'clientPortals', portalCode), {
         bookingId: booking.id,
@@ -104,9 +113,17 @@ export const BookingWorkflowPanel: React.FC<Props> = ({ booking, onClose }) => {
   };
 
   const updatePayment = (id: string, patch: Partial<WorkflowPayment>) => {
-    setData(d => ({ ...d, payments: d.payments.map(p => p.id === id ? { ...p, ...patch, status: Number(paidValue(p, patch)) >= Number(p.amount) ? 'paid' : 'pending' } : p) }));
+    setData(d => ({
+      ...d,
+      payments: d.payments.map(p => {
+        if (p.id !== id) return p;
+        const amount = Math.max(0, Number(p.amount) || 0);
+        const rawPaid = patch.paidAmount !== undefined ? Number(patch.paidAmount) : Number(p.paidAmount);
+        const paidAmount = Math.min(amount, Math.max(0, Number.isFinite(rawPaid) ? rawPaid : 0));
+        return { ...p, ...patch, amount, paidAmount, status: paidAmount >= amount && amount > 0 ? 'paid' : 'pending' };
+      })
+    }));
   };
-  const paidValue = (p: WorkflowPayment, patch?: Partial<WorkflowPayment>) => patch?.paidAmount ?? p.paidAmount;
 
   return (
     <div className="fixed inset-0 z-[90] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
