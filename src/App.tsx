@@ -24,6 +24,7 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { AvailabilityChecker } from './components/AvailabilityChecker';
 import { PackageCustomizer } from './components/PackageCustomizer';
 import { ClientExperience } from './components/ClientExperience';
+import { MotionFX } from './components/MotionFX';
 import { ServiceItem, PackageItem } from './types';
 
 function MainContent() {
@@ -60,6 +61,7 @@ function MainContent() {
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100 selection:bg-amber-500 selection:text-neutral-950">
+      <MotionFX />
       <Navbar
         onOpenBooking={() => {
           setSelectedService(null);
