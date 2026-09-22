@@ -46,14 +46,15 @@ export const Services: React.FC<ServicesProps> = ({ onSelectService }) => {
             return (
               <div
                 key={service.id}
-                className="glass-card rounded-2xl overflow-hidden border border-neutral-800 hover:border-amber-500/40 transition-all duration-500 flex flex-col group shadow-xl"
+                className="glass-card rounded-3xl overflow-hidden border border-neutral-800 hover:border-amber-500/50 transition-all duration-500 flex flex-col group shadow-xl hover:-translate-y-2 hover:shadow-amber-500/10"
               >
                 {/* Image & Price Tag */}
                 <div className="relative aspect-[16/10] overflow-hidden">
+                  <div className="absolute top-4 left-4 z-10 w-10 h-10 rounded-full border border-amber-400/30 bg-black/35 backdrop-blur-md flex items-center justify-center text-amber-400 text-xs font-cinzel font-bold">{String(activeServices.findIndex(s => s.id === service.id) + 1).padStart(2, "0")}</div>
                   <img
                     src={service.image}
                     alt={title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    className="w-full h-full object-cover group-hover:scale-110 group-hover:rotate-1 transition-transform duration-700"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/20 to-transparent" />
                   <div className="absolute bottom-3 right-3 bg-neutral-950/80 backdrop-blur-md px-3 py-1 rounded-full border border-amber-500/30 text-amber-400 font-bold text-xs">
