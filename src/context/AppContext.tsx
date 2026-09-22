@@ -14,6 +14,7 @@ import {
   deleteDoc,
   doc,
   setDoc,
+  getDoc,
 } from "firebase/firestore";
 
 import {
@@ -1988,6 +1989,18 @@ export const AppProvider: React.FC<{
     };
   }, []);
 
+
+  const syncClientPortal = async (bookingId: string, patch: Record<string, unknown>) => {
+    try {
+      const workflowSnap = await getDoc(doc(db, "bookingWorkflows", bookingId));
+      const portalCode = workflowSnap.exists() ? workflowSnap.data()?.portalCode : null;
+      if (!portalCode) return;
+      await setDoc(doc(db, "clientPortals", portalCode), patch, { merge: true });
+    } catch (error) {
+      console.error("❌ Client portal sync error:", error);
+    }
+  };
+
   // =========================================================
   // UPDATE BOOKING STATUS
   // =========================================================
@@ -2009,6 +2022,8 @@ export const AppProvider: React.FC<{
             status,
           }
         );
+
+        await syncClientPortal(id, { status });
 
         if (
           previousBooking &&
@@ -2055,6 +2070,24 @@ export const AppProvider: React.FC<{
       );
 
       await updateDoc(doc(db, "bookings", id), cleanBooking);
+
+      const portalEventDates = Array.isArray(cleanBooking.eventDates)
+        ? cleanBooking.eventDates
+        : cleanBooking.eventDate
+          ? [cleanBooking.eventDate]
+          : undefined;
+      const portalPatch: Record<string, unknown> = {};
+      if (cleanBooking.status !== undefined) portalPatch.status = cleanBooking.status;
+      if (portalEventDates) portalPatch.event = {
+        eventDates: portalEventDates,
+        eventTime: cleanBooking.eventTime || "",
+        venue: cleanBooking.venue || "",
+        wilaya: cleanBooking.wilaya || "",
+        eventType: cleanBooking.eventType || "",
+        serviceId: cleanBooking.serviceId || "",
+        packageId: cleanBooking.packageId || ""
+      };
+      if (Object.keys(portalPatch).length) await syncClientPortal(id, portalPatch);
 
       logActivity(
         "تم تعديل بيانات الحجز ID: " + id,
