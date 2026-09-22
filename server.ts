@@ -2,6 +2,8 @@ import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import twilio from "twilio";
+import { cert, getApps, initializeApp } from "firebase-admin/app";
+import { FieldValue, getFirestore } from "firebase-admin/firestore";
 
 const app = express();
 const PORT = 3000;
@@ -65,20 +67,24 @@ app.post("/api/automation/run", async (req, res) => {
   }
 
   try {
-    const { default: admin } = await import("firebase-admin");
-
-    if (!admin.apps.length) {
+    
       const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
       if (!serviceAccountJson) {
         return res.status(500).json({ success: false, error: "Firebase service account is not configured." });
       }
 
-      admin.initializeApp({
-        credential: admin.credential.cert(JSON.parse(serviceAccountJson)),
-      });
+      initializeApp({ credential: cert(JSON.parse(serviceAccountJson)) });
     }
 
-    const db = admin.firestore();
+    if (!getApps().length) {
+      const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+      if (!serviceAccountJson) {
+        return res.status(500).json({ success: false, error: "Firebase service account is not configured." });
+      }
+      initializeApp({ credential: cert(JSON.parse(serviceAccountJson)) });
+    }
+
+    const db = getFirestore();
     const snapshot = await db.collection("automationQueue")
       .where("status", "==", "queued")
       .limit(50)
@@ -96,7 +102,7 @@ app.post("/api/automation/run", async (req, res) => {
         if (data.type === "whatsapp_manual") {
           await item.ref.update({
             status: "ready",
-            processedAt: admin.firestore.FieldValue.serverTimestamp(),
+            processedAt: FieldValue.serverTimestamp(),
             processor: "server",
           });
           processed++;
@@ -113,7 +119,7 @@ app.post("/api/automation/run", async (req, res) => {
             await item.ref.update({
               status: "waiting_provider",
               lastError: "Twilio is not configured.",
-              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              updatedAt: FieldValue.serverTimestamp(),
             });
             continue;
           }
@@ -126,7 +132,7 @@ app.post("/api/automation/run", async (req, res) => {
             await item.ref.update({
               status: "failed",
               lastError: "Missing phone or message.",
-              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              updatedAt: FieldValue.serverTimestamp(),
             });
             failed++;
             continue;
@@ -142,7 +148,7 @@ app.post("/api/automation/run", async (req, res) => {
             status: "sent",
             provider: "twilio",
             messageSid: response.sid,
-            sentAt: admin.firestore.FieldValue.serverTimestamp(),
+            sentAt: FieldValue.serverTimestamp(),
           });
           processed++;
         }
@@ -151,7 +157,7 @@ app.post("/api/automation/run", async (req, res) => {
         await item.ref.update({
           status: "failed",
           lastError: error?.message || "Automation processing failed.",
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
         });
       }
     }
