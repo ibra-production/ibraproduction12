@@ -1909,134 +1909,238 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
       )}
 
       {invoiceModalData && (
-        <div className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm flex items-center justify-center p-5">
+        <div className="fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <style>{`
+            @media print {
+              @page { size: A4; margin: 12mm; }
+              body * { visibility: hidden !important; }
+              .ibra-booking-print, .ibra-booking-print * { visibility: visible !important; }
+              .ibra-booking-print {
+                position: absolute !important;
+                inset: 0 !important;
+                width: 100% !important;
+                max-width: none !important;
+                margin: 0 !important;
+                border: 0 !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+              }
+              .ibra-print-actions { display: none !important; }
+            }
+          `}</style>
 
-          <div className="w-full max-w-2xl bg-white text-neutral-900 rounded-3xl p-8">
-
-            <div className="flex items-start justify-between border-b border-neutral-200 pb-5">
-
-              <div>
-                <h2 className="text-2xl font-bold">
-                  IBRA PRODUCTION
-                </h2>
-                <p className="text-sm text-neutral-500 mt-1">
-                  عقد / تفاصيل الحجز
-                </p>
+          <div className="ibra-booking-print w-full max-w-4xl bg-white text-neutral-900 rounded-[28px] shadow-2xl overflow-hidden my-6" dir="rtl">
+            <div className="bg-neutral-950 text-white px-8 py-7">
+              <div className="flex items-start justify-between gap-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-amber-500 text-neutral-950 flex items-center justify-center font-black text-xl">IP</div>
+                  <div>
+                    <div className="text-2xl font-black tracking-wide">IBRA PRODUCTION</div>
+                    <div className="text-sm text-neutral-300 mt-1">تفاصيل الحجز الرسمية</div>
+                  </div>
+                </div>
+                <div className="text-left">
+                  <div className="text-[11px] text-neutral-400">رقم الحجز</div>
+                  <div className="text-xl font-black text-amber-400">#{String(invoiceModalData.id || '').slice(-8) || '-'}</div>
+                  <div className="mt-2 inline-flex px-3 py-1 rounded-full bg-white/10 text-xs font-bold">
+                    {invoiceModalData.status === 'new' ? 'جديد' :
+                     invoiceModalData.status === 'confirmed' ? 'مؤكد' :
+                     invoiceModalData.status === 'processing' ? 'قيد المعالجة' :
+                     invoiceModalData.status === 'completed' ? 'مكتمل' :
+                     invoiceModalData.status === 'cancelled' ? 'ملغي' :
+                     invoiceModalData.status || '-'}
+                  </div>
+                </div>
               </div>
-
-              <button
-                onClick={() =>
-                  setInvoiceModalData(null)
-                }
-                className="p-2 bg-neutral-100 rounded-full"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
             </div>
 
-            <div className="grid grid-cols-2 gap-5 mt-6 text-sm">
-
-              <div>
-                <span className="text-neutral-500">
-                  العريس
-                </span>
-                <div className="font-bold mt-1">
-                  {invoiceModalData.groomName || '-'}
+            <div className="p-8 space-y-7">
+              <section>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-1.5 h-7 bg-amber-500 rounded-full" />
+                  <h3 className="text-lg font-black">بيانات العميل</h3>
                 </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[
+                    ['اسم العريس', invoiceModalData.groomName],
+                    ['اسم العروس', invoiceModalData.brideName],
+                    ['رقم الهاتف', invoiceModalData.phone],
+                    ['البريد الإلكتروني', invoiceModalData.email],
+                  ].map(([label, value]) => (
+                    <div key={label} className="rounded-2xl bg-neutral-50 border border-neutral-200 p-4">
+                      <div className="text-xs text-neutral-500 mb-1">{label}</div>
+                      <div className="font-bold break-words">{value || '-'}</div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-1.5 h-7 bg-amber-500 rounded-full" />
+                  <h3 className="text-lg font-black">تفاصيل المناسبة</h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="rounded-2xl bg-neutral-50 border border-neutral-200 p-4">
+                    <div className="text-xs text-neutral-500 mb-1">نوع المناسبة</div>
+                    <div className="font-bold">{invoiceModalData.eventType || '-'}</div>
+                  </div>
+                  <div className="rounded-2xl bg-neutral-50 border border-neutral-200 p-4">
+                    <div className="text-xs text-neutral-500 mb-1">الولاية</div>
+                    <div className="font-bold">{invoiceModalData.wilaya || '-'}</div>
+                  </div>
+                  <div className="rounded-2xl bg-neutral-50 border border-neutral-200 p-4">
+                    <div className="text-xs text-neutral-500 mb-1">المكان / القاعة</div>
+                    <div className="font-bold">{invoiceModalData.venue || '-'}</div>
+                  </div>
+                  <div className="rounded-2xl bg-neutral-50 border border-neutral-200 p-4">
+                    <div className="text-xs text-neutral-500 mb-1">الوقت</div>
+                    <div className="font-bold">{invoiceModalData.eventTime || '-'}</div>
+                  </div>
+                </div>
+
+                <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                  <div className="text-xs text-amber-700 mb-2 font-bold">تواريخ المناسبة</div>
+                  {Array.isArray(invoiceModalData.eventDates) && invoiceModalData.eventDates.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {invoiceModalData.eventDates.map((date: string, index: number) => (
+                        <span key={date + index} className="px-3 py-2 rounded-xl bg-white border border-amber-200 font-bold text-sm">
+                          {date}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="font-bold">{invoiceModalData.eventDate || '-'}</div>
+                  )}
+                </div>
+              </section>
+
+              <section>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-1.5 h-7 bg-amber-500 rounded-full" />
+                  <h3 className="text-lg font-black">الخدمة والباقات</h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="rounded-2xl bg-neutral-50 border border-neutral-200 p-4">
+                    <div className="text-xs text-neutral-500 mb-1">الخدمة</div>
+                    <div className="font-bold">
+                      {services.find((s: any) => s.id === invoiceModalData.serviceId)?.titleAr || invoiceModalData.serviceId || '-'}
+                    </div>
+                    <div className="text-[11px] text-neutral-400 mt-1">ID: {invoiceModalData.serviceId || '-'}</div>
+                  </div>
+                  <div className="rounded-2xl bg-neutral-50 border border-neutral-200 p-4">
+                    <div className="text-xs text-neutral-500 mb-1">الباقة</div>
+                    <div className="font-bold">
+                      {packages.find((p: any) => p.id === invoiceModalData.packageId)?.nameAr || invoiceModalData.packageId || '-'}
+                    </div>
+                    {invoiceModalData.packageId && (
+                      <div className="text-[11px] text-neutral-400 mt-1">
+                        ID: {invoiceModalData.packageId}
+                        {packages.find((p: any) => p.id === invoiceModalData.packageId)?.price != null
+                          ? ` • ${packages.find((p: any) => p.id === invoiceModalData.packageId)?.price} DA`
+                          : ''}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </section>
+
+              <section>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-1.5 h-7 bg-amber-500 rounded-full" />
+                  <h3 className="text-lg font-black">ملاحظات وملفات</h3>
+                </div>
+                <div className="space-y-3">
+                  <div className="rounded-2xl bg-neutral-50 border border-neutral-200 p-4">
+                    <div className="text-xs text-neutral-500 mb-1">ملاحظات العميل</div>
+                    <div className="font-medium whitespace-pre-wrap break-words">{invoiceModalData.notes || 'لا توجد ملاحظات.'}</div>
+                  </div>
+                  <div className="rounded-2xl bg-neutral-50 border border-neutral-200 p-4">
+                    <div className="text-xs text-neutral-500 mb-1">بطاقة التعريف الوطنية</div>
+                    <div className="font-bold break-all">{invoiceModalData.idCardName || 'ملف بطاقة التعريف'}</div>
+                    {invoiceModalData.idCardUrl ? (
+                      <a href={invoiceModalData.idCardUrl} target="_blank" rel="noreferrer" className="text-amber-600 text-sm font-bold mt-2 inline-block">
+                        فتح نسخة بطاقة التعريف
+                      </a>
+                    ) : (
+                      <div className="text-sm text-red-500 mt-1">لا يوجد ملف مرفق</div>
+                    )}
+                  </div>
+                </div>
+              </section>
+
+              <section>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-1.5 h-7 bg-amber-500 rounded-full" />
+                  <h3 className="text-lg font-black">معلومات النظام</h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="rounded-2xl bg-neutral-50 border border-neutral-200 p-4">
+                    <div className="text-xs text-neutral-500 mb-1">تاريخ إنشاء الحجز</div>
+                    <div className="font-bold break-all">
+                      {typeof invoiceModalData.createdAt === 'string'
+                        ? invoiceModalData.createdAt
+                        : invoiceModalData.createdAt?.toDate
+                          ? invoiceModalData.createdAt.toDate().toLocaleString('ar-DZ')
+                          : invoiceModalData.createdAt
+                            ? String(invoiceModalData.createdAt)
+                            : '-'}
+                    </div>
+                  </div>
+                  <div className="rounded-2xl bg-neutral-50 border border-neutral-200 p-4">
+                    <div className="text-xs text-neutral-500 mb-1">معرّف الحجز الكامل</div>
+                    <div className="font-mono text-xs font-bold break-all">{invoiceModalData.id || '-'}</div>
+                  </div>
+                </div>
+              </section>
+
+              {Object.entries(invoiceModalData).filter(([key]) =>
+                !['id','groomName','brideName','phone','email','eventType','eventDate','eventDates','wilaya','venue','eventTime','serviceId','packageId','notes','idCardUrl','idCardName','status','createdAt'].includes(key)
+              ).length > 0 && (
+                <section>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-1.5 h-7 bg-amber-500 rounded-full" />
+                    <h3 className="text-lg font-black">بيانات إضافية</h3>
+                  </div>
+                  <div className="space-y-2">
+                    {Object.entries(invoiceModalData).filter(([key]) =>
+                      !['id','groomName','brideName','phone','email','eventType','eventDate','eventDates','wilaya','venue','eventTime','serviceId','packageId','notes','idCardUrl','idCardName','status','createdAt'].includes(key)
+                    ).map(([key, value]) => (
+                      <div key={key} className="rounded-xl border border-neutral-200 p-3 flex items-start justify-between gap-4">
+                        <span className="text-xs text-neutral-500">{key}</span>
+                        <span className="text-sm font-medium text-left break-all">
+                          {typeof value === 'object' ? JSON.stringify(value) : String(value ?? '-')}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              <div className="border-t border-neutral-200 pt-5 flex items-center justify-between gap-4 ibra-print-actions">
+                <button
+                  onClick={() => setInvoiceModalData(null)}
+                  className="px-5 py-3 bg-neutral-100 text-neutral-900 rounded-xl font-bold"
+                >
+                  إغلاق
+                </button>
+                <button
+                  onClick={() => window.print()}
+                  className="flex items-center gap-2 px-6 py-3 bg-neutral-950 text-white rounded-xl font-bold"
+                >
+                  <Download className="w-4 h-4" />
+                  طباعة تفاصيل الحجز
+                </button>
               </div>
 
-              <div>
-                <span className="text-neutral-500">
-                  العروس
-                </span>
-                <div className="font-bold mt-1">
-                  {invoiceModalData.brideName || '-'}
-                </div>
+              <div className="pt-4 border-t border-neutral-200 flex flex-wrap justify-between gap-3 text-xs text-neutral-500">
+                <span>IBRA PRODUCTION</span>
+                <span>{settings.phone || ''}</span>
+                <span>{settings.email || ''}</span>
+                <span>{settings.addressAr || ''}</span>
               </div>
-
-              <div>
-                <span className="text-neutral-500">
-                  الهاتف
-                </span>
-                <div className="font-bold mt-1">
-                  {invoiceModalData.phone || '-'}
-                </div>
-              </div>
-
-              <div>
-                <span className="text-neutral-500">
-                  المناسبة
-                </span>
-                <div className="font-bold mt-1">
-                  {invoiceModalData.eventType || '-'}
-                </div>
-              </div>
-
-              <div>
-                <span className="text-neutral-500">
-                  التاريخ
-                </span>
-                <div className="font-bold mt-1">
-                  {invoiceModalData.eventDate || '-'}
-                </div>
-              </div>
-
-              <div>
-                <span className="text-neutral-500">
-                  الوقت
-                </span>
-                <div className="font-bold mt-1">
-                  {invoiceModalData.eventTime || '-'}
-                </div>
-              </div>
-
-              <div className="col-span-2">
-                <span className="text-neutral-500">
-                  المكان
-                </span>
-                <div className="font-bold mt-1">
-                  {invoiceModalData.venue || '-'}
-                </div>
-              </div>
-
-              <div>
-                <span className="text-neutral-500">
-                  الحالة
-                </span>
-                <div className="font-bold mt-1">
-                  {invoiceModalData.status || 'new'}
-                </div>
-              </div>
-
-              <div>
-                <span className="text-neutral-500">
-                  رقم الحجز
-                </span>
-                <div className="font-bold mt-1">
-                  #{String(invoiceModalData.id || '').slice(-6)}
-                </div>
-              </div>
-
             </div>
-
-            <div className="border-t border-neutral-200 mt-8 pt-5 flex justify-between items-center">
-
-              <span className="text-sm text-neutral-500">
-                IBRA PRODUCTION
-              </span>
-
-              <button
-                onClick={() => window.print()}
-                className="px-5 py-2.5 bg-neutral-900 text-white rounded-xl text-sm font-bold"
-              >
-                طباعة
-              </button>
-
-            </div>
-
           </div>
-
         </div>
       )}
 
