@@ -68,6 +68,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
               <li><a href="#home" className="hover:text-amber-400 transition-colors">{language === 'ar' ? 'الرئيسية' : 'Home'}</a></li>
               <li><a href="#about" className="hover:text-amber-400 transition-colors">{language === 'ar' ? 'من نحن' : 'About Us'}</a></li>
               <li><a href="#services" className="hover:text-amber-400 transition-colors">{language === 'ar' ? 'خدماتنا' : 'Services'}</a></li>
+              <li><a href="#client-experience" className="hover:text-amber-400 transition-colors">{language === 'ar' ? 'تجربة العميل' : language === 'fr' ? 'Espace client' : 'Client Experience'}</a></li>
               <li><a href="#portfolio" className="hover:text-amber-400 transition-colors">{language === 'ar' ? 'معرض الأعمال' : 'Portfolio'}</a></li>
               <li><a href="#packages" className="hover:text-amber-400 transition-colors">{language === 'ar' ? 'الباقات والأسعار' : 'Packages'}</a></li>
             </ul>
