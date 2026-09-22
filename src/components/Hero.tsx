@@ -7,6 +7,7 @@ interface HeroProps { onOpenBooking: () => void; }
 export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
   const { language, settings, stats } = useApp();
   const [index, setIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
   const ar = language === 'ar';
   const fr = language === 'fr';
 
@@ -34,9 +35,10 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
   ]
 
   useEffect(() => {
+    if (isPaused) return;
     const timer = window.setInterval(() => setIndex(i => (i + 1) % slides.length), 6500);
     return () => window.clearInterval(timer);
-  }, [slides.length]);
+  }, [slides.length, isPaused]);
 
   const next = () => setIndex(i => (i + 1) % slides.length);
   const prev = () => setIndex(i => (i - 1 + slides.length) % slides.length);
@@ -44,19 +46,20 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
   const tagline = fr ? settings.taglineFr : language === 'en' ? settings.taglineEn : settings.taglineAr;
 
   return (
-    <section id="home" className="ibra-hero">
+    <section id="home" className="ibra-hero" onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)}>
       <div className="ibra-hero-media">
         {slides.map((src, i) => (
           <img key={src} src={src} alt="Ibra Production" className={`ibra-hero-slide ${i === index ? 'is-active' : ''}`} />
         ))}
         <div className="ibra-hero-shade" />
         <div className="ibra-hero-grid" />
+        <div className="ibra-hero-vignette" />
       </div>
 
       <div className="ibra-hero-content">
         <div className="ibra-hero-copy">
           <div className="ibra-eyebrow"><Sparkles className="w-4 h-4" /> {ar ? 'وكالة تصوير وإنتاج متكاملة' : fr ? 'Agence photo & production' : 'Photography & production agency'}</div>
-          <div className="ibra-hero-kicker">{ar ? 'IBRA PRODUCTION' : 'IBRA PRODUCTION'} <span>—</span> {ar ? 'من الماء الأبيض إلى كامل الجزائر' : fr ? 'De El Ma Labiod à toute l’Algérie' : 'From El Ma Labiod across Algeria'}</div>
+          <div className="ibra-hero-kicker"><span className="ibra-hero-live-dot" />{ar ? 'IBRA PRODUCTION' : 'IBRA PRODUCTION'} <span>—</span> {ar ? 'من الماء الأبيض إلى كامل الجزائر' : fr ? 'De El Ma Labiod à toute l’Algérie' : 'From El Ma Labiod across Algeria'}</div>
           <h1>{settings.agencyName}</h1>
           <p className="ibra-hero-tagline">{tagline}</p>
           <p className="ibra-hero-description">
@@ -88,10 +91,18 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
             <button onClick={prev} aria-label="Previous"><ChevronLeft className="w-5 h-5" /></button>
             <button onClick={next} aria-label="Next"><ChevronRight className="w-5 h-5" /></button>
           </div>
+          <div className="ibra-slide-dots">
+            {slides.map((slide, i) => (
+              <button key={slide.image} onClick={() => setIndex(i)} className={i === index ? 'is-active' : ''} aria-label={`${i + 1}`}>
+                <span />
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       <div className="ibra-hero-bottom">
+        <div className="ibra-hero-progress"><span style={{ width: `${((index + 1) / slides.length) * 100}%` }} /></div>
         <div className="ibra-stat-strip">
           {stats.slice(0, 4).map((stat, i) => (
             <div key={stat.id || i}><strong>{stat.value}</strong><span>{fr ? stat.labelFr : language === 'en' ? stat.labelEn : stat.labelAr}</span></div>
