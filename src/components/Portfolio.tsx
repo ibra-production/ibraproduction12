@@ -77,7 +77,7 @@ export const Portfolio: React.FC = () => {
               <div
                 key={item.id}
                 onClick={() => { setLightboxIndex(filteredItems.findIndex(x => x.id === item.id)); setLightboxItem(item); }}
-                className="group relative rounded-2xl overflow-hidden aspect-[4/3] cursor-pointer bg-neutral-900 border border-neutral-800 hover:border-amber-500/50 shadow-xl transition-all duration-500"
+                className="group relative rounded-3xl overflow-hidden aspect-[4/3] cursor-pointer bg-neutral-900 border border-neutral-800 hover:border-amber-500/60 shadow-xl transition-all duration-700 hover:-translate-y-2 hover:shadow-2xl hover:shadow-amber-500/10"
               >
                 <img
                   src={
