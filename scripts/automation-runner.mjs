@@ -148,7 +148,7 @@ for (const item of snapshot.docs) {
 
   const body = String(data.message || "").trim();
 
-  if (!to || !body) {
+  if (!body) {
     failed++;
     await item.ref.update({ status: "failed", lastError: "Missing phone or message.", updatedAt: FieldValue.serverTimestamp() });
     continue;
