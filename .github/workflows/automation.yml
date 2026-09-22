@@ -19,6 +19,7 @@ jobs:
       - run: node scripts/automation-runner.mjs
         env:
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
-          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
-          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
-          TWILIO_PHONE_NUMBER: ${{ secrets.TWILIO_PHONE_NUMBER }}
+          BAR9_API_KEY: ${{ secrets.BAR9_API_KEY }}
+          BAR9_TEMPLATE_ID: ${{ secrets.BAR9_TEMPLATE_ID }}
+          BAR9_LANGUAGE: ${{ secrets.BAR9_LANGUAGE }}
+          IBRA_OWNER_PHONE: ${{ secrets.IBRA_OWNER_PHONE }}
