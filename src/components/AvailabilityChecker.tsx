@@ -57,6 +57,11 @@ export const AvailabilityChecker: React.FC<AvailabilityCheckerProps> = ({ onOpen
             ? [booking.eventDate]
             : [];
 
+      const bookingWilaya = String(booking.wilaya || "").trim();
+      if (normalizedWilaya && bookingWilaya && bookingWilaya !== normalizedWilaya) {
+        return false;
+      }
+
       return bookingDates.some(
         (date: any) =>
           String(date || "").trim() === checkDate
