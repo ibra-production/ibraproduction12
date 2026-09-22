@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { auth } from '../firebase';
 import { enablePushNotifications } from "../pushNotifications";
 import { useApp } from '../context/AppContext';
+import { TeamManagement } from './TeamManagement';
 import {
   LayoutDashboard,
   Calendar,
@@ -31,7 +32,8 @@ import {
   CheckSquare,
   Eye,
   FileImage,
-  FileVideo
+  FileVideo,
+  Users
 } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -87,6 +89,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
     | 'analytics'
     | 'calendar'
     | 'idcards'
+    | 'team'
     | 'settings'
     | 'logs'
   >('dash');
@@ -427,6 +430,11 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               icon: <FileText className="w-4 h-4" />
             },
             {
+              id: 'team',
+              label: 'إدارة فريق العمل',
+              icon: <Users className="w-4 h-4" />
+            },
+            {
               id: 'settings',
               label: 'إعدادات الموقع',
               icon: <Settings className="w-4 h-4" />
@@ -472,6 +480,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               <option value="testimonials">آراء العملاء</option>
               <option value="offers">العروض الخاصة</option>
               <option value="idcards">بطاقات التعريف</option>
+              <option value="team">إدارة فريق العمل</option>
               <option value="settings">إعدادات الموقع</option>
               <option value="logs">سجل العمليات</option>
             </select>
@@ -1915,6 +1924,10 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 </div>
               )}
             </div>
+          )}
+
+          {activeTab === 'team' && (
+            <TeamManagement />
           )}
            {activeTab === 'settings' && (
             <div className="space-y-6">
