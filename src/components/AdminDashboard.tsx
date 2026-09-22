@@ -46,6 +46,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
     updateSettings,
     bookings,
     updateBookingStatus,
+    updateBooking,
     deleteBooking,
     services,
     addService,
@@ -115,6 +116,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
   } | null>(null);
 
   const [invoiceModalData, setInvoiceModalData] = useState<any | null>(null);
+  const [bookingEditModal, setBookingEditModal] = useState<any | null>(null);
+  const [bookingEditSaving, setBookingEditSaving] = useState(false);
   const [bookingSearch, setBookingSearch] = useState('');
   const [bookingStatusFilter, setBookingStatusFilter] = useState('all');
   const [bookingWilayaFilter, setBookingWilayaFilter] = useState('all');
@@ -653,6 +656,12 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <button onClick={() => setInvoiceModalData(booking)} className="flex-1 min-w-[110px] px-3 py-2.5 rounded-xl bg-amber-500 text-neutral-950 font-bold text-xs">عرض التفاصيل</button>
+                      <button onClick={() => setBookingEditModal({
+                        ...booking,
+                        eventDates: Array.isArray(booking.eventDates) && booking.eventDates.length ? booking.eventDates.join("\n") : (booking.eventDate || ''),
+                        totalPrice: booking.totalPrice ?? booking.total ?? booking.price ?? '',
+                        totalPaid: booking.totalPaid ?? booking.paidAmount ?? booking.paid ?? ''
+                      })} className="px-3 py-2.5 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400 text-xs font-bold">تعديل</button>
                       {booking.phone && <a href={`https://wa.me/${String(booking.phone).replace(/[^0-9]/g,'')}`} target="_blank" rel="noreferrer" className="px-3 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold">واتساب</a>}
                     </div>
                   </div>
@@ -775,6 +784,19 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                                   title="عرض كل تفاصيل الحجز"
                                 >
                                   <Eye className="w-4 h-4" />
+                                </button>
+
+                                <button
+                                  onClick={() => setBookingEditModal({
+                                    ...b,
+                                    eventDates: Array.isArray(b.eventDates) && b.eventDates.length ? b.eventDates.join("\n") : (b.eventDate || ''),
+                                    totalPrice: b.totalPrice ?? b.total ?? b.price ?? '',
+                                    totalPaid: b.totalPaid ?? b.paidAmount ?? b.paid ?? ''
+                                  })}
+                                  className="p-2 bg-neutral-800 text-sky-400 rounded-lg"
+                                  title="تعديل الحجز بالكامل"
+                                >
+                                  <Edit className="w-4 h-4" />
                                 </button>
 
                                 <a
@@ -2522,6 +2544,73 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 <span>{settings.addressAr || ''}</span>
                 <span>طُبع في: {new Date().toLocaleString('ar-DZ')}</span>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {bookingEditModal && (
+        <div className="fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="w-full max-w-4xl bg-neutral-900 border border-neutral-800 rounded-3xl p-6 my-6 shadow-2xl">
+            <div className="flex items-center justify-between gap-4 mb-6">
+              <div>
+                <h3 className="text-xl font-black text-white">تعديل الحجز بالكامل</h3>
+                <p className="text-xs text-neutral-500 mt-1">رقم الحجز: #{String(bookingEditModal.id || '').slice(-8)}</p>
+              </div>
+              <button onClick={() => setBookingEditModal(null)} className="p-2 bg-neutral-800 rounded-full text-neutral-400 hover:text-white"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[70vh] overflow-y-auto pr-1">
+              <input value={bookingEditModal.groomName || ''} onChange={e => setBookingEditModal({...bookingEditModal, groomName:e.target.value})} placeholder="اسم العريس" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+              <input value={bookingEditModal.brideName || ''} onChange={e => setBookingEditModal({...bookingEditModal, brideName:e.target.value})} placeholder="اسم العروس" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+              <input value={bookingEditModal.phone || ''} onChange={e => setBookingEditModal({...bookingEditModal, phone:e.target.value})} placeholder="رقم الهاتف" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+              <input type="email" value={bookingEditModal.email || ''} onChange={e => setBookingEditModal({...bookingEditModal, email:e.target.value})} placeholder="البريد الإلكتروني" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+              <input value={bookingEditModal.eventType || ''} onChange={e => setBookingEditModal({...bookingEditModal, eventType:e.target.value})} placeholder="نوع المناسبة" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+              <input value={bookingEditModal.wilaya || ''} onChange={e => setBookingEditModal({...bookingEditModal, wilaya:e.target.value})} placeholder="الولاية" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+              <input value={bookingEditModal.venue || ''} onChange={e => setBookingEditModal({...bookingEditModal, venue:e.target.value})} placeholder="القاعة / المكان" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+              <input value={bookingEditModal.eventTime || ''} onChange={e => setBookingEditModal({...bookingEditModal, eventTime:e.target.value})} placeholder="وقت المناسبة" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+              <input value={bookingEditModal.serviceId || ''} onChange={e => setBookingEditModal({...bookingEditModal, serviceId:e.target.value})} placeholder="الخدمة" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+              <input value={bookingEditModal.packageId || ''} onChange={e => setBookingEditModal({...bookingEditModal, packageId:e.target.value})} placeholder="الباقة" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+              <input type="number" value={bookingEditModal.totalPrice ?? ''} onChange={e => setBookingEditModal({...bookingEditModal, totalPrice:e.target.value === '' ? '' : Number(e.target.value)})} placeholder="المبلغ الإجمالي (DA)" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+              <input type="number" value={bookingEditModal.totalPaid ?? ''} onChange={e => setBookingEditModal({...bookingEditModal, totalPaid:e.target.value === '' ? '' : Number(e.target.value)})} placeholder="المبلغ المدفوع (DA)" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+              <div className="md:col-span-2">
+                <label className="block text-xs text-neutral-400 mb-2">تواريخ المناسبة — تاريخ في كل سطر</label>
+                <textarea rows={4} value={bookingEditModal.eventDates || ''} onChange={e => setBookingEditModal({...bookingEditModal, eventDates:e.target.value})} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" placeholder="2026-09-25&#10;2026-09-26" />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-xs text-neutral-400 mb-2">ملاحظات</label>
+                <textarea rows={4} value={bookingEditModal.notes || ''} onChange={e => setBookingEditModal({...bookingEditModal, notes:e.target.value})} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+              </div>
+              <select value={bookingEditModal.status || 'new'} onChange={e => setBookingEditModal({...bookingEditModal, status:e.target.value})} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white">
+                <option value="new">جديد</option><option value="confirmed">مؤكد</option><option value="processing">قيد المعالجة</option><option value="completed">مكتمل</option><option value="cancelled">ملغي</option>
+              </select>
+              <div className="flex items-center gap-3 rounded-xl bg-neutral-950 border border-neutral-800 px-4 py-3 text-xs text-neutral-400">
+                <FileText className="w-4 h-4 text-amber-400" /><span>بطاقة التعريف: {bookingEditModal.idCardName || (bookingEditModal.idCardUrl ? 'مرفوعة' : 'غير مرفوعة')} — ملف البطاقة لا يتغير من هذا النموذج.</span>
+              </div>
+            </div>
+            <div className="flex flex-wrap justify-end gap-3 mt-6 pt-5 border-t border-neutral-800">
+              <button onClick={() => setBookingEditModal(null)} className="px-5 py-3 bg-neutral-800 text-white rounded-xl font-bold">إلغاء</button>
+              <button disabled={bookingEditSaving} onClick={async () => {
+                if (!bookingEditModal.groomName?.trim()) { alert('اسم العريس مطلوب.'); return; }
+                if (!bookingEditModal.phone?.trim()) { alert('رقم الهاتف مطلوب.'); return; }
+                const dates = String(bookingEditModal.eventDates || '').split(/[,\n]+/).map((x:string) => x.trim()).filter(Boolean);
+                if (new Set(dates).size !== dates.length) { alert('يوجد تاريخ مكرر في الحجز.'); return; }
+                try {
+                  setBookingEditSaving(true);
+                  const { eventDates, ...rest } = bookingEditModal;
+                  const payload:any = {...rest, eventDate: dates[0] || '', eventDates: dates, totalPrice: bookingEditModal.totalPrice === '' ? 0 : Number(bookingEditModal.totalPrice || 0), totalPaid: bookingEditModal.totalPaid === '' ? 0 : Number(bookingEditModal.totalPaid || 0)};
+                  delete payload.id;
+                  delete payload.createdAt;
+                  await updateBooking(bookingEditModal.id, payload);
+                  setBookingEditModal(null);
+                  alert('تم حفظ تعديل الحجز بنجاح.');
+                } catch (error) {
+                  alert(error instanceof Error ? error.message : 'تعذر حفظ تعديل الحجز.');
+                } finally {
+                  setBookingEditSaving(false);
+                }
+              }} className="px-6 py-3 bg-amber-500 text-neutral-950 rounded-xl font-black disabled:opacity-50">
+                {bookingEditSaving ? 'جارٍ الحفظ...' : 'حفظ جميع التعديلات'}
+              </button>
             </div>
           </div>
         </div>
