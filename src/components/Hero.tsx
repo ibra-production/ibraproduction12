@@ -11,10 +11,27 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
   const fr = language === 'fr';
 
   const slides = [
-    'https://i.postimg.cc/9Q9hfwgJ/B329C383-85BC-4E9E-BB5B-486150EBC3E9.png',
-    'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=2200&q=90',
-    'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=2200&q=90'
-  ];
+    {
+      image: 'https://i.postimg.cc/fbZqcV5R/Re-Lens-IMG-20260625133005.jpg',
+      label: ar ? 'تصوير احترافي' : fr ? 'Photographie professionnelle' : 'Professional photography',
+    },
+    {
+      image: 'https://i.postimg.cc/rybhhnQV/IMG-2114.avif',
+      label: ar ? 'تغطية المناسبات' : fr ? 'Couverture événementielle' : 'Event coverage',
+    },
+    {
+      image: 'https://i.postimg.cc/jSTBX3Sx/IMG-8875.avif',
+      label: ar ? 'أجمل التفاصيل' : fr ? 'Les plus beaux détails' : 'Beautiful details',
+    },
+    {
+      image: 'https://i.postimg.cc/2SCXvq0V/IMG-8838.avif',
+      label: ar ? 'إنتاج بصري' : fr ? 'Production visuelle' : 'Visual production',
+    },
+    {
+      image: 'https://i.postimg.cc/RFtT29P5/IMG-8836.avif',
+      label: ar ? 'Ibra Production' : 'Ibra Production',
+    },
+  ]
 
   useEffect(() => {
     const timer = window.setInterval(() => setIndex(i => (i + 1) % slides.length), 6500);
