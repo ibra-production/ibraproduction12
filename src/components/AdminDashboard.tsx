@@ -2294,9 +2294,14 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                     <div className="text-xs text-neutral-500 mb-1">بطاقة التعريف الوطنية</div>
                     <div className="font-bold break-all">{invoiceModalData.idCardName || 'ملف بطاقة التعريف'}</div>
                     {invoiceModalData.idCardUrl ? (
-                      <a href={invoiceModalData.idCardUrl} target="_blank" rel="noreferrer" className="text-amber-600 text-sm font-bold mt-2 inline-block">
-                        فتح نسخة بطاقة التعريف
-                      </a>
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        <button type="button" onClick={() => previewIdCard(invoiceModalData)} disabled={idCardLoading} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 text-neutral-950 text-sm font-bold disabled:opacity-50">
+                          <Eye className="w-4 h-4" /> {idCardLoading ? 'جاري التحميل...' : 'معاينة'}
+                        </button>
+                        <button type="button" onClick={() => downloadIdCard(invoiceModalData)} disabled={idCardLoading} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-neutral-900 text-white text-sm font-bold border border-neutral-700 disabled:opacity-50">
+                          <Download className="w-4 h-4" /> تحميل
+                        </button>
+                      </div>
                     ) : (
                       <div className="text-sm text-red-500 mt-1">لا يوجد ملف مرفق</div>
                     )}
@@ -2351,6 +2356,20 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                   </div>
                 </section>
               )}
+
+              <div className="ibra-print-actions flex flex-wrap gap-2 p-3 rounded-2xl bg-neutral-50 border border-neutral-200">
+                <span className="text-xs text-neutral-500 self-center">تغيير الحالة:</span>
+                {[
+                  ['confirmed','تأكيد الحجز'],
+                  ['processing','قيد المعالجة'],
+                  ['completed','مكتمل'],
+                  ['cancelled','إلغاء الحجز']
+                ].map(([status,label]) => (
+                  <button key={status} type="button" onClick={() => handleStatusChange(invoiceModalData, status)} className="px-3 py-2 rounded-xl bg-white border border-neutral-200 hover:border-amber-400 text-xs font-bold transition-all">
+                    {label}
+                  </button>
+                ))}
+              </div>
 
               <div className="border-t border-neutral-200 pt-5 flex items-center justify-between gap-4 ibra-print-actions">
                 <button
