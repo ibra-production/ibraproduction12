@@ -520,11 +520,18 @@ export const AppProvider: React.FC<{
     pass: string
   ): Promise<boolean> => {
     try {
-      await signInWithEmailAndPassword(
+      const credential = await signInWithEmailAndPassword(
         auth,
-        email,
+        email.trim(),
         pass
       );
+
+      const signedInEmail = (credential.user.email || "").trim().toLowerCase();
+      if (signedInEmail !== "admin@ibraprod.online") {
+        await signOut(auth);
+        alert("هذا الحساب غير مخول للوصول إلى لوحة الإدارة.");
+        return false;
+      }
 
       return true;
     } catch (error) {
@@ -571,12 +578,15 @@ export const AppProvider: React.FC<{
         auth,
         (firebaseUser) => {
           if (firebaseUser) {
-            const adminUser =
-              users[0];
+            const signedInEmail = (firebaseUser.email || "").trim().toLowerCase();
+            if (signedInEmail !== "admin@ibraprod.online") {
+              signOut(auth).catch(() => undefined);
+              setCurrentUser(null);
+              return;
+            }
 
-            setCurrentUser(
-              adminUser
-            );
+            const adminUser = users[0];
+            setCurrentUser(adminUser);
           } else {
             setCurrentUser(null);
           }
