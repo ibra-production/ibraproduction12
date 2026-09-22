@@ -25,6 +25,7 @@ import { AvailabilityChecker } from './components/AvailabilityChecker';
 import { PackageCustomizer } from './components/PackageCustomizer';
 import { ClientExperience } from './components/ClientExperience';
 import { MotionFX } from './components/MotionFX';
+import { AgencyExperience } from './components/AgencyExperience';
 import { ServiceItem, PackageItem } from './types';
 
 function MainContent() {
@@ -95,6 +96,7 @@ function MainContent() {
           <About />
           <Services onSelectService={handleOpenBookingWithService} />
           <AvailabilityChecker onOpenBooking={() => setBookingModalOpen(true)} />
+          <AgencyExperience onOpenBooking={() => setBookingModalOpen(true)} />
           <Portfolio />
           <VideosSection />
           <OffersSection onOpenBooking={() => setBookingModalOpen(true)} />
