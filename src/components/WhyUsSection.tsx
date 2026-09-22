@@ -129,9 +129,10 @@ export const WhyUsSection: React.FC = () => {
           {reasons.map((item, idx) => (
             <div
               key={idx}
-              className="glass-card p-8 rounded-3xl border border-neutral-800 hover:border-amber-500/40 transition-all duration-500 group"
+              className="glass-card p-8 rounded-3xl border border-neutral-800 hover:border-amber-500/60 transition-all duration-700 group hover:-translate-y-2 hover:shadow-2xl"
             >
-              <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <div className="absolute top-6 right-6 text-xs font-cinzel text-amber-500/30 group-hover:text-amber-400/70 transition-colors">0{idx + 1}</div>
+              <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
                 {item.icon}
               </div>
 
