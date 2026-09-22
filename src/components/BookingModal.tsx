@@ -27,6 +27,8 @@ interface BookingModalProps {
   preselectedPackage?: PackageItem | null;
 }
 
+const ID_CARD_WORKER_URL = 'https://yellow-bar-9020ibra-id-card-upload.bahibarhouma15.workers.dev';
+
 const WILAYAS = [
   ['01', 'أدرار', 'Adrar'],
   ['02', 'الشلف', 'Chlef'],
@@ -228,17 +230,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     setIdCardFile(file);
     setIdCardName(file.name);
 
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      const result = reader.result;
-
-      if (typeof result === 'string') {
-        setIdCardUrl(result);
-      }
-    };
-
-    reader.readAsDataURL(file);
+    const previewUrl = URL.createObjectURL(file);
+    setIdCardUrl(previewUrl);
   };
 
   const handleResetAndClose = () => {
@@ -272,6 +265,27 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     setIsSubmitting(false);
 
     onClose();
+  };
+
+  const uploadIdCardToR2 = async () => {
+    if (!idCardFile) throw new Error('بطاقة التعريف مطلوبة.');
+
+    const formData = new FormData();
+    formData.append('file', idCardFile);
+    formData.append('type', 'id-card');
+    formData.append('phone', phone.trim());
+
+    const response = await fetch(ID_CARD_WORKER_URL, {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await response.json().catch(() => null);
+    if (!response.ok || !data?.key) {
+      throw new Error(data?.error || 'تعذر رفع بطاقة التعريف.');
+    }
+
+    return `${ID_CARD_WORKER_URL}/?key=${encodeURIComponent(data.key)}`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -334,6 +348,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
     try {
       setIsSubmitting(true);
+      const uploadedIdCardUrl = await uploadIdCardToR2();
       await addBooking({
         groomName,
         brideName,
@@ -355,7 +370,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         notes,
 
         // Required ID card
-        idCardUrl,
+        idCardUrl: uploadedIdCardUrl,
         idCardName,
       });
 
@@ -804,6 +819,15 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                     }
                   />
                 </label>
+
+                {idCardFile && idCardUrl && idCardFile.type !== 'application/pdf' && (
+                  <div className="mt-3 rounded-xl overflow-hidden border border-neutral-800 bg-neutral-950">
+                    <img src={idCardUrl} alt="ID card preview" className="w-full max-h-48 object-contain" />
+                  </div>
+                )}
+                {idCardFile && (
+                  <div className="mt-2 flex items-center gap-2 text-xs text-neutral-400"><Eye className="w-3.5 h-3.5 text-amber-400" /> {language === 'ar' ? 'سيتم رفع الملف بشكل آمن عند تأكيد الحجز.' : language === 'fr' ? 'Le fichier sera envoyé de manière sécurisée à la confirmation.' : 'The file will be securely uploaded when you confirm.'}</div>
+                )}
 
                 <p className="text-xs text-amber-400/80 mt-2">
                   {language === 'ar'
