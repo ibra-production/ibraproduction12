@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { PortfolioItem } from '../types';
 import { Sparkles, Maximize2, X, MapPin, Calendar, Heart, ZoomIn, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -8,6 +8,24 @@ export const Portfolio: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [lightboxItem, setLightboxItem] = useState<PortfolioItem | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  useEffect(() => {
+    if (!lightboxItem) return;
+    const items = filteredItems;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setLightboxItem(null);
+      if (event.key === 'ArrowLeft' && items.length) setLightboxIndex((i) => (i - 1 + items.length) % items.length);
+      if (event.key === 'ArrowRight' && items.length) setLightboxIndex((i) => (i + 1) % items.length);
+    };
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [lightboxItem, filteredItems.length]);
+
+  const currentLightboxItem = filteredItems[lightboxIndex] || lightboxItem;
 
   const categories = [
     { id: 'all', labelAr: 'الكل', labelFr: 'Tous', labelEn: 'All' },
@@ -119,7 +137,7 @@ export const Portfolio: React.FC = () => {
       </div>
 
       {/* Fullscreen Lightbox Modal */}
-      {lightboxItem && (
+      {lightboxItem && currentLightboxItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8 bg-neutral-950/95 backdrop-blur-xl animate-fade-in">
           <button
             onClick={() => setLightboxItem(null)}
@@ -130,44 +148,46 @@ export const Portfolio: React.FC = () => {
 
           <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-3 gap-8 items-center bg-neutral-900/80 border border-neutral-800 rounded-3xl overflow-hidden shadow-2xl">
             <div className="lg:col-span-2 aspect-[16/10] bg-neutral-950 relative">
+              <button type="button" onClick={() => setLightboxIndex((i) => (i - 1 + filteredItems.length) % filteredItems.length)} className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full bg-neutral-950/80 border border-neutral-700 text-white hover:text-amber-400 hover:border-amber-500 transition-all"><ChevronLeft className="w-5 h-5 mx-auto" /></button>
               <img
                 src={
-  Array.isArray(lightboxItem.images) &&
-  lightboxItem.images.length > 0
-    ? lightboxItem.images[0]
-    : lightboxItem.image
+  Array.isArray(currentLightboxItem.images) &&
+  currentLightboxItem.images.length > 0
+    ? currentLightboxItem.images[0]
+    : currentLightboxItem.image
 }
                 alt=""
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain transition-opacity duration-300"
               />
+            <button type="button" onClick={() => setLightboxIndex((i) => (i + 1) % filteredItems.length)} className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full bg-neutral-950/80 border border-neutral-700 text-white hover:text-amber-400 hover:border-amber-500 transition-all"><ChevronRight className="w-5 h-5 mx-auto" /></button>
             </div>
 
             <div className="p-6 sm:p-8 flex flex-col justify-between">
               <div>
-                {lightboxItem.coupleNames && (
+                {currentLightboxItem.coupleNames && (
                   <span className="text-amber-400 text-xs font-bold uppercase tracking-widest block mb-2">
                     {lightboxItem.coupleNames}
                   </span>
                 )}
                 <h3 className="text-2xl font-bold font-cinzel text-white mb-4">
-                  {language === 'fr' ? lightboxItem.titleFr : language === 'en' ? lightboxItem.titleEn : lightboxItem.titleAr}
+                  {language === 'fr' ? currentLightboxItem.titleFr : language === 'en' ? currentLightboxItem.titleEn : currentLightboxItem.titleAr}
                 </h3>
                 <p className="text-neutral-300 text-sm leading-relaxed mb-6">
-                  {language === 'fr' ? lightboxItem.descriptionFr : language === 'en' ? lightboxItem.descriptionEn : lightboxItem.descriptionAr}
+                  {language === 'fr' ? currentLightboxItem.descriptionFr : language === 'en' ? currentLightboxItem.descriptionEn : currentLightboxItem.descriptionAr}
                 </p>
 
                 <div className="space-y-3 pt-4 border-t border-neutral-800 text-xs text-neutral-400">
                   <div className="flex items-center justify-between">
                     <span>{language === 'ar' ? 'الموقع:' : 'Location:'}</span>
-                    <span className="text-white font-medium">{lightboxItem.location}</span>
+                    <span className="text-white font-medium">{currentLightboxItem.location}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>{language === 'ar' ? 'التاريخ:' : 'Date:'}</span>
-                    <span className="text-white font-medium">{lightboxItem.date}</span>
+                    <span className="text-white font-medium">{currentLightboxItem.date}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>{language === 'ar' ? 'التصنيف:' : 'Category:'}</span>
-                    <span className="text-amber-400 font-semibold uppercase">{lightboxItem.category}</span>
+                    <span className="text-amber-400 font-semibold uppercase">{currentLightboxItem.category}</span>
                   </div>
                 </div>
               </div>
