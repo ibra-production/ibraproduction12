@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { PackageItem, ServiceItem } from '../types';
 import {
@@ -147,6 +147,19 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !isSubmitting) handleResetAndClose();
+    };
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleEscape);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen, isSubmitting]);
+
   if (!isOpen) {
     return null;
   }
@@ -178,6 +191,10 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       if (booking.status === 'cancelled') {
         return false;
       }
+
+      const bookingWilaya = String(booking.wilaya || '').trim();
+      const selectedWilaya = String(wilaya || '').trim();
+      if (bookingWilaya && selectedWilaya && bookingWilaya !== selectedWilaya) return false;
 
       const dates =
         booking.eventDates && booking.eventDates.length > 0
@@ -235,6 +252,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   };
 
   const handleResetAndClose = () => {
+    if (idCardUrl.startsWith('blob:')) URL.revokeObjectURL(idCardUrl);
     setGroomName('');
     setBrideName('');
     setPhone('');
@@ -290,7 +308,34 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (step < 3) { setStep((current) => current + 1); return; }
+
+    if (step === 1) {
+      if (!groomName.trim() || !phone.trim()) {
+        alert(language === 'ar' ? 'يرجى إدخال اسم العريس ورقم الهاتف.' : language === 'fr' ? 'Veuillez saisir le nom et le téléphone.' : 'Please enter the groom name and phone number.');
+        return;
+      }
+      setStep(2);
+      return;
+    }
+
+    if (step === 2) {
+      const stepDates = Array.from(new Set(eventDates.filter(Boolean)));
+      if (!wilaya || stepDates.length === 0) {
+        alert(language === 'ar' ? 'يرجى اختيار الولاية وإضافة تاريخ المناسبة.' : language === 'fr' ? 'Veuillez choisir la wilaya et une date.' : 'Please select a wilaya and event date.');
+        return;
+      }
+      if (stepDates.length !== eventDates.filter(Boolean).length) {
+        alert(language === 'ar' ? 'لا يمكن تكرار نفس التاريخ.' : language === 'fr' ? 'La même date ne peut pas être répétée.' : 'The same date cannot be repeated.');
+        return;
+      }
+      const blocked = stepDates.filter(isDateBlocked);
+      if (blocked.length) {
+        alert(language === 'ar' ? `هذه التواريخ محجوزة في الولاية المختارة: ${blocked.join('، ')}` : language === 'fr' ? `Ces dates sont déjà réservées dans la wilaya sélectionnée : ${blocked.join(', ')}` : `These dates are already booked in the selected wilaya: ${blocked.join(', ')}`);
+        return;
+      }
+      setStep(3);
+      return;
+    }
 
     const cleanDates = Array.from(
       new Set(eventDates.filter(Boolean))
