@@ -1,4 +1,4 @@
-import aboutImage from '../assets/about/file_00000000d7348210af4bc67f18918c76.png';
+const aboutImage = 'https://i.postimg.cc/9Q9hfwgJ/B329C383-85BC-4E9E-BB5B-486150EBC3E9.png';
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import { Camera, Video, Clapperboard, Sparkles, CheckCircle2 } from 'lucide-react';
