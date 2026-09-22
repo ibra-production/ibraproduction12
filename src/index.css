@@ -45,3 +45,29 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #d4af37;
 }
+
+
+/* Ibra Production 2.0 UI */
+html { scroll-behavior: smooth; }
+section[id] { scroll-margin-top: 92px; }
+
+.hero-kenburns {
+  animation: heroKenBurns 18s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes heroKenBurns {
+  from { transform: scale(1.04); }
+  to { transform: scale(1.11); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up { animation: fadeInUp .8s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .hero-kenburns, .animate-fade-in-up, .animate-bounce { animation: none !important; }
+}
