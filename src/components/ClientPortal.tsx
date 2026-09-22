@@ -59,6 +59,16 @@ export const ClientPortal: React.FC = () => {
           <div className="grid grid-cols-2 gap-3 mt-5"><div className="bg-neutral-950 rounded-xl p-4"><div className="text-xs text-neutral-500">المجموع</div><b>{total.toLocaleString()} DA</b></div><div className="bg-neutral-950 rounded-xl p-4"><div className="text-xs text-neutral-500">المدفوع</div><b>{paid.toLocaleString()} DA</b></div></div>
         </section>
       </div>
+      {Array.isArray(portal.questionnaire) && portal.questionnaire.length > 0 && <section className="bg-neutral-900 border border-neutral-800 rounded-3xl p-5 mt-5">
+        <h2 className="font-bold text-xl mb-5">Questionnaire</h2>
+        <div className="space-y-3">{portal.questionnaire.map((q:any)=><div key={q.id} className="bg-neutral-950 rounded-xl p-4"><div className="text-sm text-neutral-400">{q.question}</div><div className="mt-2 font-semibold">{q.answer || 'لم تتم الإجابة بعد'}</div></div>)}</div>
+      </section>}
+      {portal.contract && <section className="bg-neutral-900 border border-neutral-800 rounded-3xl p-5 mt-5">
+        <h2 className="font-bold text-xl mb-4">{portal.contract.title || 'العقد'}</h2>
+        <div className="whitespace-pre-wrap text-sm leading-7 text-neutral-300">{portal.contract.body || ''}</div>
+        <div className="mt-5 pt-4 border-t border-neutral-800"><div className="text-xs text-neutral-500">التوقيع</div><div className="font-bold mt-1">{portal.contract.signatureName || 'لم يتم التوقيع بعد'}</div>{portal.contract.signedAt && <div className="text-xs text-emerald-400 mt-1">تم التوقيع: {new Date(portal.contract.signedAt).toLocaleString('ar-DZ')}</div>}</div>
+      </section>}
+
       <div className="text-center text-xs text-neutral-600 mt-8">بوابة عميل خاصة من Ibra Production • يتم تحديث المعلومات تلقائياً</div>
     </div>
   </div>;
