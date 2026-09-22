@@ -40,11 +40,6 @@ export const Portfolio: React.FC = () => {
     { id: 'content', labelAr: 'المحتوى', labelFr: 'Contenu', labelEn: 'Content' },
   ];
 
-  const filteredItems = portfolio.filter(item => {
-    if (!item.visible) return false;
-    if (activeCategory === 'all') return true;
-    return item.category === activeCategory;
-  });
 
   return (
     <section id="portfolio" className="py-24 bg-neutral-900/40 relative">
