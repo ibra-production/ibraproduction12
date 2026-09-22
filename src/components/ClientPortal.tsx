@@ -28,7 +28,13 @@ export const ClientPortal: React.FC = () => {
   const total = payments.reduce((s:number,p:any)=>s+Number(p.amount||0),0);
   const completedTimeline = timeline.filter((x:any)=>x.status==='done').length;
   const completedChecklist = checklist.filter((x:any)=>x.completed).length;
-  const progress = timeline.length ? Math.round((completedTimeline/timeline.length)*100) : (checklist.length ? Math.round((completedChecklist/checklist.length)*100) : 0);
+  const progressParts = [
+    timeline.length ? (completedTimeline / timeline.length) : null,
+    checklist.length ? (completedChecklist / checklist.length) : null
+  ].filter((value): value is number => value !== null);
+  const progress = progressParts.length
+    ? Math.round(progressParts.reduce((sum, value) => sum + value, 0) / progressParts.length * 100)
+    : 0;
   const booking = {
     id: portal?.bookingId || '—',
     groomName: portal?.client?.groomName || '',
