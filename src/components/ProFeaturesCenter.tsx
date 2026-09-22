@@ -59,7 +59,6 @@ const features=[
 function EyeIcon(p:any){return <ShieldCheck {...p}/>}
 
 export const ProFeaturesCenter:React.FC<Props>=({onNavigate,bookings,notifications})=>{
- const active=new Set(['bookings','calendar','workflow','notifications','analytics','team','idcards','logs','settings','services','packages','portfolio','videos','testimonials','offers','messages','dash']);
  return <div className="space-y-6">
   <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6">
    <div className="flex flex-wrap items-center justify-between gap-4">
