@@ -44,7 +44,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onOpenAdmin }) =>
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      isScrolled ? 'bg-neutral-950/90 backdrop-blur-md py-3 border-b border-amber-500/20 shadow-2xl' : 'bg-gradient-to-b from-neutral-950/80 to-transparent py-5'
+      isScrolled ? 'bg-neutral-950/85 backdrop-blur-2xl py-3 border-b border-amber-500/20 shadow-2xl shadow-black/40' : 'bg-gradient-to-b from-neutral-950/80 to-transparent py-5'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
@@ -70,10 +70,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onOpenAdmin }) =>
               <a
                 key={link.href}
                 href={link.href}
-                className={`relative text-sm font-medium transition-colors tracking-wide py-2 ${activeSection === link.href.slice(1) ? 'text-amber-400' : 'text-neutral-300 hover:text-amber-400'}`}
+                className={`relative text-sm font-medium transition-all duration-300 tracking-wide py-2 hover:-translate-y-0.5 ${activeSection === link.href.slice(1) ? 'text-amber-400' : 'text-neutral-300 hover:text-amber-400'}`}
               >
                 {link.label}
-                <span className={`absolute left-1/2 -bottom-0.5 h-px -translate-x-1/2 bg-amber-400 transition-all duration-300 ${activeSection === link.href.slice(1) ? 'w-full' : 'w-0'}`} />
+                <span className={`absolute left-1/2 -bottom-0.5 h-0.5 -translate-x-1/2 bg-amber-400 transition-all duration-500 shadow-[0_0_12px_rgba(212,175,55,.7)] ${activeSection === link.href.slice(1) ? 'w-full' : 'w-0'}`} />
               </a>
             ))}
           </nav>
@@ -114,7 +114,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onOpenAdmin }) =>
             {/* Book Now Button */}
             <button
               onClick={onOpenBooking}
-              className="relative inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-neutral-950 font-bold text-sm tracking-wider uppercase shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:from-amber-400 hover:to-amber-500 transition-all transform hover:-translate-y-0.5"
+              className="gold-pulse relative inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-neutral-950 font-bold text-sm tracking-wider uppercase shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:from-amber-400 hover:to-amber-500 transition-all transform hover:-translate-y-0.5"
             >
               <Calendar className="w-4 h-4" />
               <span>{language === 'ar' ? 'احجز الآن' : language === 'fr' ? 'Réserver' : 'Book Now'}</span>
