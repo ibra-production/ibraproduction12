@@ -178,6 +178,22 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
     new Set(safeBookings.map((b: any) => String(b.wilaya || '')).filter(Boolean))
   ).sort();
 
+  const getBookingDates = (booking: any) =>
+    Array.isArray(booking?.eventDates) && booking.eventDates.length
+      ? booking.eventDates.filter(Boolean)
+      : booking?.eventDate
+        ? [booking.eventDate]
+        : [];
+
+  const calendarBookings = [...safeBookings]
+    .filter((b: any) => b.status !== 'cancelled')
+    .sort((a: any, b: any) => {
+      const ad = getBookingDates(a)[0] || '9999-12-31';
+      const bd = getBookingDates(b)[0] || '9999-12-31';
+      return String(ad).localeCompare(String(bd));
+    });
+
+
   const getIdCardBlob = async (value: string) => {
     if (value.startsWith('data:')) {
       const response = await fetch(value);
@@ -814,7 +830,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5">
+                <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 hover:border-amber-500/20 transition-all">
                   <h3 className="font-bold text-white mb-4">توزيع الحالات</h3>
                   <div className="grid grid-cols-2 gap-3">
                     {Object.entries(statusCounts).map(([key,value]) => (
@@ -836,7 +852,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
 
-                <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
+                <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 hover:border-amber-500/20 transition-all">
                   <div className="text-sm text-neutral-400">
                     إجمالي الحجوزات
                   </div>
@@ -946,12 +962,12 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
 
-                {safeBookings.length === 0 ? (
+                {calendarBookings.length === 0 ? (
                   <div className="col-span-full bg-neutral-900 border border-neutral-800 rounded-2xl p-10 text-center text-neutral-500">
-                    لا توجد مواعيد حالياً.
+                    لا توجد مواعيد نشطة حالياً.
                   </div>
                 ) : (
-                  safeBookings.map((b: any) => (
+                  calendarBookings.map((b: any) => (
                     <div
                       key={b.id}
                       className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5"
@@ -962,15 +978,24 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                         <div className="flex items-center gap-2">
                           <CalendarDays className="w-5 h-5 text-amber-400" />
                           <span className="font-bold text-white">
-                            {b.eventDate || 'بدون تاريخ'}
+                            {getBookingDates(b)[0] || 'بدون تاريخ'}
                           </span>
                         </div>
 
                         <span className="text-xs text-neutral-400">
                           {b.eventTime || ''}
                         </span>
-
                       </div>
+
+                      {getBookingDates(b).length > 1 && (
+                        <div className="flex flex-wrap gap-1.5 mb-4">
+                          {getBookingDates(b).map((date: string, index: number) => (
+                            <span key={date + index} className="px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[11px] font-bold">
+                              {date}
+                            </span>
+                          ))}
+                        </div>
+                      )}
 
                       <div className="space-y-2 text-sm">
 
@@ -1528,7 +1553,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
             <label className="flex items-center gap-3 w-full cursor-pointer bg-neutral-950 border border-dashed border-amber-500/40 rounded-xl px-4 py-4">
               <FileVideo className="w-5 h-5 text-amber-400" />
               <div className="flex-1"><div className="text-sm text-white font-semibold">رفع فيديو من الحاسوب</div><div className="text-xs text-neutral-500">MP4 / WEBM / MOV — حتى 500MB</div></div>
-              <input type="file" accept="video/mp4,video/webm,video/quicktime" className="hidden" disabled={videoUploading} onChange={async e=>{const file=e.target.files?.[0];if(!file)return;try{setVideoUploading(true);const url=await uploadVideoFile(file);setVideoModal((m:any)=>({...m,videoUrl:url}));}catch(error){alert(error instanceof Error?error.message:'فشل رفع الفيديو.');}finally{setVideoUploading(false);e.target.value='';}}}/>
+              <input type="file" accept="video/mp4,video/webm,video/quicktime,video/x-msvideo,video/x-matroska" className="hidden" disabled={videoUploading} onChange={async e=>{const file=e.target.files?.[0];if(!file)return;try{setVideoUploading(true);const url=await uploadVideoFile(file);setVideoModal((m:any)=>({...m,videoUrl:url}));}catch(error){alert(error instanceof Error?error.message:'فشل رفع الفيديو.');}finally{setVideoUploading(false);e.target.value='';}}}/>
             </label>
             {videoUploading && <div className="text-xs text-amber-400">جارٍ رفع الفيديو...</div>}
             <input value={videoModal.videoUrl || ''} onChange={e=>setVideoModal({...videoModal,videoUrl:e.target.value})} placeholder="أو أدخل رابط الفيديو" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
