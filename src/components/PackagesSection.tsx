@@ -1,7 +1,7 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import { PackageItem } from '../types';
-import { Sparkles, Check, Star, Calendar } from 'lucide-react';
+import { Sparkles, Check, Star, Calendar, ArrowUpRight, Crown } from 'lucide-react';
 
 interface PackagesProps {
   onSelectPackage: (pkg: PackageItem) => void;
@@ -235,7 +235,7 @@ export const PackagesSection: React.FC<PackagesProps> = ({
                       : 'bg-neutral-800 hover:bg-amber-500 text-white hover:text-neutral-950 border border-neutral-700'
                   }`}
                 >
-                  <Calendar className="w-4 h-4" />
+                  <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
 
                   <span>
                     {language === 'ar'
