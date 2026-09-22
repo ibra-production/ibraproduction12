@@ -96,6 +96,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
     | 'settings'
     | 'logs'
     | 'workflow'
+    | 'notifications'
   >('dash');
 
   const [adminNotes, setAdminNotes] = useState<string>(() =>
@@ -141,6 +142,8 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
   const [calendarView, setCalendarView] = useState<'month' | 'list'>('month');
 
   useEffect(() => {
+    let initialized = false;
+    let knownIds = new Set<string>();
     const unsubscribe = onSnapshot(collection(db, 'automationQueue'), snapshot => {
       const items = snapshot.docs
         .map(item => ({ id: item.id, ...item.data() }))
@@ -150,6 +153,20 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
           return bt - at;
         })
         .slice(0, 50);
+      if (initialized && 'Notification' in window && Notification.permission === 'granted') {
+        items.filter((item:any) => !knownIds.has(item.id)).forEach((item:any) => {
+          new Notification('Ibra Production — إشعار جديد', {
+            body: item.type === 'status_change'
+              ? `تغيير حالة الحجز: ${item.groomName || 'عميل'} → ${item.toStatus || ''}`
+              : item.type === 'whatsapp_manual'
+                ? `تم تجهيز رسالة WhatsApp لـ ${item.groomName || 'العميل'}`
+                : 'تم إنشاء عملية أتمتة جديدة.',
+            icon: '/logo.jpg'
+          });
+        });
+      }
+      knownIds = new Set(items.map((item:any) => item.id));
+      initialized = true;
       setAutomationNotifications(items);
     }, error => {
       console.error('Automation notifications error:', error);
@@ -158,7 +175,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
   }, []);
 
   const openWhatsAppAutomation = async (booking: any, action: 'confirmation' | 'reminder' | 'payment') => {
-    const rawPhone = String(booking?.phone || '').replace(/\\D/g, '');
+    const rawPhone = String(booking?.phone || '').replace(/\D/g, '');
     if (!rawPhone) return alert('رقم هاتف العميل غير موجود.');
     const phone = rawPhone.startsWith('213') ? rawPhone : rawPhone.startsWith('0') ? '213' + rawPhone.slice(1) : rawPhone;
     const dateText = getBookingDates(booking).join(' • ') || booking.eventDate || '—';
@@ -513,6 +530,11 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               icon: <CheckSquare className="w-4 h-4" />
             },
             {
+              id: 'notifications',
+              label: `الإشعارات والأتمتة (${automationNotifications.length})`,
+              icon: <Send className="w-4 h-4" />
+            },
+            {
               id: 'settings',
               label: 'إعدادات الموقع',
               icon: <Settings className="w-4 h-4" />
@@ -560,6 +582,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               <option value="idcards">بطاقات التعريف</option>
               <option value="team">إدارة فريق العمل</option>
               <option value="workflow">سير عمل الحجوزات</option>
+              <option value="notifications">الإشعارات والأتمتة</option>
               <option value="settings">إعدادات الموقع</option>
               <option value="logs">سجل العمليات</option>
             </select>
@@ -1155,6 +1178,33 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                       <div className="text-xs text-neutral-400 mt-1">{item.groomName || '—'} • {item.phone || '—'} • {item.toStatus ? `${item.fromStatus} → ${item.toStatus}` : item.action || ''}</div>
                     </div>
                     {item.message && <button onClick={() => { navigator.clipboard?.writeText(item.message); alert('تم نسخ الرسالة.'); }} className="px-3 py-2 bg-neutral-800 rounded-xl text-xs">نسخ الرسالة</button>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'notifications' && (
+            <div className="space-y-6">
+              <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5">
+                <h2 className="text-2xl font-bold">الإشعارات والأتمتة</h2>
+                <p className="text-xs text-neutral-400 mt-2">تنبيهات لوحة التحكم وقائمة عمليات الأتمتة الأخيرة.</p>
+                <button
+                  onClick={handleEnablePushNotifications}
+                  className="mt-4 px-4 py-2.5 bg-amber-500 text-black rounded-xl text-xs font-bold"
+                >
+                  تفعيل إشعارات المتصفح
+                </button>
+              </div>
+              <div className="grid gap-3">
+                {automationNotifications.map((item:any) => (
+                  <div key={item.id} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="font-bold">{item.type === 'status_change' ? 'تغيير حالة الحجز' : item.type === 'whatsapp_manual' ? 'WhatsApp' : 'Automation'}</div>
+                      <span className="text-[11px] text-neutral-500">{item.status || 'queued'}</span>
+                    </div>
+                    <div className="text-sm text-neutral-300 mt-2">{item.groomName || '—'} {item.toStatus ? `• ${item.fromStatus || ''} → ${item.toStatus}` : ''}</div>
+                    {item.message && <div className="text-xs text-neutral-500 mt-2 line-clamp-2">{item.message}</div>}
                   </div>
                 ))}
               </div>
