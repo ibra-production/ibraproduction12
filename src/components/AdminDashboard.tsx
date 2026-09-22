@@ -5,6 +5,7 @@ import { enablePushNotifications } from "../pushNotifications";
 import { useApp } from '../context/AppContext';
 import { TeamManagement } from './TeamManagement';
 import { BookingWorkflowPanel } from './BookingWorkflowPanel';
+import { ProFeaturesCenter } from './ProFeaturesCenter';
 import {
   LayoutDashboard,
   Calendar,
@@ -97,6 +98,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
     | 'logs'
     | 'workflow'
     | 'notifications'
+    | 'pro'
   >('dash');
 
   const [adminNotes, setAdminNotes] = useState<string>(() =>
@@ -535,6 +537,11 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               icon: <Send className="w-4 h-4" />
             },
             {
+              id: 'pro',
+              label: 'مركز 50 ميزة احترافية',
+              icon: <BarChart3 className="w-4 h-4" />
+            },
+            {
               id: 'settings',
               label: 'إعدادات الموقع',
               icon: <Settings className="w-4 h-4" />
@@ -583,10 +590,15 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               <option value="team">إدارة فريق العمل</option>
               <option value="workflow">سير عمل الحجوزات</option>
               <option value="notifications">الإشعارات والأتمتة</option>
+              <option value="pro">مركز 50 ميزة احترافية</option>
               <option value="settings">إعدادات الموقع</option>
               <option value="logs">سجل العمليات</option>
             </select>
           </div>
+
+          {activeTab === 'pro' && (
+            <ProFeaturesCenter onNavigate={(tab) => setActiveTab(tab as any)} bookings={safeBookings} notifications={automationNotifications.length} />
+          )}
 
           {activeTab === 'dash' && (
             <div className="space-y-8">
