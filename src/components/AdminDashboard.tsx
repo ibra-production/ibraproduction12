@@ -144,6 +144,25 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
     m => !m.read
   ).length;
 
+  const activeBookings = safeBookings.filter((b: any) => b.status !== 'cancelled');
+  const analyticsRevenue = activeBookings.reduce((sum: number, b: any) => {
+    const value = b.totalPrice ?? b.total ?? b.price ?? 0;
+    const numeric = Number(String(value).replace(/[^0-9.-]/g, ''));
+    return sum + (Number.isFinite(numeric) ? numeric : 0);
+  }, 0);
+  const analyticsPaid = activeBookings.reduce((sum: number, b: any) => {
+    const value = b.totalPaid ?? b.paidAmount ?? b.paid ?? 0;
+    const numeric = Number(String(value).replace(/[^0-9.-]/g, ''));
+    return sum + (Number.isFinite(numeric) ? numeric : 0);
+  }, 0);
+  const analyticsRemaining = Math.max(analyticsRevenue - analyticsPaid, 0);
+  const statusCounts = {
+    new: activeBookings.filter((b: any) => b.status === 'new').length,
+    confirmed: activeBookings.filter((b: any) => b.status === 'confirmed').length,
+    processing: activeBookings.filter((b: any) => b.status === 'processing').length,
+    completed: activeBookings.filter((b: any) => b.status === 'completed').length,
+  };
+
   const filteredBookings = safeBookings.filter((b: any) => {
     const q = bookingSearch.trim().toLowerCase();
     const matchesSearch = !q || [
@@ -608,7 +627,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                       <div className="bg-neutral-950 rounded-xl p-3"><span className="text-neutral-500 block mb-1">الهاتف</span><a href={`tel:${booking.phone || ''}`} className="text-amber-400">{booking.phone || '—'}</a></div>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <button onClick={() => { const el = document.getElementById(`booking-${booking.id}`); el?.scrollIntoView({behavior:'smooth',block:'center'}); }} className="flex-1 min-w-[110px] px-3 py-2.5 rounded-xl bg-amber-500 text-neutral-950 font-bold text-xs">عرض التفاصيل</button>
+                      <button onClick={() => setInvoiceModalData(booking)} className="flex-1 min-w-[110px] px-3 py-2.5 rounded-xl bg-amber-500 text-neutral-950 font-bold text-xs">عرض التفاصيل</button>
                       {booking.phone && <a href={`https://wa.me/${String(booking.phone).replace(/[^0-9]/g,'')}`} target="_blank" rel="noreferrer" className="px-3 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold">واتساب</a>}
                     </div>
                   </div>
@@ -778,6 +797,41 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 <p className="text-xs text-neutral-400 mt-2">
                   نظرة عامة على أداء الحجوزات والخدمات.
                 </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  ['إجمالي الحجوزات', safeBookings.length, ''],
+                  ['الحجوزات النشطة', activeBookings.length, ''],
+                  ['الإيراد المتوقع', analyticsRevenue.toLocaleString('ar-DZ') + ' DA', ''],
+                  ['المبلغ المحصل', analyticsPaid.toLocaleString('ar-DZ') + ' DA', ''],
+                ].map(([label,value]) => (
+                  <div key={String(label)} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 hover:border-amber-500/30 transition-all">
+                    <div className="text-xs text-neutral-400">{label}</div>
+                    <div className="text-2xl font-black text-white mt-3">{value}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5">
+                  <h3 className="font-bold text-white mb-4">توزيع الحالات</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {Object.entries(statusCounts).map(([key,value]) => (
+                      <div key={key} className="bg-neutral-950 rounded-xl p-4">
+                        <div className="text-xs text-neutral-500">{key === 'new' ? 'جديد' : key === 'confirmed' ? 'مؤكد' : key === 'processing' ? 'قيد المعالجة' : 'مكتمل'}</div>
+                        <div className="text-xl font-black text-amber-400 mt-1">{value}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5">
+                  <h3 className="font-bold text-white mb-4">الوضع المالي</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-neutral-950 rounded-xl p-4"><div className="text-xs text-neutral-500">المتبقي</div><div className="text-xl font-black text-white mt-1">{analyticsRemaining.toLocaleString('ar-DZ')} DA</div></div>
+                    <div className="bg-neutral-950 rounded-xl p-4"><div className="text-xs text-neutral-500">نسبة التحصيل</div><div className="text-xl font-black text-amber-400 mt-1">{analyticsRevenue > 0 ? Math.round((analyticsPaid / analyticsRevenue) * 100) : 0}%</div></div>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
