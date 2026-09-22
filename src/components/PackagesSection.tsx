@@ -131,7 +131,7 @@ export const PackagesSection: React.FC<PackagesProps> = ({
             const oldPrice =
               pkg?.oldPrice !== undefined &&
               pkg?.oldPrice !== null &&
-              pkg?.oldPrice !== ''
+              Number(pkg?.oldPrice) > 0
                 ? Number(pkg.oldPrice)
                 : null;
 
