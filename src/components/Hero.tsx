@@ -20,13 +20,13 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
       {/* Background Cinematic Image / Overlay */}
       <div className="absolute inset-0 z-0">
         <img
-          src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=2000&q=90"
+          src="https://i.postimg.cc/9Q9hfwgJ/B329C383-85BC-4E9E-BB5B-486150EBC3E9.png"
           alt="IBRA PRODUCTION Luxury Wedding"
           className="w-full h-full object-cover object-center scale-105 hero-kenburns"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/75 to-neutral-950/35" />
-        <div className="absolute inset-0 bg-gradient-to-r from-neutral-950/60 via-transparent to-neutral-950/60" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-neutral-950/60 to-neutral-950" />
+        <div className="absolute inset-0 ibra-hero-overlay" />
+        <div className="absolute inset-0 ibra-hero-side" />
+        <div className="absolute inset-0 ibra-hero-vignette" />
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mt-12">
