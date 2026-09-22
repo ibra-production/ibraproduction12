@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { Calendar, Play, Sparkles, Award, Video, Camera } from 'lucide-react';
+import { Calendar, Play, Sparkles, ArrowDown, ShieldCheck, Zap } from 'lucide-react';
 
 interface HeroProps {
   onOpenBooking: () => void;
@@ -16,15 +16,16 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
   };
 
   return (
-    <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 pb-16">
+    <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24 pb-12 sm:pb-16">
       {/* Background Cinematic Image / Overlay */}
       <div className="absolute inset-0 z-0">
         <img
           src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=2000&q=90"
           alt="IBRA PRODUCTION Luxury Wedding"
-          className="w-full h-full object-cover object-center scale-105 animate-pulse duration-[10000ms]"
+          className="w-full h-full object-cover object-center scale-105 hero-kenburns"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/80 to-neutral-950/40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/75 to-neutral-950/35" />
+        <div className="absolute inset-0 bg-gradient-to-r from-neutral-950/60 via-transparent to-neutral-950/60" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-neutral-950/60 to-neutral-950" />
       </div>
 
@@ -32,13 +33,13 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
         
         {/* Logo Badge */}
         <div className="flex justify-center mb-6">
-          <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden shadow-2xl shadow-amber-500/30 bg-neutral-900 animate-fade-in p-1">
+          <div className="relative w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden shadow-2xl shadow-amber-500/30 bg-neutral-900 animate-fade-in p-1 ring-1 ring-amber-400/40 ring-offset-4 ring-offset-neutral-950">
             <img src="/logo.jpg" alt="IBRA PRODUCTION" className="w-full h-full object-cover rounded-full" />
           </div>
         </div>
 
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/30 backdrop-blur-md mb-8 animate-fade-in">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full animate-fade-in-up bg-amber-500/10 border border-amber-500/30 backdrop-blur-md mb-8 animate-fade-in">
           <Sparkles className="w-4 h-4 text-amber-400" />
           <span className="text-xs sm:text-sm font-semibold text-amber-300 tracking-widest uppercase font-cinzel">
             Professional Wedding & Media Production
@@ -46,17 +47,19 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
         </div>
 
         {/* Main Title */}
-        <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-bold font-cinzel tracking-wider text-white mb-6 drop-shadow-2xl">
+        <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-bold font-cinzel tracking-wider text-white mb-6 drop-shadow-2xl animate-fade-in-up">
+          <span className="bg-gradient-to-b from-white via-white to-amber-200 bg-clip-text text-transparent">
           {settings.agencyName}
+          </span>
         </h1>
 
         {/* Tagline */}
-        <p className="text-xl sm:text-2xl md:text-3xl text-neutral-200 font-light max-w-3xl mx-auto mb-4 tracking-wide leading-relaxed">
+        <p className="text-xl sm:text-2xl md:text-3xl text-neutral-200 font-light max-w-3xl mx-auto mb-4 tracking-wide leading-relaxed animate-fade-in-up">
           "{getTagline()}"
         </p>
 
         {/* Sub-tagline */}
-        <div className="flex flex-wrap items-center justify-center gap-3 text-amber-400/90 text-sm sm:text-base font-medium mb-12 tracking-widest uppercase">
+        <div className="flex flex-wrap items-center justify-center gap-3 text-amber-400/90 text-sm sm:text-base font-medium mb-10 sm:mb-12 tracking-widest uppercase">
           <span>{language === 'ar' ? 'تصوير' : 'Photography'}</span>
           <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
           <span>{language === 'ar' ? 'فيديو' : 'Videography'}</span>
@@ -85,6 +88,11 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
           </a>
         </div>
 
+        <div className="flex flex-wrap items-center justify-center gap-3 mb-8 text-xs sm:text-sm text-neutral-300">
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-4 py-2 backdrop-blur-md"><ShieldCheck className="w-4 h-4 text-amber-400" /> {language === 'ar' ? 'فريق محترف وموثوق' : language === 'fr' ? 'Équipe professionnelle et fiable' : 'Professional & trusted team'}</span>
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-4 py-2 backdrop-blur-md"><Zap className="w-4 h-4 text-amber-400" /> {language === 'ar' ? 'حجز سريع ومتابعة مباشرة' : language === 'fr' ? 'Réservation rapide' : 'Fast booking & follow-up'}</span>
+        </div>
+
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
           {stats.map((stat, idx) => {
@@ -104,6 +112,11 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
             );
           })}
         </div>
+
+        <a href="#about" className="inline-flex items-center gap-2 mt-10 text-neutral-400 hover:text-amber-400 transition-colors text-xs tracking-[0.25em] uppercase">
+          <span>{language === 'ar' ? 'اكتشف إبرا برودكشن' : language === 'fr' ? 'Découvrir Ibra Production' : 'Discover Ibra Production'}</span>
+          <ArrowDown className="w-4 h-4 animate-bounce" />
+        </a>
 
       </div>
     </section>
