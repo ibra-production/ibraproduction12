@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { PortfolioItem } from '../types';
-import { Sparkles, Maximize2, X, MapPin, Calendar, Heart } from 'lucide-react';
+import { Sparkles, Maximize2, X, MapPin, Calendar, Heart, ZoomIn, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export const Portfolio: React.FC = () => {
   const { language, portfolio } = useApp();
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [lightboxItem, setLightboxItem] = useState<PortfolioItem | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   const categories = [
     { id: 'all', labelAr: 'الكل', labelFr: 'Tous', labelEn: 'All' },
@@ -75,7 +76,7 @@ export const Portfolio: React.FC = () => {
             return (
               <div
                 key={item.id}
-                onClick={() => setLightboxItem(item)}
+                onClick={() => { setLightboxIndex(filteredItems.findIndex(x => x.id === item.id)); setLightboxItem(item); }}
                 className="group relative rounded-2xl overflow-hidden aspect-[4/3] cursor-pointer bg-neutral-900 border border-neutral-800 hover:border-amber-500/50 shadow-xl transition-all duration-500"
               >
                 <img
@@ -108,7 +109,7 @@ export const Portfolio: React.FC = () => {
                 </div>
 
                 <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-neutral-950/80 backdrop-blur-md border border-neutral-800 flex items-center justify-center text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Maximize2 className="w-4 h-4" />
+                  <ZoomIn className="w-4 h-4" />
                 </div>
               </div>
             );
@@ -128,7 +129,7 @@ export const Portfolio: React.FC = () => {
           </button>
 
           <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-3 gap-8 items-center bg-neutral-900/80 border border-neutral-800 rounded-3xl overflow-hidden shadow-2xl">
-            <div className="lg:col-span-2 aspect-[16/10] bg-neutral-950">
+            <div className="lg:col-span-2 aspect-[16/10] bg-neutral-950 relative">
               <img
                 src={
   Array.isArray(lightboxItem.images) &&
