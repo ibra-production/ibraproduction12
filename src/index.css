@@ -695,3 +695,151 @@ section[id="client-experience"] > div > div > div > div:hover {
   .ibra-hero-content { padding-top:92px !important; padding-bottom:100px !important; }
   section[id] { overflow:clip; }
 }
+
+
+/* =========================================================
+   IBRA HERO — NEW CINEMATIC ART-DIRECTION
+   ========================================================= */
+.ibra-hero {
+  min-height: 100svh !important;
+  isolation: isolate;
+  background: #080608 !important;
+}
+.ibra-hero-media {
+  inset: 0 !important;
+}
+.ibra-hero-slide {
+  inset: -4% !important;
+  width: 108% !important;
+  height: 108% !important;
+  object-position: center !important;
+  filter: brightness(.62) saturate(.72) contrast(1.08) !important;
+  transition: opacity 1.15s ease, transform 7.5s cubic-bezier(.16,1,.3,1), filter 1.15s ease !important;
+}
+.ibra-hero-slide.is-active {
+  transform: scale(1.015) !important;
+  filter: brightness(.68) saturate(.84) contrast(1.08) !important;
+}
+.ibra-hero-shade {
+  background:
+    linear-gradient(90deg, rgba(5,4,6,.97) 0%, rgba(5,4,6,.82) 30%, rgba(5,4,6,.35) 62%, rgba(5,4,6,.60) 100%),
+    linear-gradient(0deg, rgba(5,4,6,.97) 0%, transparent 35%, rgba(5,4,6,.32) 100%) !important;
+}
+.ibra-hero-grid {
+  opacity: .09 !important;
+  background-size: 110px 110px !important;
+}
+.ibra-hero-vignette {
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:radial-gradient(circle at 55% 45%, transparent 20%, rgba(0,0,0,.28) 58%, rgba(0,0,0,.72) 100%);
+}
+.ibra-hero-content {
+  max-width: 1480px !important;
+  padding-top: 155px !important;
+}
+.ibra-hero-copy {
+  animation: ibraHeroEnter 1s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes ibraHeroEnter {
+  from { opacity:0; transform:translateY(30px); filter:blur(8px); }
+  to { opacity:1; transform:none; filter:none; }
+}
+.ibra-hero-kicker {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:rgba(255,248,241,.58) !important;
+}
+.ibra-hero-live-dot {
+  width:7px;
+  height:7px;
+  flex:0 0 7px;
+  border-radius:50%;
+  background:var(--ibra-copper-light);
+  box-shadow:0 0 0 6px rgba(224,162,125,.08), 0 0 18px rgba(224,162,125,.45);
+  animation:ibraDotPulse 2s ease-in-out infinite;
+}
+@keyframes ibraDotPulse {
+  50% { box-shadow:0 0 0 10px rgba(224,162,125,.02),0 0 25px rgba(224,162,125,.7); }
+}
+.ibra-hero h1 {
+  font-size:clamp(4rem,10vw,10rem) !important;
+  letter-spacing:-.07em !important;
+  text-shadow:0 20px 70px rgba(0,0,0,.35);
+}
+.ibra-hero-tagline {
+  max-width:720px !important;
+  font-weight:500;
+}
+.ibra-hero-side-panel {
+  border-radius:2px !important;
+  border-color:rgba(255,248,241,.17) !important;
+  background:rgba(7,5,7,.28) !important;
+  position:relative;
+}
+.ibra-hero-side-panel::before {
+  content:"";
+  position:absolute;
+  top:0;
+  right:22px;
+  width:1px;
+  height:54px;
+  background:linear-gradient(var(--ibra-copper),transparent);
+}
+.ibra-slider-controls button {
+  border-radius:3px !important;
+}
+.ibra-slide-dots {
+  display:flex;
+  gap:7px;
+  margin-top:18px;
+}
+.ibra-slide-dots button {
+  width:28px;
+  height:4px;
+  padding:0;
+  border:0;
+  border-radius:99px;
+  background:rgba(255,255,255,.18);
+  cursor:pointer;
+  transition:all .45s cubic-bezier(.22,1,.36,1);
+}
+.ibra-slide-dots button span { display:block; width:100%; height:100%; }
+.ibra-slide-dots button.is-active {
+  width:54px;
+  background:var(--ibra-copper-light);
+  box-shadow:0 0 18px rgba(224,162,125,.3);
+}
+.ibra-hero-progress {
+  position:absolute;
+  left:5vw;
+  right:5vw;
+  bottom:0;
+  height:2px;
+  background:rgba(255,255,255,.12);
+  overflow:hidden;
+}
+.ibra-hero-progress span {
+  display:block;
+  height:100%;
+  background:linear-gradient(90deg,var(--ibra-copper),var(--ibra-copper-light));
+  transition:width .7s cubic-bezier(.22,1,.36,1);
+}
+.ibra-stat-strip {
+  border-radius:3px !important;
+}
+.ibra-scroll-cue {
+  writing-mode:vertical-rl;
+  gap:10px;
+}
+@media(max-width:900px) {
+  .ibra-hero-content { padding-top:125px !important; }
+  .ibra-hero-progress { left:22px; right:22px; }
+}
+@media(max-width:560px) {
+  .ibra-hero h1 { font-size:clamp(3.25rem,18vw,5.4rem) !important; }
+  .ibra-hero-kicker { font-size:.62rem; }
+  .ibra-slide-dots { margin-top:14px; }
+}
