@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { VideoItem } from '../types';
-import { Sparkles, Play, X, Clock, Film, Volume2 } from 'lucide-react';
+import { Sparkles, Play, X, Clock, Film } from 'lucide-react';
 
 export const VideosSection: React.FC = () => {
   const { language, videos } = useApp();
