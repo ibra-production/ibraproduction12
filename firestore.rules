@@ -77,6 +77,19 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+
+    // Client portal documents are readable by anyone holding the unguessable portal code.
+    // Only the admin can create/update/delete portal snapshots.
+    match /clientPortals/{portalCode} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Internal workflow data is admin-only.
+    match /bookingWorkflows/{bookingId} {
+      allow read, write: if isAdmin();
+    }
+
     // Push notification tokens must never be readable/writable by ordinary users.
     match /pushTokens/{token} {
       allow read, create, update, delete: if isAdmin();
