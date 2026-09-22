@@ -8,11 +8,14 @@ export const ContactSection: React.FC = () => {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [message, setMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
 
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !phone.trim() || !message.trim()) return;
-    addContactMessage({ name, phone, message });
+    setIsSending(true);
+    addContactMessage({ name: name.trim(), phone: phone.trim(), message: message.trim() });
+    setTimeout(() => setIsSending(false), 500);
     setSentMessage(true);
     setTimeout(() => setSentMessage(false), 5000);
     setName('');
@@ -53,7 +56,7 @@ export const ContactSection: React.FC = () => {
                 {settings.agencyName}
               </h3>
 
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 group hover:translate-x-1 transition-transform">
                 <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
                   <Phone className="w-5 h-5" />
                 </div>
@@ -192,6 +195,7 @@ export const ContactSection: React.FC = () => {
                     <input
                       type="tel"
                       required
+                      inputMode="tel"
                       value={phone}
                       onChange={e => setPhone(e.target.value)}
                       placeholder="0779000833"
@@ -215,9 +219,10 @@ export const ContactSection: React.FC = () => {
 
                   <button
                     type="submit"
+                    disabled={isSending}
                     className="w-full py-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-sm tracking-wider uppercase transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
                   >
-                    <Send className="w-4 h-4" />
+                    <Send className={`w-4 h-4 transition-transform ${isSending ? 'animate-pulse' : 'group-hover:translate-x-1'}`} />
                     <span>{language === 'ar' ? 'إرسال الرسالة' : language === 'fr' ? 'Envoyer le Message' : 'Send Message'}</span>
                   </button>
                 </form>
