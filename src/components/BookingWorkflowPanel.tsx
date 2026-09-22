@@ -40,17 +40,29 @@ export const BookingWorkflowPanel: React.FC<Props> = ({ booking, onClose }) => {
     return { paid, scheduled, remaining: Math.max(scheduled - paid, 0) };
   }, [data.payments]);
 
+  const ensurePortalCode = () => data.portalCode || crypto.randomUUID().replace(/-/g, '').slice(0, 16).toUpperCase();
+
   const save = async () => {
     const user = auth.currentUser;
     if (!user) return alert('يجب تسجيل الدخول كمسؤول.');
     setSaving(true);
     try {
-      await setDoc(doc(db, 'bookingWorkflows', booking.id), {
-        ...data,
+      const portalCode = ensurePortalCode();
+      const next = { ...data, bookingId: booking.id, portalCode, updatedAt: new Date().toISOString() };
+      await setDoc(doc(db, 'bookingWorkflows', booking.id), { ...next, updatedAt: Timestamp.now() }, { merge: true });
+      await setDoc(doc(db, 'clientPortals', portalCode), {
         bookingId: booking.id,
+        portalCode,
+        client: { groomName: booking.groomName || '', brideName: booking.brideName || '', phone: booking.phone || '' },
+        event: { eventType: booking.eventType || '', eventDates: Array.isArray(booking.eventDates) ? booking.eventDates : (booking.eventDate ? [booking.eventDate] : []), eventTime: booking.eventTime || '', venue: booking.venue || '', wilaya: booking.wilaya || '' },
+        status: booking.status || 'new',
+        timeline: next.timeline,
+        checklist: next.checklist,
+        payments: next.payments,
         updatedAt: Timestamp.now()
       }, { merge: true });
-      alert('تم حفظ سير العمل للحجز.');
+      setData(next);
+      alert('تم حفظ سير العمل وإنشاء/تحديث بوابة العميل.');
     } catch (e) {
       alert(e instanceof Error ? e.message : 'تعذر حفظ سير العمل.');
     } finally { setSaving(false); }
@@ -165,6 +177,11 @@ export const BookingWorkflowPanel: React.FC<Props> = ({ booking, onClose }) => {
             </label>)}
             <div className="text-xs text-neutral-500 mt-3 leading-6">هذه المرحلة تحفظ قواعد الأتمتة مع الحجز، وسيتم ربطها لاحقاً بقنوات WhatsApp/SMS والإشعارات.</div>
           </section>
+        </div>
+
+        <div className="flex flex-wrap justify-between items-center gap-3 mt-6">
+          <button onClick={async()=>{ try { const code=ensurePortalCode(); const url=window.location.origin+'/?portal='+encodeURIComponent(code); await navigator.clipboard.writeText(url); setData(d=>({...d,portalCode:code})); alert('تم نسخ رابط بوابة العميل.'); } catch { alert('تعذر نسخ الرابط. احفظ سير العمل أولاً.'); } }} className="px-5 py-3 bg-neutral-800 text-white rounded-xl font-bold">نسخ رابط العميل</button>
+          <div className="text-xs text-neutral-500">رابط خاص بالعميل — شاركه معه فقط.</div>
         </div>
 
         <div className="flex justify-end mt-6">
