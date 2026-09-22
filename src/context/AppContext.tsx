@@ -2078,6 +2078,15 @@ export const AppProvider: React.FC<{
           : undefined;
       const portalPatch: Record<string, unknown> = {};
       if (cleanBooking.status !== undefined) portalPatch.status = cleanBooking.status;
+      if (cleanBooking.groomName !== undefined || cleanBooking.brideName !== undefined || cleanBooking.phone !== undefined || cleanBooking.email !== undefined) {
+        const previous = bookings.find(item => item.id === id);
+        portalPatch.client = {
+          groomName: cleanBooking.groomName ?? previous?.groomName ?? "",
+          brideName: cleanBooking.brideName ?? previous?.brideName ?? "",
+          phone: cleanBooking.phone ?? previous?.phone ?? "",
+          email: cleanBooking.email ?? previous?.email ?? ""
+        };
+      }
       if (portalEventDates) portalPatch.event = {
         eventDates: portalEventDates,
         eventTime: cleanBooking.eventTime || "",
