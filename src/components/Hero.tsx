@@ -48,7 +48,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
 
         {/* Main Title */}
         <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-bold font-cinzel tracking-wider text-white mb-6 drop-shadow-2xl animate-fade-in-up">
-          <span className="bg-gradient-to-b from-white via-white to-amber-200 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-b from-white via-white to-amber-200 bg-clip-text text-transparent cinematic-shimmer">
           {settings.agencyName}
           </span>
         </h1>
@@ -73,7 +73,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-5 mb-20">
           <button
             onClick={onOpenBooking}
-            className="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-neutral-950 font-bold text-base tracking-wider uppercase shadow-xl shadow-amber-500/30 hover:shadow-amber-500/50 hover:from-amber-400 hover:to-amber-500 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-3"
+            className="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-neutral-950 font-bold text-base tracking-wider uppercase shadow-xl shadow-amber-500/30 hover:shadow-amber-500/50 hover:from-amber-400 hover:to-amber-500 transition-all transform hover:-translate-y-1 hover:scale-[1.02] gold-pulse flex items-center justify-center gap-3"
           >
             <Calendar className="w-5 h-5" />
             <span>{language === 'ar' ? 'احجز موعدك' : language === 'fr' ? 'Réserver Votre Date' : 'Book Your Date'}</span>
@@ -81,7 +81,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
 
           <a
             href="#portfolio"
-            className="w-full sm:w-auto px-8 py-4 rounded-full bg-neutral-900/80 hover:bg-neutral-800 text-white border border-neutral-700/80 hover:border-amber-500/50 font-semibold text-base tracking-wider uppercase backdrop-blur-md transition-all flex items-center justify-center gap-3"
+            className="w-full sm:w-auto px-8 py-4 rounded-full bg-neutral-900/80 hover:bg-neutral-800 text-white border border-neutral-700/80 hover:border-amber-500/50 font-semibold hover:-translate-y-1 hover:scale-[1.02] text-base tracking-wider uppercase backdrop-blur-md transition-all flex items-center justify-center gap-3"
           >
             <Play className="w-5 h-5 text-amber-400 fill-amber-400" />
             <span>{language === 'ar' ? 'شاهد أعمالنا' : language === 'fr' ? 'Découvrir Nos Œuvres' : 'Explore Portfolio'}</span>
