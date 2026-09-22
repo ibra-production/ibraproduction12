@@ -224,3 +224,19 @@ a:active {
   .cinematic-shimmer,
   .gold-pulse { animation: none !important; transition: none !important; }
 }
+
+
+/* Final premium UX polish */
+::selection { background: rgba(212,175,55,.28); color: #fff; }
+:focus-visible { outline: 2px solid rgba(212,175,55,.85); outline-offset: 3px; }
+input, textarea, select {
+  transition: border-color .3s ease, box-shadow .3s ease, transform .25s ease, background .3s ease;
+}
+input:focus, textarea:focus, select:focus {
+  box-shadow: 0 0 0 3px rgba(212,175,55,.08), 0 10px 30px rgba(0,0,0,.18);
+}
+button:not(:disabled), a { will-change: transform; }
+@media (max-width: 640px) {
+  section[id] { scroll-margin-top: 78px; }
+  .glass-card, .glass-panel { backdrop-filter: blur(10px); }
+}
