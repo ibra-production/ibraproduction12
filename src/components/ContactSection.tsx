@@ -51,13 +51,13 @@ export const ContactSection: React.FC = () => {
           
           {/* Contact Details & Info */}
           <div className="space-y-8">
-            <div className="glass-card p-8 rounded-3xl border border-neutral-800 space-y-6">
+            <div className="glass-card p-8 rounded-3xl border border-neutral-800 space-y-6 hover:border-amber-500/40">
               <h3 className="text-2xl font-bold font-cinzel text-white mb-4">
                 {settings.agencyName}
               </h3>
 
               <div className="flex items-center gap-4 group hover:translate-x-1 transition-transform">
-                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 group-hover/contact:bg-amber-500/20 transition-colors duration-300">
                   <Phone className="w-5 h-5" />
                 </div>
                 <div>
@@ -75,7 +75,7 @@ export const ContactSection: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 group/contact hover:translate-x-1 transition-transform duration-300">
                 <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
                   <MessageCircle className="w-5 h-5" />
                 </div>
@@ -153,7 +153,7 @@ export const ContactSection: React.FC = () => {
           </div>
 
           {/* Contact Form */}
-          <div className="glass-card p-8 sm:p-10 rounded-3xl border border-neutral-800 flex flex-col justify-between">
+          <div className="glass-card p-8 sm:p-10 rounded-3xl border border-neutral-800 flex flex-col justify-between hover:border-amber-500/40">
             <div>
               <h3 className="text-2xl font-bold font-cinzel text-white mb-2">
                 {language === 'ar' ? 'أرسل لنا رسالة مباشرة' : language === 'fr' ? 'Envoyez-nous un Message' : 'Send Us a Message'}
@@ -220,9 +220,9 @@ export const ContactSection: React.FC = () => {
                   <button
                     type="submit"
                     disabled={isSending}
-                    className="w-full py-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-sm tracking-wider uppercase transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
+                    className="group/submit w-full py-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-sm tracking-wider uppercase transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
                   >
-                    <Send className={`w-4 h-4 transition-transform ${isSending ? 'animate-pulse' : 'group-hover:translate-x-1'}`} />
+                    <Send className={`w-4 h-4 transition-transform ${isSending ? 'animate-pulse' : 'group-hover/submit:translate-x-1'}`} />
                     <span>{language === 'ar' ? 'إرسال الرسالة' : language === 'fr' ? 'Envoyer le Message' : 'Send Message'}</span>
                   </button>
                 </form>
