@@ -34,9 +34,19 @@ function MainContent() {
   const maintenance = settings.maintenanceMode === true;
 
   useEffect(() => {
-    const title = settings.seoTitle || settings.agencyName || 'IBRA PRODUCTION';
+    const title =
+      language === 'ar'
+        ? 'منصة إبرا للحجوزات | Ibra Production'
+        : language === 'fr'
+          ? 'Plateforme de réservation Ibra | Ibra Production'
+          : 'Ibra Booking Platform | Ibra Production';
     document.title = title;
-    const description = settings.seoDescription || settings.taglineAr || '';
+    const description =
+      language === 'ar'
+        ? 'منصة إبرا للحجوزات الرسمية — احجز خدمات التصوير والفيديو وتنظيم الأعراس والمناسبات مع Ibra Production في الجزائر.'
+        : language === 'fr'
+          ? 'Plateforme officielle de réservation Ibra Production pour la photographie, la vidéo et l’organisation des mariages et événements en Algérie.'
+          : 'Official Ibra Production booking platform for photography, videography, weddings and events in Algeria.';
     let meta = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
     if (!meta) { meta = document.createElement('meta'); meta.name = 'description'; document.head.appendChild(meta); }
     meta.content = description;
