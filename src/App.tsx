@@ -24,6 +24,7 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { AvailabilityChecker } from './components/AvailabilityChecker';
 import { PackageCustomizer } from './components/PackageCustomizer';
 import { ClientExperience } from './components/ClientExperience';
+import { ClientPortal } from './components/ClientPortal';
 import { MotionFX } from './components/MotionFX';
 import { AgencyExperience } from './components/AgencyExperience';
 import { QuickActions, ContactShortcut } from './components/QuickActions';
@@ -74,6 +75,7 @@ function MainContent() {
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100 selection:bg-amber-500 selection:text-neutral-950">
       <MotionFX />
+      <ClientPortal />
       <Navbar
         onOpenBooking={() => {
           setSelectedService(null);
