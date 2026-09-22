@@ -26,7 +26,7 @@ export const initialSiteSettings: SiteSettings = {
 };
 
 export const initialStats: StatItem[] = [
-  { id: '1', value: '+6', labelAr: 'سنوات خبرة', labelFr: 'Années d’expérience', labelEn: 'Years of Experience' },
+  { id: '1', value: '+4', labelAr: 'سنوات خبرة', labelFr: 'Années d’expérience', labelEn: 'Years of Experience' },
   { id: '2', value: '+500', labelAr: 'مشروع ناجح', labelFr: 'Projets réussis', labelEn: 'Successful Projects' },
   { id: '3', value: '+1000', labelAr: 'عميل سعيد', labelFr: 'Clients satisfaits', labelEn: 'Happy Clients' },
   { id: '4', value: '+1000', labelAr: 'لحظة موثقة', labelFr: 'Moments immortalisés', labelEn: 'Moments Captured' },
