@@ -418,7 +418,29 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
         </aside>
 
-        <main className="flex-1 overflow-y-auto p-6 sm:p-10 bg-neutral-950">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-8 lg:p-10 bg-neutral-950">
+          <div className="md:hidden sticky top-0 z-20 mb-5 -mx-1 bg-neutral-950/95 backdrop-blur-md py-2">
+            <select
+              value={activeTab}
+              onChange={e => setActiveTab(e.target.value as any)}
+              className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-amber-500"
+            >
+              <option value="dash">لوحة القيادة العامة</option>
+              <option value="bookings">الحجوزات والطلبات</option>
+              <option value="analytics">الإحصائيات والأرباح</option>
+              <option value="calendar">تقويم المواعيد</option>
+              <option value="services">إدارة الخدمات</option>
+              <option value="packages">الباقات والأسعار</option>
+              <option value="portfolio">معرض الأعمال</option>
+              <option value="videos">الفيديوهات</option>
+              <option value="messages">رسائل التواصل</option>
+              <option value="testimonials">آراء العملاء</option>
+              <option value="offers">العروض الخاصة</option>
+              <option value="idcards">بطاقات التعريف</option>
+              <option value="settings">إعدادات الموقع</option>
+              <option value="logs">سجل العمليات</option>
+            </select>
+          </div>
 
           {activeTab === 'dash' && (
             <div className="space-y-8">
@@ -435,7 +457,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
 
-                <div className="glass-card p-6 rounded-2xl border border-neutral-800">
+                <div className="glass-card p-6 rounded-2xl border border-neutral-800 hover:border-amber-500/30 hover:-translate-y-1 transition-all duration-300">
                   <span className="text-xs text-neutral-400">
                     إجمالي الحجوزات
                   </span>
@@ -476,7 +498,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
               </div>
 
-              <div className="glass-card p-6 rounded-3xl border border-neutral-800">
+              <div className="glass-card p-6 rounded-3xl border border-neutral-800 hover:border-amber-500/20 transition-all">
 
                 <div className="flex items-center justify-between mb-4">
 
