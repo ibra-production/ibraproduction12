@@ -10,7 +10,8 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
   const { language, settings } = useApp();
 
   return (
-    <footer className="bg-neutral-950 border-t border-neutral-900 pt-16 pb-12 text-neutral-400 text-sm">
+    <footer className="bg-neutral-950 border-t border-amber-500/10 pt-16 pb-12 text-neutral-400 text-sm relative overflow-hidden">
+      <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[36rem] h-64 rounded-full bg-amber-500/5 blur-3xl pointer-events-none" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           
@@ -37,7 +38,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
             </p>
 
             <div className="flex items-center gap-3 mb-6">
-              <a href={settings.facebookUrl} target="_blank" rel="noreferrer" className="w-9 h-9 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-300 hover:text-amber-400 hover:border-amber-500 transition-all">
+              <a href={settings.facebookUrl} target="_blank" rel="noreferrer" className="w-9 h-9 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-300 hover:text-amber-400 hover:border-amber-500 hover:-translate-y-1 transition-all duration-300">
                 <Facebook className="w-4 h-4" />
               </a>
               <a href={settings.instagramUrl} target="_blank" rel="noreferrer" className="w-9 h-9 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-300 hover:text-amber-400 hover:border-amber-500 transition-all">
