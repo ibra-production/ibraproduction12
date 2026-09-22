@@ -111,6 +111,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
   } | null>(null);
 
   const [invoiceModalData, setInvoiceModalData] = useState<any | null>(null);
+  const [bookingSearch, setBookingSearch] = useState('');
+  const [bookingStatusFilter, setBookingStatusFilter] = useState('all');
+  const [bookingWilayaFilter, setBookingWilayaFilter] = useState('all');
   const [serviceModal, setServiceModal] = useState<any | null>(null);
   const [packageModal, setPackageModal] = useState<any | null>(null);
   const [portfolioModal, setPortfolioModal] = useState<any | null>(null);
@@ -137,6 +140,21 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
   const unreadMessagesCount = safeMessages.filter(
     m => !m.read
   ).length;
+
+  const filteredBookings = safeBookings.filter((b: any) => {
+    const q = bookingSearch.trim().toLowerCase();
+    const matchesSearch = !q || [
+      b.id, b.groomName, b.brideName, b.phone, b.email,
+      b.eventType, b.venue, b.wilaya, b.eventDate, b.serviceId, b.packageId
+    ].some(value => String(value || '').toLowerCase().includes(q));
+    const matchesStatus = bookingStatusFilter === 'all' || b.status === bookingStatusFilter;
+    const matchesWilaya = bookingWilayaFilter === 'all' || String(b.wilaya || '') === bookingWilayaFilter;
+    return matchesSearch && matchesStatus && matchesWilaya;
+  });
+
+  const bookingWilayas = Array.from(
+    new Set(safeBookings.map((b: any) => String(b.wilaya || '')).filter(Boolean))
+  ).sort();
 
   const handleStatusChange = async (
     booking: any,
@@ -454,6 +472,46 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 </p>
               </div>
 
+              <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <input
+                    value={bookingSearch}
+                    onChange={e => setBookingSearch(e.target.value)}
+                    placeholder="بحث بالاسم، الهاتف، البريد، المناسبة، المكان أو رقم الحجز..."
+                    className="md:col-span-1 bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-amber-500"
+                  />
+                  <select
+                    value={bookingStatusFilter}
+                    onChange={e => setBookingStatusFilter(e.target.value)}
+                    className="bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white text-sm"
+                  >
+                    <option value="all">كل الحالات</option>
+                    <option value="new">جديد</option>
+                    <option value="confirmed">مؤكد</option>
+                    <option value="processing">قيد المعالجة</option>
+                    <option value="completed">مكتمل</option>
+                    <option value="cancelled">ملغي</option>
+                  </select>
+                  <select
+                    value={bookingWilayaFilter}
+                    onChange={e => setBookingWilayaFilter(e.target.value)}
+                    className="bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white text-sm"
+                  >
+                    <option value="all">كل الولايات</option>
+                    {bookingWilayas.map(w => <option key={w} value={w}>{w}</option>)}
+                  </select>
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-3 mt-3 text-xs text-neutral-500">
+                  <span>عرض {filteredBookings.length} من {safeBookings.length} حجز</span>
+                  <button
+                    onClick={() => { setBookingSearch(''); setBookingStatusFilter('all'); setBookingWilayaFilter('all'); }}
+                    className="px-3 py-2 rounded-lg bg-neutral-800 text-neutral-300 hover:text-white"
+                  >
+                    إعادة ضبط البحث
+                  </button>
+                </div>
+              </div>
+
               <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
 
                 <div className="overflow-x-auto">
@@ -473,17 +531,17 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
                     <tbody className="divide-y divide-neutral-800">
 
-                      {safeBookings.length === 0 ? (
+                      {filteredBookings.length === 0 ? (
                         <tr>
                           <td
                             colSpan={6}
                             className="p-10 text-center text-neutral-500"
                           >
-                            لا توجد حجوزات حتى الآن.
+                            {safeBookings.length === 0 ? 'لا توجد حجوزات حتى الآن.' : 'لا توجد نتائج مطابقة للبحث.'}
                           </td>
                         </tr>
                       ) : (
-                        safeBookings.map((b: any) => (
+                        filteredBookings.map((b: any) => (
                           <tr
                             key={b.id}
                             className="hover:bg-neutral-800/40"
@@ -566,10 +624,18 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                                     setInvoiceModalData(b)
                                   }
                                   className="p-2 bg-neutral-800 text-amber-400 rounded-lg"
-                                  title="العقد"
+                                  title="عرض كل تفاصيل الحجز"
                                 >
-                                  <FileText className="w-4 h-4" />
+                                  <Eye className="w-4 h-4" />
                                 </button>
+
+                                <a
+                                  href={b.phone ? `tel:${b.phone}` : '#'}
+                                  className="p-2 bg-neutral-800 text-green-400 rounded-lg"
+                                  title="اتصال"
+                                >
+                                  <PhoneCall className="w-4 h-4" />
+                                </a>
 
                                 <button
                                   onClick={() =>
@@ -2048,6 +2114,25 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               <section>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-1.5 h-7 bg-amber-500 rounded-full" />
+                  <h3 className="text-lg font-black">الجانب المالي والمتابعة</h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {[
+                    ['السعر الإجمالي', invoiceModalData.totalPrice ?? invoiceModalData.total ?? invoiceModalData.price],
+                    ['المبلغ المدفوع', invoiceModalData.totalPaid ?? invoiceModalData.paidAmount ?? invoiceModalData.paid],
+                    ['المبلغ المتبقي', invoiceModalData.remainingBalance ?? invoiceModalData.remaining ?? invoiceModalData.balance],
+                  ].map(([label, value]) => (
+                    <div key={label} className="rounded-2xl bg-neutral-50 border border-neutral-200 p-4">
+                      <div className="text-xs text-neutral-500 mb-1">{label}</div>
+                      <div className="font-black text-lg">{value !== undefined && value !== null && value !== '' ? `${value} DA` : '-'}</div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-1.5 h-7 bg-amber-500 rounded-full" />
                   <h3 className="text-lg font-black">ملاحظات وملفات</h3>
                 </div>
                 <div className="space-y-3">
@@ -2095,7 +2180,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               </section>
 
               {Object.entries(invoiceModalData).filter(([key]) =>
-                !['id','groomName','brideName','phone','email','eventType','eventDate','eventDates','wilaya','venue','eventTime','serviceId','packageId','notes','idCardUrl','idCardName','status','createdAt'].includes(key)
+                !['id','groomName','brideName','phone','email','eventType','eventDate','eventDates','wilaya','venue','eventTime','serviceId','packageId','notes','idCardUrl','idCardName','status','createdAt','totalPrice','total','price','totalPaid','paidAmount','paid','remainingBalance','remaining','balance'].includes(key)
               ).length > 0 && (
                 <section>
                   <div className="flex items-center gap-3 mb-4">
@@ -2124,13 +2209,49 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 >
                   إغلاق
                 </button>
-                <button
-                  onClick={() => window.print()}
-                  className="flex items-center gap-2 px-6 py-3 bg-neutral-950 text-white rounded-xl font-bold"
-                >
-                  <Download className="w-4 h-4" />
-                  طباعة تفاصيل الحجز
-                </button>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard?.writeText(String(invoiceModalData.id || ''));
+                      alert('تم نسخ رقم الحجز.');
+                    }}
+                    className="px-4 py-3 bg-neutral-100 text-neutral-900 rounded-xl font-bold text-sm"
+                  >
+                    نسخ رقم الحجز
+                  </button>
+                  {invoiceModalData.phone && (
+                    <a
+                      href={`https://wa.me/${String(invoiceModalData.phone).replace(/[^0-9]/g, '')}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-4 py-3 bg-neutral-100 text-neutral-900 rounded-xl font-bold text-sm"
+                    >
+                      WhatsApp
+                    </a>
+                  )}
+                  <button
+                    onClick={() => {
+                      const data = JSON.stringify(invoiceModalData, null, 2);
+                      const blob = new Blob([data], { type: 'application/json' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `booking-${String(invoiceModalData.id || 'unknown')}.json`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                    className="px-4 py-3 bg-neutral-100 text-neutral-900 rounded-xl font-bold text-sm"
+                  >
+                    تصدير البيانات
+                  </button>
+                  <button
+                    onClick={() => window.print()}
+                    className="flex items-center gap-2 px-6 py-3 bg-neutral-950 text-white rounded-xl font-bold"
+                  >
+                    <Download className="w-4 h-4" />
+                    طباعة A4
+                  </button>
+                </div>
               </div>
 
               <div className="pt-4 border-t border-neutral-200 flex flex-wrap justify-between gap-3 text-xs text-neutral-500">
@@ -2138,6 +2259,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 <span>{settings.phone || ''}</span>
                 <span>{settings.email || ''}</span>
                 <span>{settings.addressAr || ''}</span>
+                <span>طُبع في: {new Date().toLocaleString('ar-DZ')}</span>
               </div>
             </div>
           </div>
