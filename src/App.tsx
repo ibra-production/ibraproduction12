@@ -26,6 +26,7 @@ import { PackageCustomizer } from './components/PackageCustomizer';
 import { ClientExperience } from './components/ClientExperience';
 import { MotionFX } from './components/MotionFX';
 import { AgencyExperience } from './components/AgencyExperience';
+import { QuickActions, ContactShortcut } from './components/QuickActions';
 import { ServiceItem, PackageItem } from './types';
 
 function MainContent() {
@@ -93,6 +94,7 @@ function MainContent() {
       ) : (
         <main>
           <Hero onOpenBooking={() => setBookingModalOpen(true)} />
+          <QuickActions onOpenBooking={() => setBookingModalOpen(true)} />
           <About />
           <Services onSelectService={handleOpenBookingWithService} />
           <AvailabilityChecker onOpenBooking={() => setBookingModalOpen(true)} />
@@ -119,6 +121,7 @@ function MainContent() {
         }}
       />
       <WhatsAppFloat />
+      <ContactShortcut />
 
       <BookingModal
         isOpen={bookingModalOpen}
