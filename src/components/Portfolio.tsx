@@ -9,6 +9,12 @@ export const Portfolio: React.FC = () => {
   const [lightboxItem, setLightboxItem] = useState<PortfolioItem | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
+  const filteredItems = portfolio.filter(item => {
+    if (!item.visible) return false;
+    if (activeCategory === 'all') return true;
+    return item.category === activeCategory;
+  });
+
   useEffect(() => {
     if (!lightboxItem) return;
     const items = filteredItems;
@@ -24,8 +30,6 @@ export const Portfolio: React.FC = () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [lightboxItem, filteredItems.length]);
-
-  const currentLightboxItem = filteredItems[lightboxIndex] || lightboxItem;
 
   const categories = [
     { id: 'all', labelAr: 'الكل', labelFr: 'Tous', labelEn: 'All' },
