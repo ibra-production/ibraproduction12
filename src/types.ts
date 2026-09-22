@@ -170,6 +170,25 @@ export interface ActivityLog {
   type: 'create' | 'update' | 'delete' | 'settings';
 }
 
+export interface TeamMember {
+  id: string;
+  fullName: string;
+  role: string;
+  phone: string;
+  email: string;
+  photoUrl?: string;
+  bioAr: string;
+  bioFr: string;
+  bioEn: string;
+  skills: string[];
+  wilaya: string;
+  joinedAt: string;
+  instagram?: string;
+  facebook?: string;
+  active: boolean;
+  order: number;
+}
+
 export interface AdminUser {
   id: string;
   email: string;
