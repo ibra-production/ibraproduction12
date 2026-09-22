@@ -589,7 +589,34 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 </div>
               </div>
 
-              <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
+              <div className="md:hidden space-y-3">
+                {filteredBookings.map((booking: any) => (
+                  <div key={booking.id} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 hover:border-amber-500/30 transition-all">
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div>
+                        <div className="font-bold text-white">{booking.groomName || 'بدون اسم'}</div>
+                        <div className="text-xs text-neutral-500 mt-1">{booking.brideName || '—'} • #{String(booking.id || '').slice(-6)}</div>
+                      </div>
+                      <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-neutral-800 text-amber-400 border border-amber-500/20">
+                        {booking.status === 'new' ? 'جديد' : booking.status === 'confirmed' ? 'مؤكد' : booking.status === 'processing' ? 'قيد المعالجة' : booking.status === 'completed' ? 'مكتمل' : 'ملغي'}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-xs mb-4">
+                      <div className="bg-neutral-950 rounded-xl p-3"><span className="text-neutral-500 block mb-1">المناسبة</span><span className="text-neutral-200">{booking.eventType || '—'}</span></div>
+                      <div className="bg-neutral-950 rounded-xl p-3"><span className="text-neutral-500 block mb-1">التاريخ</span><span className="text-neutral-200">{Array.isArray(booking.eventDates) && booking.eventDates.length ? booking.eventDates.join(' • ') : booking.eventDate || '—'}</span></div>
+                      <div className="bg-neutral-950 rounded-xl p-3"><span className="text-neutral-500 block mb-1">الولاية</span><span className="text-neutral-200">{booking.wilaya || '—'}</span></div>
+                      <div className="bg-neutral-950 rounded-xl p-3"><span className="text-neutral-500 block mb-1">الهاتف</span><a href={`tel:${booking.phone || ''}`} className="text-amber-400">{booking.phone || '—'}</a></div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button onClick={() => { const el = document.getElementById(`booking-${booking.id}`); el?.scrollIntoView({behavior:'smooth',block:'center'}); }} className="flex-1 min-w-[110px] px-3 py-2.5 rounded-xl bg-amber-500 text-neutral-950 font-bold text-xs">عرض التفاصيل</button>
+                      {booking.phone && <a href={`https://wa.me/${String(booking.phone).replace(/[^0-9]/g,'')}`} target="_blank" rel="noreferrer" className="px-3 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold">واتساب</a>}
+                    </div>
+                  </div>
+                ))}
+                {!filteredBookings.length && <div className="text-center py-12 text-neutral-500 bg-neutral-900 border border-neutral-800 rounded-2xl">لا توجد حجوزات مطابقة للبحث.</div>}
+              </div>
+
+              <div className="hidden md:block bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
 
                 <div className="overflow-x-auto">
 
