@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { enablePushNotifications } from "../pushNotifications";
 import { useApp } from '../context/AppContext';
 import { TeamManagement } from './TeamManagement';
@@ -261,7 +262,22 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
   ) => {
     if (!booking?.id) return;
 
-    updateBookingStatus(booking.id, newStatus);
+    await updateBookingStatus(booking.id, newStatus);
+    try {
+      await addDoc(collection(db, 'automationQueue'), {
+        bookingId: booking.id,
+        type: 'status_change',
+        fromStatus: booking.status || 'new',
+        toStatus: newStatus,
+        phone: booking.phone || '',
+        groomName: booking.groomName || '',
+        eventDate: booking.eventDate || '',
+        createdAt: serverTimestamp(),
+        status: 'queued'
+      });
+    } catch (automationError) {
+      console.error('Automation queue error:', automationError);
+    }
 
     if (newStatus === 'confirmed') {
       const smsText =
