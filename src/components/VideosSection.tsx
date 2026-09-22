@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { VideoItem } from '../types';
-import { Sparkles, Play, X, Clock, Film } from 'lucide-react';
+import { Sparkles, Play, X, Clock, Film, Volume2 } from 'lucide-react';
 
 export const VideosSection: React.FC = () => {
   const { language, videos } = useApp();
@@ -52,7 +52,7 @@ export const VideosSection: React.FC = () => {
 
                 {/* Play Button Icon */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-16 h-16 rounded-full bg-amber-500/90 text-neutral-950 flex items-center justify-center shadow-lg shadow-amber-500/30 group-hover:scale-110 transition-transform">
+                  <div className="w-16 h-16 rounded-full bg-amber-500/90 text-neutral-950 flex items-center justify-center shadow-lg shadow-amber-500/30 group-hover:scale-110 group-hover:shadow-amber-500/50 transition-all duration-300">
                     <Play className="w-7 h-7 fill-neutral-950 ml-1" />
                   </div>
                 </div>
@@ -69,7 +69,7 @@ export const VideosSection: React.FC = () => {
                     </span>
                   </div>
 
-                  <h3 className="text-lg font-bold font-cinzel text-white group-hover:text-amber-400 transition-colors">
+                  <div className="flex items-center gap-2 mb-1 text-[10px] uppercase tracking-[0.2em] text-amber-400/80"><Film className="w-3 h-3" /> Cinematic</div>\n                  <h3 className="text-lg font-bold font-cinzel text-white group-hover:text-amber-400 transition-colors">
                     {title}
                   </h3>
                 </div>
