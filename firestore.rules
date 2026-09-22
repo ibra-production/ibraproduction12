@@ -95,6 +95,10 @@ service cloud.firestore {
       allow read, create, update, delete: if isAdmin();
     }
 
+    match /automationQueue/{eventId} {
+      allow read, write: if isAdmin();
+    }
+
     // Everything else is denied by default.
     match /{document=**} {
       allow read, write: if false;
