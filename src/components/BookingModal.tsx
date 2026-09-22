@@ -13,6 +13,11 @@ import {
   FileText,
   Plus,
   Trash2,
+  ArrowLeft,
+  ArrowRight,
+  ShieldCheck,
+  Eye,
+  Loader2,
 } from 'lucide-react';
 
 interface BookingModalProps {
@@ -137,6 +142,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   const [idCardName, setIdCardName] = useState('');
 
   const [submitted, setSubmitted] = useState(false);
+  const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) {
     return null;
@@ -261,12 +268,15 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     setIdCardName('');
 
     setSubmitted(false);
+    setStep(1);
+    setIsSubmitting(false);
 
     onClose();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (step < 3) { setStep((current) => current + 1); return; }
 
     const cleanDates = Array.from(
       new Set(eventDates.filter(Boolean))
@@ -323,6 +333,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     }
 
     try {
+      setIsSubmitting(true);
       await addBooking({
         groomName,
         brideName,
@@ -359,8 +370,12 @@ export const BookingModal: React.FC<BookingModalProps> = ({
           ? "Une erreur est survenue lors de l'enregistrement de la réservation."
           : 'An error occurred while saving the booking.'
       );
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  const cleanDatesPreview = (dates: string[]) => dates.filter(Boolean).join(' • ') || '—';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-950/80 backdrop-blur-md animate-fade-in">
@@ -426,7 +441,22 @@ export const BookingModal: React.FC<BookingModalProps> = ({
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="grid grid-cols-3 gap-2 mb-7">
+                {[
+                  { n: 1, ar: 'المعلومات', fr: 'Infos', en: 'Info' },
+                  { n: 2, ar: 'المناسبة', fr: 'Événement', en: 'Event' },
+                  { n: 3, ar: 'التأكيد', fr: 'Confirmation', en: 'Confirm' },
+                ].map((item) => (
+                  <div key={item.n} className="text-center">
+                    <div className={`h-1 rounded-full mb-2 transition-all duration-300 ${step >= item.n ? 'bg-amber-500' : 'bg-neutral-800'}`} />
+                    <span className={`text-[10px] sm:text-xs font-semibold ${step === item.n ? 'text-amber-400' : 'text-neutral-500'}`}>
+                      {language === 'ar' ? item.ar : language === 'fr' ? item.fr : item.en}
+                    </span>
+                  </div>
+                ))}
+              </div>
 
+              {step === 1 && <div className="space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-neutral-300 mb-1.5">
@@ -521,6 +551,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 </div>
               </div>
 
+              </div>}
+
+              {step === 2 && <div className="space-y-5">
               <div>
                 <label className="block text-xs font-medium text-neutral-300 mb-1.5">
                   {language === 'ar'
@@ -721,6 +754,10 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 </select>
               </div>
 
+              <div className="mt-2 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
+                <div className="flex items-center gap-2 text-amber-400 text-sm font-semibold mb-1"><ShieldCheck className="w-4 h-4" /> {language === 'ar' ? 'بيانات المناسبة' : language === 'fr' ? 'Détails de l’événement' : 'Event details'}</div>
+                <p className="text-xs text-neutral-400">{cleanDatesPreview(eventDates)} · {wilaya || '—'} · {eventTime || '—'}</p>
+              </div>
               <div>
                 <label className="block text-xs font-medium text-neutral-300 mb-1.5">
                   {language === 'ar'
@@ -801,20 +838,47 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 />
               </div>
 
+              </div>}
+
+              {step === 3 && <div className="space-y-5">
+                <div className="rounded-2xl border border-neutral-800 bg-neutral-950/70 p-5">
+                  <div className="flex items-center justify-between mb-5">
+                    <div>
+                      <p className="text-xs text-neutral-500 uppercase tracking-widest">IBRA PRODUCTION</p>
+                      <h4 className="text-lg font-bold text-white mt-1">{language === 'ar' ? 'مراجعة طلب الحجز' : language === 'fr' ? 'Vérifier la réservation' : 'Review booking'}</h4>
+                    </div>
+                    <ShieldCheck className="w-7 h-7 text-amber-400" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    {[
+                      [language === 'ar' ? 'العريس' : 'Groom', groomName],
+                      [language === 'ar' ? 'العروس' : 'Bride', brideName || '—'],
+                      [language === 'ar' ? 'الهاتف' : 'Phone', phone],
+                      [language === 'ar' ? 'الولاية' : 'Wilaya', wilaya],
+                      [language === 'ar' ? 'التاريخ' : 'Date', eventDates.filter(Boolean).join(' • ')],
+                      [language === 'ar' ? 'الوقت' : 'Time', eventTime],
+                      [language === 'ar' ? 'المكان' : 'Venue', venue || '—'],
+                      [language === 'ar' ? 'الباقة' : 'Package', packageId ? (packages.find(p => p.id === packageId)?.nameAr || '—') : '—'],
+                    ].map(([label, value]) => <div key={label} className="rounded-xl bg-neutral-900 border border-neutral-800 p-3"><span className="block text-neutral-500 mb-1">{label}</span><strong className="text-white break-words">{value}</strong></div>)}
+                  </div>
+                  <div className="mt-4 flex items-center gap-2 text-xs text-amber-400"><FileText className="w-4 h-4" /> {idCardName || '—'}</div>
+                </div>
+              </div>}
+
+              <div className="flex gap-3 pt-2">
+                {step > 1 && <button type="button" onClick={() => setStep((current) => current - 1)} className="flex-1 py-4 rounded-xl bg-neutral-800 border border-neutral-700 text-white font-bold flex items-center justify-center gap-2 hover:bg-neutral-700 transition-all"><ArrowLeft className="w-4 h-4" /> {language === 'ar' ? 'رجوع' : language === 'fr' ? 'Retour' : 'Back'}</button>}
               <button
                 type="submit"
-                className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-neutral-950 font-bold text-base tracking-wider uppercase shadow-lg shadow-amber-500/25 hover:from-amber-400 hover:to-amber-500 transition-all flex items-center justify-center gap-2"
+                disabled={isSubmitting}
+                className="flex-[2] w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-neutral-950 font-bold text-base tracking-wider uppercase shadow-lg shadow-amber-500/25 hover:from-amber-400 hover:to-amber-500 transition-all flex items-center justify-center gap-2"
               >
-                <Calendar className="w-5 h-5" />
+                {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : step < 3 ? <ArrowRight className="w-5 h-5" /> : <Calendar className="w-5 h-5" />}
 
                 <span>
-                  {language === 'ar'
-                    ? 'إرسال طلب الحجز'
-                    : language === 'fr'
-                    ? 'Envoyer la Demande'
-                    : 'Submit Booking Request'}
+                  {isSubmitting ? (language === 'ar' ? 'جاري إرسال الطلب...' : language === 'fr' ? 'Envoi en cours...' : 'Sending...') : step < 3 ? (language === 'ar' ? 'التالي' : language === 'fr' ? 'Suivant' : 'Next') : (language === 'ar' ? 'تأكيد وإرسال الحجز' : language === 'fr' ? 'Confirmer et envoyer' : 'Confirm & submit')}
                 </span>
               </button>
+              </div>
 
             </form>
           </div>
