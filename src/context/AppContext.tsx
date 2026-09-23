@@ -15,6 +15,9 @@ import {
   doc,
   setDoc,
   getDoc,
+  getDocs,
+  query,
+  where,
 } from "firebase/firestore";
 
 import {
@@ -1727,9 +1730,57 @@ export const AppProvider: React.FC<{
           }
         );
 
+      // Create/reuse one permanent client file and attach its stable barcode ID to the booking.
+      const phoneKey = String(bookingData.phone || "").trim();
+      let clientDoc: any = null;
+      if (phoneKey) {
+        const existing = await getDocs(
+          query(collection(db, "clients"), where("phone", "==", phoneKey))
+        );
+        if (!existing.empty) {
+          clientDoc = existing.docs[0];
+        }
+      }
+
+      const clientId = clientDoc?.id || doc(collection(db, "clients")).id;
+      const existingClient = clientDoc?.data() || {};
+      const clientCode =
+        String(existingClient.clientCode || existingClient.barcode || "").trim() ||
+        `IBRA-C-${bookingRef.id.slice(-8).toUpperCase()}`;
+
+      await setDoc(
+        doc(db, "clients", clientId),
+        {
+          clientCode,
+          barcode: clientCode,
+          fullName: bookingData.groomName || "",
+          groomName: bookingData.groomName || "",
+          brideName: bookingData.brideName || "",
+          phone: phoneKey,
+          email: bookingData.email || "",
+          address: bookingData.venue || "",
+          active: true,
+          totalProjects: Number(existingClient.totalProjects || 0) + 1,
+          lastBookingId: bookingRef.id,
+          lastEventDates: bookingData.eventDates || [bookingData.eventDate].filter(Boolean),
+          lastStatus: "new",
+          updatedAt: serverTimestamp(),
+          createdAt: existingClient.createdAt || serverTimestamp(),
+          source: "booking",
+        },
+        { merge: true }
+      );
+
+      await updateDoc(doc(db, "bookings", bookingRef.id), {
+        clientId,
+        clientCode,
+      });
+
       console.log(
         "2️⃣ تم الحفظ في Firestore بنجاح:",
-        bookingRef.id
+        bookingRef.id,
+        "Client:",
+        clientCode
       );
 
       logActivity(
