@@ -843,3 +843,360 @@ section[id="client-experience"] > div > div > div > div:hover {
   .ibra-hero-kicker { font-size:.62rem; }
   .ibra-slide-dots { margin-top:14px; }
 }
+
+
+/* =========================================================
+   IBRA PRODUCTION — MOBILE / TABLET / SMART TV EXPERIENCE
+   Keeps desktop layout intact and adds device-specific UX.
+   ========================================================= */
+
+html, body, #root {
+  min-width: 0;
+  max-width: 100%;
+}
+
+img, video, canvas, iframe {
+  max-width: 100%;
+}
+
+button, input, textarea, select, a {
+  touch-action: manipulation;
+}
+
+/* Phones: full-width controls, readable forms, no horizontal overflow */
+@media (max-width: 767px) {
+  html, body {
+    width: 100%;
+    overflow-x: hidden !important;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  main {
+    width: 100%;
+    overflow-x: clip;
+  }
+
+  section[id] {
+    scroll-margin-top: 72px !important;
+  }
+
+  button, a, input, select, textarea {
+    min-height: 44px;
+  }
+
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+
+  textarea {
+    min-height: 110px;
+  }
+
+  .ibra-hero {
+    min-height: 100svh !important;
+    min-height: 100dvh !important;
+  }
+
+  .ibra-hero-content {
+    width: 100% !important;
+    padding-inline: 18px !important;
+  }
+
+  .ibra-hero-actions {
+    width: 100%;
+  }
+
+  .ibra-hero-actions > * {
+    width: 100%;
+  }
+
+  .ibra-quick-inner {
+    padding-inline: 14px !important;
+  }
+
+  .ibra-contact-shortcut {
+    bottom: calc(14px + env(safe-area-inset-bottom));
+  }
+
+  /* Common responsive grids */
+  .grid {
+    min-width: 0;
+  }
+
+  /* Dialogs/modals: turn into mobile sheets/full-screen panels */
+  [role="dialog"] {
+    max-width: calc(100vw - 20px) !important;
+  }
+
+  /* Keep large data tables usable without breaking the page */
+  table {
+    min-width: 680px;
+  }
+
+  /* Admin dashboard and workflow panels */
+  .admin-mobile-scroll,
+  [data-admin-scroll="true"] {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Prevent fixed desktop widths from creating sideways scroll */
+  .w-screen {
+    width: 100vw;
+    max-width: 100%;
+  }
+
+  /* Mobile-friendly fixed overlays */
+  .fixed.inset-0 {
+    overscroll-behavior: contain;
+  }
+
+  /* Hide decorative hover-only effects on touch devices */
+  .glass-card:hover,
+  .glass-panel:hover,
+  .ibra-feature-card:hover {
+    transform: none;
+  }
+}
+
+/* Small phones */
+@media (max-width: 430px) {
+  .ibra-hero-content {
+    padding-inline: 15px !important;
+  }
+
+  .ibra-hero-description {
+    font-size: .86rem !important;
+    line-height: 1.75 !important;
+  }
+
+  .ibra-trust-row {
+    gap: 10px 14px !important;
+    font-size: .68rem !important;
+  }
+
+  .ibra-quick-intro {
+    padding-inline: 12px !important;
+  }
+
+  .ibra-quick-item,
+  .ibra-quick-book {
+    padding-inline: 8px !important;
+  }
+}
+
+/* =========================================================
+   ADMIN — MOBILE FIRST
+   ========================================================= */
+@media (max-width: 900px) {
+  /* Dashboard content should never force the viewport wider */
+  [data-admin-dashboard],
+  .admin-dashboard,
+  .admin-panel {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  /* Cards and panels stack naturally */
+  [data-admin-dashboard] .grid,
+  .admin-dashboard .grid,
+  .admin-panel .grid {
+    min-width: 0;
+  }
+
+  /* Dense admin controls become scrollable rows instead of wrapping badly */
+  [data-admin-dashboard] .flex-wrap,
+  .admin-dashboard .flex-wrap {
+    row-gap: 8px;
+  }
+
+  /* Booking/calendar tables */
+  [data-admin-dashboard] table,
+  .admin-dashboard table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Modal/dialog safety */
+  [role="dialog"] {
+    width: calc(100vw - 12px) !important;
+    max-height: calc(100dvh - 12px) !important;
+    margin: 6px !important;
+    border-radius: 18px !important;
+  }
+
+  /* Large dashboard headings */
+  .admin-dashboard h1,
+  .admin-dashboard h2,
+  .admin-panel h1,
+  .admin-panel h2 {
+    font-size: clamp(1.2rem, 5vw, 1.7rem);
+    line-height: 1.25;
+  }
+
+  /* Make common buttons comfortable for fingers */
+  .admin-dashboard button,
+  .admin-panel button {
+    min-height: 44px;
+  }
+
+  /* Date/calendar controls */
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"] {
+    min-height: 46px;
+  }
+}
+
+/* =========================================================
+   CLIENT PORTAL — PHONE
+   ========================================================= */
+@media (max-width: 767px) {
+  .client-portal,
+  [data-client-portal] {
+    width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  .client-portal .grid,
+  [data-client-portal] .grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .client-portal table,
+  [data-client-portal] table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* =========================================================
+   SMART TV / ANDROID TV
+   Browser-based: optimized for 1080p/4K screens and remote
+   ========================================================= */
+.tv-mode {
+  --tv-scale: 1.18;
+}
+
+.tv-mode body {
+  cursor: default;
+}
+
+.tv-mode button,
+.tv-mode a,
+.tv-mode input,
+.tv-mode select,
+.tv-mode textarea {
+  min-height: 54px;
+}
+
+.tv-mode a:focus-visible,
+.tv-mode button:focus-visible,
+.tv-mode input:focus-visible,
+.tv-mode select:focus-visible,
+.tv-mode textarea:focus-visible {
+  outline: 3px solid var(--ibra-copper-light);
+  outline-offset: 5px;
+  box-shadow: 0 0 0 8px rgba(224,162,125,.12);
+}
+
+.tv-mode .ibra-hero-content {
+  max-width: 1700px !important;
+}
+
+.tv-mode .ibra-hero h1 {
+  font-size: clamp(5rem, 9vw, 11rem) !important;
+}
+
+.tv-mode .ibra-hero-tagline {
+  font-size: clamp(1.6rem, 2.2vw, 2.5rem) !important;
+}
+
+.tv-mode .ibra-hero-description {
+  font-size: 1.08rem;
+}
+
+.tv-mode .ibra-btn {
+  min-height: 64px;
+  padding-inline: 28px;
+  font-size: 1.02rem;
+}
+
+.tv-mode .ibra-quick-item,
+.tv-mode .ibra-quick-book {
+  min-height: 100px;
+  font-size: 1rem;
+}
+
+.tv-mode section[id] {
+  scroll-margin-top: 100px;
+}
+
+.tv-mode .glass-card,
+.tv-mode .glass-panel,
+.tv-mode .ibra-feature-card {
+  border-width: 2px;
+}
+
+.tv-mode .ibra-contact-shortcut {
+  right: 32px;
+  bottom: 32px;
+  font-size: 1rem;
+  padding: 16px 22px;
+}
+
+/* 4K TVs */
+@media (min-width: 2560px) {
+  .tv-mode .ibra-hero-content {
+    max-width: 2100px !important;
+  }
+
+  .tv-mode .ibra-hero h1 {
+    font-size: clamp(7rem, 8vw, 13rem) !important;
+  }
+
+  .tv-mode .ibra-hero-tagline {
+    font-size: 2.6rem !important;
+  }
+
+  .tv-mode .ibra-btn {
+    min-height: 72px;
+    font-size: 1.15rem;
+  }
+}
+
+/* Android TV remote / keyboard navigation */
+.tv-mode :focus-visible {
+  scroll-margin: 140px;
+}
+
+.tv-mode [role="dialog"] {
+  max-height: 88vh;
+}
+
+@media (pointer: coarse) and (min-width: 1000px) {
+  button, a {
+    min-width: 48px;
+    min-height: 48px;
+  }
+}
+
+/* =========================================================
+   PWA safe-area support
+   ========================================================= */
+@media (display-mode: standalone) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
