@@ -10,7 +10,7 @@ export const ClientTrackingButton:React.FC=()=>{
     window.location.href=`${window.location.origin}?portal=${encodeURIComponent(value)}`;
   };
   return <>
-    <button onClick={()=>setOpen(true)} className="fixed bottom-5 left-5 z-40 px-4 py-3 rounded-2xl bg-amber-500 text-black font-black shadow-2xl inline-flex items-center gap-2 hover:scale-[1.02] transition-transform"><Search className="w-4 h-4"/> متابعة الطلب</button>
+    <button data-client-tracking onClick={()=>setOpen(true)} className="fixed bottom-5 left-5 z-40 px-4 py-3 rounded-2xl bg-amber-500 text-black font-black shadow-2xl inline-flex items-center gap-2 hover:scale-[1.02] transition-transform"><Search className="w-4 h-4"/> متابعة الطلب</button>
     {open&&<div className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm flex items-center justify-center p-5" onClick={()=>setOpen(false)}>
       <div className="w-full max-w-md bg-neutral-950 border border-neutral-800 rounded-3xl p-6 text-white" onClick={e=>e.stopPropagation()}>
         <div className="flex justify-between items-center"><div><div className="text-amber-400 text-xs font-bold">IBRA PRODUCTION</div><h2 className="text-2xl font-black mt-1">متابعة طلبك</h2></div><button onClick={()=>setOpen(false)} className="p-2 bg-neutral-900 rounded-xl"><X className="w-5 h-5"/></button></div>
