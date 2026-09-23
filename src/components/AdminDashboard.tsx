@@ -146,6 +146,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
   const [scanCode, setScanCode] = useState('');
   const [scanLogs, setScanLogs] = useState<any[]>([]);
   const [scanMessage, setScanMessage] = useState('جاهز للمسح');
+  const safeBookings = Array.isArray(bookings) ? bookings.filter(b => b && typeof b === 'object') : [];
   const [scanResult, setScanResult] = useState<any | null>(null);
 
   useEffect(() => {
@@ -338,9 +339,6 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
   };
 
-  const safeBookings = Array.isArray(bookings)
-    ? bookings.filter(b => b && typeof b === 'object')
-    : [];
 
   const safeMessages = Array.isArray(contactMessages)
     ? contactMessages.filter(m => m && typeof m === 'object')
