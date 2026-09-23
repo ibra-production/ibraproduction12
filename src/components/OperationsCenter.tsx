@@ -9,6 +9,11 @@ const money=(n:any)=>Number(n||0).toLocaleString('fr-DZ')+' DA';
 const dates=(b:any)=>Array.isArray(b?.eventDates)&&b.eventDates.length?b.eventDates:[b?.eventDate].filter(Boolean);
 const code=(prefix:string,id:string)=>prefix+'-'+String(id||'').slice(-8).toUpperCase();
 
+const CODE39:Record<string,string>={"0":"nnnwwnwnn","1":"wnnwnnnnw","2":"nnwwnnnnw","3":"wnwwnnnnn","4":"nnnwwnnnw","5":"wnnwwnnnn","6":"nnwwwnnnn","7":"nnnwnnwnw","8":"wnnwnnwnn","9":"nnwwnnwnn","A":"wnnnnwnnw","B":"nnwnnwnnw","C":"wnwnnwnnn","D":"nnnnwwnnw","E":"wnnnwwnnn","F":"nnwnwwnnn","G":"nnnnnwwnw","H":"wnnnnwwnn","I":"nnwnnwwnn","J":"nnnnwwwnn","K":"wnnnnnnww","L":"nnwnnnnww","M":"wnwnnnnwn","N":"nnnnwnnww","O":"wnnnwnnwn","P":"nnwnwnnwn","Q":"nnnnnnwww","R":"wnnnnnwwn","S":"nnwnnnwwn","T":"nnnnwnwwn","U":"wwnnnnnnw","V":"nwwnnnnnw","W":"wwwnnnnnn","X":"nwnnwnnnw","Y":"wwnnwnnnn","Z":"nwwnwnnnn","-":"nwnnnnwnw",".":"wwnnnnwnn"," ":"nwwnnnwnn","$":"nwnwnwnnn","/":"nwnwnnnwn","+":"nwnnnwnwn","%":"nnnwnwnwn","*":"nwnnwnwnn"};
+const barcodeSvg=(raw:string)=>{const value=String(raw||"").toUpperCase().replace(/[^0-9A-Z\\-\\. $/+%]/g,"");const payload="*"+value+"*";let x=8;const bars:string[]=[];for(const ch of payload){const p=CODE39[ch]||CODE39["-"];[...p].forEach((u,i)=>{const w=u==="w"?5:2;if(i%2===0)bars.push('<rect x="'+x+'" y="4" width="'+w+'" height="68"/>');x+=w;});x+=2;}const width=x+8;return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+width+' 88" style="width:100%;height:auto;background:#fff;padding:5px">'+bars.join("")+'<text x="'+width/2+'" y="83" text-anchor="middle" font-family="monospace" font-size="11">'+value+'</text></svg>';};
+
+
+
 export const OperationsCenter: React.FC<Props> = ({ bookings, teamMembers }) => {
   const [tab,setTab]=useState<'crm'|'shoot'|'usb'|'finance'|'permissions'|'gallery'>('crm');
   const [clients,setClients]=useState<any[]>([]);
@@ -71,7 +76,8 @@ export const OperationsCenter: React.FC<Props> = ({ bookings, teamMembers }) => 
     const value=String(client.clientCode||client.barcode||'').toUpperCase();
     if(!value)return;
     const safeName=String(client.fullName||client.groomName||'Client').replace(/[<>&]/g,'');
-    const html='<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>Ibra Client Card</title><style>body{font-family:Arial;padding:20px;background:#eee}.card{width:86mm;min-height:54mm;background:#111;color:#fff;border-radius:14px;padding:18px;text-align:center;box-sizing:border-box}.brand{color:#d4a84b;font-weight:900;letter-spacing:2px}.name{font-size:18px;font-weight:800;margin:10px}.code{font-family:monospace;color:#d4a84b}.barcode{margin-top:10px;background:#fff;color:#000;padding:12px;font-family:monospace;font-weight:900;font-size:16px;letter-spacing:2px}.hint{font-size:9px;color:#aaa;margin-top:8px}@media print{body{background:#fff;padding:0}}</style></head><body><div class="card"><div class="brand">IBRA PRODUCTION</div><div class="name">'+safeName+'</div><div class="code">'+value+'</div><div class="barcode">||||| '+value+' |||||</div><div class="hint">Client ID — امسح البطاقة لفتح الملف</div></div><script>window.print()</script></body></html>';
+    const barcode=barcodeSvg(value);
+    const html='<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>Ibra Client Card</title><style>body{font-family:Arial;padding:20px;background:#eee}.card{width:86mm;min-height:54mm;background:#111;color:#fff;border-radius:14px;padding:18px;text-align:center;box-sizing:border-box}.brand{color:#d4a84b;font-weight:900;letter-spacing:2px}.name{font-size:18px;font-weight:800;margin:10px}.code{font-family:monospace;color:#d4a84b}.hint{font-size:9px;color:#aaa;margin-top:8px}@media print{body{background:#fff;padding:0}}</style></head><body><div class="card"><div class="brand">IBRA PRODUCTION</div><div class="name">'+safeName+'</div><div class="code">'+value+'</div>'+barcode+'<div class="hint">Client ID — امسح الباركود لفتح الملف</div></div><script>window.print()</script></body></html>';
     const w=window.open('','_blank');if(w){w.document.write(html);w.document.close();}
   };
 
