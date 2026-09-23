@@ -6,6 +6,7 @@ import { useApp } from '../context/AppContext';
 import { TeamManagement } from './TeamManagement';
 import { BookingWorkflowPanel } from './BookingWorkflowPanel';
 import { ProFeaturesCenter } from './ProFeaturesCenter';
+import { OperationsCenter } from './OperationsCenter';
 import {
   LayoutDashboard,
   Calendar,
@@ -100,6 +101,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
     | 'notifications'
     | 'pro'
     | 'scan'
+    | 'operations'
   >('dash');
 
   const [adminNotes, setAdminNotes] = useState<string>(() =>
@@ -735,6 +737,10 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
           {activeTab === 'pro' && (
             <ProFeaturesCenter onNavigate={(tab) => setActiveTab(tab as any)} bookings={safeBookings} notifications={automationNotifications.length} />
+          )}
+
+          {activeTab === 'operations' && (
+            <OperationsCenter bookings={safeBookings} teamMembers={useApp().teamMembers} />
           )}
 
           {activeTab === 'dash' && (
