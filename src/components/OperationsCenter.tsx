@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { addDoc, collection, doc, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore';
-import { BarChart3, BriefcaseBusiness, CalendarDays, CheckCircle2, CreditCard, FileText, Image as ImageIcon, LockKeyhole, Plus, Printer, RefreshCw, Search, ShieldCheck, Usb, Users, WalletCards } from 'lucide-react';
+import { addDoc, collection, doc, getDocs, onSnapshot, query, serverTimestamp, setDoc, where } from 'firebase/firestore';
+import { BarChart3, BriefcaseBusiness, CalendarDays, CheckCircle2, CreditCard, FileText, Image as ImageIcon, LockKeyhole, Plus, Printer, RefreshCw, Search, ShieldCheck, Usb, Users, WalletCards, ScanLine } from 'lucide-react';
 import { db } from '../firebase';
 
 type Props = { bookings: any[]; teamMembers: any[] };
@@ -19,12 +19,17 @@ export const OperationsCenter: React.FC<Props> = ({ bookings, teamMembers }) => 
   const [search,setSearch]=useState('');
   const [selected,setSelected]=useState<any|null>(null);
   const [loading,setLoading]=useState(false);
+  const [scan,setScan]=useState('');
+  const [scanBusy,setScanBusy]=useState(false);
+  const [scanLogs,setScanLogs]=useState<any[]>([]);
+  const scanRef=useRef<HTMLInputElement>(null);
 
   useEffect(()=>onSnapshot(collection(db,'clients'),s=>setClients(s.docs.map(d=>({id:d.id,...d.data()})))),[]);
   useEffect(()=>onSnapshot(collection(db,'bookingWorkflows'),s=>setWorkflows(s.docs.map(d=>({id:d.id,...d.data()})))),[]);
   useEffect(()=>onSnapshot(collection(db,'usbRecords'),s=>setUsbItems(s.docs.map(d=>({id:d.id,...d.data()})))),[]);
   useEffect(()=>onSnapshot(collection(db,'adminPermissions'),s=>setPermissions(s.docs.map(d=>({id:d.id,...d.data()})))),[]);
   useEffect(()=>onSnapshot(collection(db,'galleryItems'),s=>setGallery(s.docs.map(d=>({id:d.id,...d.data()})))),[]);
+  useEffect(()=>onSnapshot(collection(db,'scanLogs'),s=>setScanLogs(s.docs.map(d=>({id:d.id,...d.data()})))),[]);
 
   const bookingById=useMemo(()=>new Map(bookings.map(b=>[String(b.id),b])),[bookings]);
   const visibleClients=useMemo(()=>{
@@ -41,6 +46,33 @@ export const OperationsCenter: React.FC<Props> = ({ bookings, teamMembers }) => 
       lastBookingId:b.id||'',lastEventDates:dates(b),lastStatus:b.status||'new',
       updatedAt:serverTimestamp(),source:'booking'
     },{merge:true});
+  };
+
+
+  const openClientByBarcode=async(raw?:string)=>{
+    const value=String(raw??scan).trim().toUpperCase();
+    if(!value||scanBusy)return;
+    setScanBusy(true);
+    try{
+      let snap=await getDocs(query(collection(db,'clients'),where('barcode','==',value)));
+      if(snap.empty)snap=await getDocs(query(collection(db,'clients'),where('clientCode','==',value)));
+      if(snap.empty){await addDoc(collection(db,'scanLogs'),{code:value,type:'client',success:false,createdAt:serverTimestamp()});alert('لم يتم العثور على ملف عميل بهذا الكود.');return;}
+      const found={id:snap.docs[0].id,...snap.docs[0].data()} as any;
+      const bs=bookings.filter(b=>String(b.clientId||'')===String(found.id)||String(b.clientCode||'').toUpperCase()===String(found.clientCode||'').toUpperCase()||String(b.phone||'')===String(found.phone||''));
+      await addDoc(collection(db,'scanLogs'),{code:value,type:'client',success:true,clientId:found.id,clientCode:found.clientCode||value,createdAt:serverTimestamp()});
+      setSelected({...found,bookings:bs});
+      setScan('');
+      setTab('crm');
+    }catch(error){console.error(error);alert('تعذر تنفيذ عملية Scan.');}
+    finally{setScanBusy(false);setTimeout(()=>scanRef.current?.focus(),50);}
+  };
+
+  const printClientCard=(client:any)=>{
+    const value=String(client.clientCode||client.barcode||'').toUpperCase();
+    if(!value)return;
+    const safeName=String(client.fullName||client.groomName||'Client').replace(/[<>&]/g,'');
+    const html='<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>Ibra Client Card</title><style>body{font-family:Arial;padding:20px;background:#eee}.card{width:86mm;min-height:54mm;background:#111;color:#fff;border-radius:14px;padding:18px;text-align:center;box-sizing:border-box}.brand{color:#d4a84b;font-weight:900;letter-spacing:2px}.name{font-size:18px;font-weight:800;margin:10px}.code{font-family:monospace;color:#d4a84b}.barcode{margin-top:10px;background:#fff;color:#000;padding:12px;font-family:monospace;font-weight:900;font-size:16px;letter-spacing:2px}.hint{font-size:9px;color:#aaa;margin-top:8px}@media print{body{background:#fff;padding:0}}</style></head><body><div class="card"><div class="brand">IBRA PRODUCTION</div><div class="name">'+safeName+'</div><div class="code">'+value+'</div><div class="barcode">||||| '+value+' |||||</div><div class="hint">Client ID — امسح البطاقة لفتح الملف</div></div><script>window.print()</script></body></html>';
+    const w=window.open('','_blank');if(w){w.document.write(html);w.document.close();}
   };
 
   const createUsb=async(b:any)=>{
@@ -77,7 +109,7 @@ export const OperationsCenter: React.FC<Props> = ({ bookings, teamMembers }) => 
   };
 
   const tabs=[
-    ['crm','CRM العملاء',Users],['shoot','Shoot Sheet',BriefcaseBusiness],['usb','USB / Barcode',Usb],
+    ['crm','CRM العملاء',Users],['scan','Ibra Scan Center',ScanLine],['shoot','Shoot Sheet',BriefcaseBusiness],['usb','USB / Barcode',Usb],
     ['finance','النظام المالي',WalletCards],['permissions','الصلاحيات',LockKeyhole],['gallery','Gallery / R2',ImageIcon]
   ] as const;
 
@@ -90,12 +122,21 @@ export const OperationsCenter: React.FC<Props> = ({ bookings, teamMembers }) => 
       <div className="flex gap-2 overflow-x-auto mt-5 pb-1">{tabs.map(([id,label,Icon])=><button key={id} onClick={()=>setTab(id as any)} className={'px-4 py-2.5 rounded-xl whitespace-nowrap font-bold text-sm '+(tab===id?'bg-amber-500 text-black':'bg-neutral-950 text-neutral-300 border border-neutral-800')}><Icon className="w-4 h-4 inline ml-2"/>{label}</button>)}</div>
     </div>
 
+
+    {tab==='scan'&&<div className="space-y-4">
+      <div className="bg-neutral-900 border border-amber-500/30 rounded-3xl p-6">
+        <div className="flex items-center gap-3"><ScanLine className="w-7 h-7 text-amber-400"/><div><h3 className="text-2xl font-black">Ibra Scan Center</h3><p className="text-sm text-neutral-400">قارئ USB يعمل كلوحة مفاتيح. امسح بطاقة العميل ثم Enter لفتح ملفه مباشرة.</p></div></div>
+        <div className="flex gap-2 mt-6"><input ref={scanRef} autoFocus value={scan} onChange={e=>setScan(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();void openClientByBarcode();}}} placeholder="Scan Client Barcode..." className="flex-1 bg-neutral-950 border border-amber-500/40 rounded-2xl px-5 py-4 font-mono text-lg"/><button disabled={scanBusy} onClick={()=>void openClientByBarcode()} className="px-6 rounded-2xl bg-amber-500 text-black font-black">SCAN</button></div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4 text-xs"><div className="bg-neutral-950 rounded-xl p-4">ملفات العملاء <b className="block text-xl mt-1">{clients.length}</b></div><div className="bg-neutral-950 rounded-xl p-4">عمليات Scan <b className="block text-xl mt-1">{scanLogs.length}</b></div><div className="bg-neutral-950 rounded-xl p-4">آخر كود <b className="block text-amber-400 mt-1 font-mono">{scanLogs[scanLogs.length-1]?.code||'—'}</b></div></div>
+      </div>
+      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5"><h3 className="font-black mb-3">سجل Scan</h3>{scanLogs.slice(-20).reverse().map(l=><div key={l.id} className="flex justify-between py-3 border-t border-neutral-800 text-xs"><span className={l.success?'text-emerald-400':'text-red-400'}>{l.success?'✓':'✕'} {l.code}</span><span className="text-neutral-500">{l.clientCode||'غير موجود'}</span></div>)}</div>
+    </div>}
     {tab==='crm'&&<div className="space-y-4">
       <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 flex gap-3"><Search className="w-5 h-5 text-neutral-500 mt-3"/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="بحث بالاسم أو الهاتف أو البريد..." className="flex-1 bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3"/></div>
       <div className="grid gap-3">{visibleClients.map(c=>{
         const bs=bookings.filter(b=>String(b.phone||'')===String(c.phone||'')||String(b.id)===String(c.lastBookingId));
         return <div key={c.id} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4">
-          <div className="flex flex-wrap items-center justify-between gap-3"><div><div className="font-black text-lg">{c.groomName||'عميل'}{c.brideName?' × '+c.brideName:''}</div><div className="text-xs text-neutral-500 mt-1">{c.phone||'—'} • {c.email||'—'}</div></div><button onClick={()=>setSelected({...c,bookings:bs})} className="px-4 py-2 bg-amber-500 text-black rounded-xl font-bold">فتح الملف</button></div>
+          <div className="flex flex-wrap items-center justify-between gap-3"><div><div className="font-black text-lg">{c.groomName||'عميل'}{c.brideName?' × '+c.brideName:''}</div><div className="text-xs text-neutral-500 mt-1">{c.phone||'—'} • {c.email||'—'}</div></div><button onClick={()=>setSelected({...c,bookings:bs})} className="px-4 py-2 bg-amber-500 text-black rounded-xl font-bold">فتح الملف</button><button onClick={()=>printClientCard(c)} className="px-4 py-2 bg-neutral-800 rounded-xl"><Printer className="w-4 h-4 inline ml-1"/>بطاقة العميل</button></div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4 text-xs"><div className="bg-neutral-950 p-3 rounded-xl">الحجوزات <b className="block text-white mt-1">{bs.length}</b></div><div className="bg-neutral-950 p-3 rounded-xl">آخر حالة <b className="block text-white mt-1">{c.lastStatus||'—'}</b></div><div className="bg-neutral-950 p-3 rounded-xl">آخر موعد <b className="block text-white mt-1">{(c.lastEventDates||[])[0]||'—'}</b></div><div className="bg-neutral-950 p-3 rounded-xl">USB <b className="block text-white mt-1">{usbItems.filter(u=>u.clientPhone===c.phone).length}</b></div></div>
         </div>
       })}</div>
