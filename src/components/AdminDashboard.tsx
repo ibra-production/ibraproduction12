@@ -99,6 +99,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
     | 'workflow'
     | 'notifications'
     | 'pro'
+    | 'scan'
   >('dash');
 
   const [adminNotes, setAdminNotes] = useState<string>(() =>
@@ -142,6 +143,97 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
   const [calendarView, setCalendarView] = useState<'month' | 'list'>('month');
+  const [scanCode, setScanCode] = useState('');
+  const [scanLogs, setScanLogs] = useState<any[]>([]);
+  const [scanMessage, setScanMessage] = useState('جاهز للمسح');
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'scanLogs'), snapshot => {
+      const items = snapshot.docs
+        .map(item => ({ id: item.id, ...item.data() }))
+        .sort((a: any, b: any) => {
+          const at = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+          const bt = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+          return bt - at;
+        })
+        .slice(0, 100);
+      setScanLogs(items);
+    }, error => console.error('Scan logs error:', error));
+    return () => unsubscribe();
+  }, []);
+
+  const handleScan = async (raw: string) => {
+    const code = String(raw || '').trim();
+    if (!code) return;
+    setScanCode('');
+    let scanType = 'unknown';
+    let result = 'لم يتم التعرف على نوع الكود';
+    const normalized = code.toUpperCase();
+
+    if (normalized.startsWith('BOOK-') || normalized.startsWith('CLIENT-')) {
+      scanType = normalized.startsWith('BOOK-') ? 'booking' : 'client';
+      const key = code.slice(code.indexOf('-') + 1).toLowerCase();
+      const match = safeBookings.find((b: any) =>
+        String(b.id).toLowerCase() === key ||
+        String(b.id).toLowerCase().endsWith(key)
+      );
+      result = match
+        ? `تم العثور على الحجز: ${match.groomName || 'عميل'}`
+        : 'الكود لا يطابق حجزاً موجوداً';
+      if (match) setActiveTab('bookings');
+    } else if (normalized.startsWith('USB-')) {
+      scanType = 'usb';
+      result = 'تم التعرف على كود USB';
+    } else if (normalized.startsWith('TEAM-')) {
+      scanType = 'team';
+      result = 'تم التعرف على كود عضو الفريق';
+      setActiveTab('team');
+    } else if (normalized.startsWith('PAY-')) {
+      scanType = 'payment';
+      result = 'تم التعرف على كود الدفع';
+      setActiveTab('workflow');
+    } else if (normalized.startsWith('DELIVERY-')) {
+      scanType = 'delivery';
+      result = 'تم التعرف على كود التسليم';
+      setActiveTab('workflow');
+    } else if (normalized.startsWith('ALBUM-')) {
+      scanType = 'album';
+      result = 'تم التعرف على كود الألبوم';
+    }
+
+    try {
+      await addDoc(collection(db, 'scanLogs'), {
+        code,
+        scanType,
+        result,
+        source: 'USB/QR Scanner',
+        operator: auth.currentUser?.email || 'admin',
+        createdAt: serverTimestamp()
+      });
+      setScanMessage(result);
+    } catch (error) {
+      console.error('Scan log error:', error);
+      setScanMessage('تمت القراءة لكن تعذر حفظ السجل');
+    }
+  };
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const tag = target?.tagName?.toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+      if (event.key === 'Enter') {
+        const value = scanCode.trim();
+        if (value) {
+          void handleScan(value);
+        }
+      } else if (event.key.length === 1) {
+        setScanCode(value => value + event.key);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [scanCode, safeBookings]);
 
   useEffect(() => {
     let initialized = false;
@@ -535,6 +627,11 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               id: 'notifications',
               label: `الإشعارات والأتمتة (${automationNotifications.length})`,
               icon: <Send className="w-4 h-4" />
+            },
+            {
+              id: 'scan',
+              label: `Ibra Scan Center (${scanLogs.length})`,
+              icon: <ShieldCheck className="w-4 h-4" />
             },
             {
               id: 'pro',
@@ -1196,7 +1293,64 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
             </div>
           )}
 
-          {activeTab === 'notifications' && (
+          {activeTab === 'scan' && (
+          <section className="space-y-5" data-admin-dashboard>
+            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5">
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <div>
+                  <h2 className="text-xl font-bold text-white">Ibra Scan Center</h2>
+                  <p className="text-xs text-neutral-400 mt-1">امسح Barcode أو QR بالقارئ USB. القارئ يعمل كلوحة مفاتيح.</p>
+                </div>
+                <span className="text-xs px-3 py-2 rounded-xl bg-emerald-500/10 text-emerald-400">{scanMessage}</span>
+              </div>
+              <input
+                autoFocus
+                value={scanCode}
+                onChange={e => setScanCode(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    void handleScan(scanCode);
+                  }
+                }}
+                placeholder="وجّه القارئ للكود..."
+                className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-4 py-4 text-lg text-white outline-none focus:border-amber-500"
+              />
+              <div className="flex gap-2 mt-3">
+                <button onClick={() => void handleScan(scanCode)} className="px-5 py-3 rounded-xl bg-amber-500 text-neutral-950 font-bold">مسح الكود</button>
+                <button onClick={() => setScanCode('')} className="px-5 py-3 rounded-xl bg-neutral-800 text-white">مسح الحقل</button>
+              </div>
+            </div>
+
+            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
+              <div className="p-5 border-b border-neutral-800 flex items-center justify-between">
+                <h3 className="font-bold text-white">سجل عمليات Scan</h3>
+                <span className="text-xs text-neutral-500">آخر 100 عملية</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-neutral-950 text-neutral-400">
+                    <tr><th className="p-3 text-right">الكود</th><th className="p-3 text-right">النوع</th><th className="p-3 text-right">النتيجة</th><th className="p-3 text-right">المشغل</th><th className="p-3 text-right">الوقت</th></tr>
+                  </thead>
+                  <tbody>
+                    {scanLogs.map((log: any) => (
+                      <tr key={log.id} className="border-t border-neutral-800">
+                        <td className="p-3 font-mono text-amber-300">{log.code}</td>
+                        <td className="p-3">{log.scanType}</td>
+                        <td className="p-3 text-neutral-300">{log.result}</td>
+                        <td className="p-3 text-neutral-400">{log.operator || '—'}</td>
+                        <td className="p-3 text-neutral-500">{log.createdAt?.toDate ? log.createdAt.toDate().toLocaleString('ar-DZ') : 'الآن'}</td>
+                      </tr>
+                    ))}
+                    {!scanLogs.length && <tr><td colSpan={5} className="p-8 text-center text-neutral-500">لا توجد عمليات Scan بعد.</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {activeTab === 'notifications' && (
             <div className="space-y-6">
               <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5">
                 <h2 className="text-2xl font-bold">الإشعارات والأتمتة</h2>
