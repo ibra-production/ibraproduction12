@@ -23,5 +23,40 @@
       "type": "image/jpeg",
       "purpose": "any maskable"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "حجز جديد",
+      "short_name": "حجز",
+      "url": "/?booking=1",
+      "icons": [
+        {
+          "src": "/logo.jpg",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "متابعة الطلب",
+      "short_name": "متابعة",
+      "url": "/?tracking=1",
+      "icons": [
+        {
+          "src": "/logo.jpg",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "وضع التلفاز",
+      "short_name": "TV",
+      "url": "/?tv=1",
+      "icons": [
+        {
+          "src": "/logo.jpg",
+          "sizes": "192x192"
+        }
+      ]
+    }
   ]
 }
