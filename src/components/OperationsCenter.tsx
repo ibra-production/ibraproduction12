@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { addDoc, collection, doc, getDocs, onSnapshot, query, serverTimestamp, setDoc, where } from 'firebase/firestore';
 import { BarChart3, BriefcaseBusiness, CalendarDays, CheckCircle2, CreditCard, FileText, Image as ImageIcon, LockKeyhole, Plus, Printer, RefreshCw, Search, ShieldCheck, Usb, Users, WalletCards, ScanLine } from 'lucide-react';
 import { db } from '../firebase';
@@ -73,8 +73,7 @@ export const OperationsCenter: React.FC<Props> = ({ bookings, teamMembers }) => 
   };
 
   const printClientCard=(client:any)=>{
-    const value=String(client.clientCode||client.barcode||'').toUpperCase();
-    if(!value)return;
+    const value=String(client.clientCode||client.barcode||'').toUpperCase(); if(!value)return;
     const safeName=String(client.fullName||client.groomName||'Client').replace(/[<>&]/g,'');
     const barcode=barcodeSvg(value);
     const html='<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>Ibra Client Card</title><style>body{font-family:Arial;padding:20px;background:#eee}.card{width:86mm;min-height:54mm;background:#111;color:#fff;border-radius:14px;padding:18px;text-align:center;box-sizing:border-box}.brand{color:#d4a84b;font-weight:900;letter-spacing:2px}.name{font-size:18px;font-weight:800;margin:10px}.code{font-family:monospace;color:#d4a84b}.hint{font-size:9px;color:#aaa;margin-top:8px}@media print{body{background:#fff;padding:0}}</style></head><body><div class="card"><div class="brand">IBRA PRODUCTION</div><div class="name">'+safeName+'</div><div class="code">'+value+'</div>'+barcode+'<div class="hint">Client ID — امسح الباركود لفتح الملف</div></div><script>window.print()</script></body></html>';
