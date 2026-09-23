@@ -49,6 +49,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
     settings,
     updateSettings,
     bookings,
+    teamMembers,
     updateBookingStatus,
     updateBooking,
     deleteBooking,
@@ -740,7 +741,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
           )}
 
           {activeTab === 'operations' && (
-            <OperationsCenter bookings={safeBookings} teamMembers={useApp().teamMembers} />
+            <OperationsCenter bookings={safeBookings} teamMembers={teamMembers} />
           )}
 
           {activeTab === 'dash' && (
