@@ -33,6 +33,19 @@ import { ServiceItem, PackageItem } from './types';
 
 function MainContent() {
   const { currentUser, settings, language } = useApp();
+
+  useEffect(() => {
+    const ua = navigator.userAgent || '';
+    const queryTv = new URLSearchParams(window.location.search).get('tv') === '1';
+    const tvUa = /Android TV|SMART-TV|SmartTV|GoogleTV|BRAVIA|AFT[SB]?|KOSCOM/i.test(ua);
+    document.documentElement.classList.toggle('tv-mode', queryTv || tvUa);
+    document.body.classList.toggle('tv-mode', queryTv || tvUa);
+
+    return () => {
+      document.documentElement.classList.remove('tv-mode');
+      document.body.classList.remove('tv-mode');
+    };
+  }, []);
   const maintenance = settings.maintenanceMode === true;
 
   useEffect(() => {
