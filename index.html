@@ -78,6 +78,7 @@
   </script>
 
   <link rel="icon" href="/logo.jpg" />
+  <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/logo.jpg" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -88,6 +89,13 @@
     rel="stylesheet"
   />
   <script src="/clear-old-cache.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("/sw.js").catch(function () {});
+      });
+    }
+  </script>
 </head>
 
 <body class="bg-neutral-950 text-neutral-100 font-sans">
