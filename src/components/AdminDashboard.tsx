@@ -146,6 +146,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
   const [scanCode, setScanCode] = useState('');
   const [scanLogs, setScanLogs] = useState<any[]>([]);
   const [scanMessage, setScanMessage] = useState('جاهز للمسح');
+  const [scanResult, setScanResult] = useState<any | null>(null);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'scanLogs'), snapshot => {
@@ -166,56 +167,97 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
     const code = String(raw || '').trim();
     if (!code) return;
     setScanCode('');
+    const normalized = code.toUpperCase();
     let scanType = 'unknown';
     let result = 'لم يتم التعرف على نوع الكود';
-    const normalized = code.toUpperCase();
+    let match: any = null;
+    let targetTab = '';
 
-    if (normalized.startsWith('BOOK-') || normalized.startsWith('CLIENT-')) {
-      scanType = normalized.startsWith('BOOK-') ? 'booking' : 'client';
-      const key = code.slice(code.indexOf('-') + 1).toLowerCase();
-      const match = safeBookings.find((b: any) =>
-        String(b.id).toLowerCase() === key ||
-        String(b.id).toLowerCase().endsWith(key)
-      );
-      result = match
-        ? `تم العثور على الحجز: ${match.groomName || 'عميل'}`
-        : 'الكود لا يطابق حجزاً موجوداً';
-      if (match) setActiveTab('bookings');
+    const suffix = (prefix: string) => code.slice(prefix.length).trim().toLowerCase();
+
+    if (normalized.startsWith('BOOK-')) {
+      scanType = 'booking';
+      const key = suffix('BOOK-');
+      match = safeBookings.find((b: any) => String(b.id).toLowerCase() === key || String(b.id).toLowerCase().endsWith(key));
+      result = match ? `تم العثور على الحجز: ${match.groomName || 'عميل'}` : 'الكود لا يطابق حجزاً موجوداً';
+      targetTab = 'bookings';
+    } else if (normalized.startsWith('CLIENT-')) {
+      scanType = 'client';
+      const key = suffix('CLIENT-');
+      match = safeBookings.find((b: any) => String(b.id).toLowerCase() === key || String(b.id).toLowerCase().endsWith(key));
+      result = match ? `تم العثور على بوابة العميل: ${match.groomName || 'عميل'}` : 'الكود لا يطابق حجزاً موجوداً';
+      targetTab = 'workflow';
     } else if (normalized.startsWith('USB-')) {
       scanType = 'usb';
-      result = 'تم التعرف على كود USB';
+      const key = suffix('USB-');
+      match = safeBookings.find((b: any) => String(b.id).toLowerCase() === key || String(b.id).toLowerCase().endsWith(key));
+      result = match ? `USB مرتبط بالحجز: ${match.groomName || 'عميل'}` : 'تم التعرف على كود USB';
+      targetTab = match ? 'workflow' : 'scan';
     } else if (normalized.startsWith('TEAM-')) {
       scanType = 'team';
       result = 'تم التعرف على كود عضو الفريق';
-      setActiveTab('team');
+      targetTab = 'team';
     } else if (normalized.startsWith('PAY-')) {
       scanType = 'payment';
-      result = 'تم التعرف على كود الدفع';
-      setActiveTab('workflow');
+      const key = suffix('PAY-');
+      match = safeBookings.find((b: any) => String(b.id).toLowerCase() === key || String(b.id).toLowerCase().endsWith(key));
+      result = match ? `فتح الدفعات: ${match.groomName || 'عميل'}` : 'تم التعرف على كود الدفع';
+      targetTab = 'workflow';
     } else if (normalized.startsWith('DELIVERY-')) {
       scanType = 'delivery';
-      result = 'تم التعرف على كود التسليم';
-      setActiveTab('workflow');
+      const key = suffix('DELIVERY-');
+      match = safeBookings.find((b: any) => String(b.id).toLowerCase() === key || String(b.id).toLowerCase().endsWith(key));
+      result = match ? `ملف التسليم: ${match.groomName || 'عميل'}` : 'تم التعرف على كود التسليم';
+      targetTab = 'workflow';
     } else if (normalized.startsWith('ALBUM-')) {
       scanType = 'album';
-      result = 'تم التعرف على كود الألبوم';
+      const key = suffix('ALBUM-');
+      match = safeBookings.find((b: any) => String(b.id).toLowerCase() === key || String(b.id).toLowerCase().endsWith(key));
+      result = match ? `ألبوم العميل: ${match.groomName || 'عميل'}` : 'تم التعرف على كود الألبوم';
+      targetTab = 'workflow';
+    } else {
+      const direct = safeBookings.find((b: any) => String(b.id).toLowerCase() === code.toLowerCase());
+      if (direct) {
+        scanType = 'booking';
+        match = direct;
+        result = `تم العثور على الحجز: ${direct.groomName || 'عميل'}`;
+        targetTab = 'bookings';
+      }
     }
+
+    const scanResultData = {
+      code,
+      scanType,
+      result,
+      bookingId: match?.id || null,
+      groomName: match?.groomName || null,
+      brideName: match?.brideName || null,
+      phone: match?.phone || null,
+      status: match?.status || null,
+      scannedAt: new Date().toISOString()
+    };
+    setScanResult(scanResultData);
+    setScanMessage(result);
 
     try {
       await addDoc(collection(db, 'scanLogs'), {
-        code,
-        scanType,
-        result,
+        ...scanResultData,
         source: 'USB/QR Scanner',
         operator: auth.currentUser?.email || 'admin',
         createdAt: serverTimestamp()
       });
-      setScanMessage(result);
     } catch (error) {
       console.error('Scan log error:', error);
       setScanMessage('تمت القراءة لكن تعذر حفظ السجل');
     }
+
+    if (match && targetTab === 'workflow') {
+      setWorkflowBooking(match);
+    } else if (match && targetTab) {
+      setActiveTab(targetTab as any);
+    }
   };
+
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -1296,59 +1338,53 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
           {activeTab === 'scan' && (
           <section className="space-y-5" data-admin-dashboard>
             <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5">
-              <div className="flex items-center justify-between gap-3 mb-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                 <div>
                   <h2 className="text-xl font-bold text-white">Ibra Scan Center</h2>
-                  <p className="text-xs text-neutral-400 mt-1">امسح Barcode أو QR بالقارئ USB. القارئ يعمل كلوحة مفاتيح.</p>
+                  <p className="text-xs text-neutral-400 mt-1">USB Barcode / QR — امسح ثم Enter.</p>
                 </div>
                 <span className="text-xs px-3 py-2 rounded-xl bg-emerald-500/10 text-emerald-400">{scanMessage}</span>
               </div>
-              <input
-                autoFocus
-                value={scanCode}
-                onChange={e => setScanCode(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    void handleScan(scanCode);
-                  }
-                }}
-                placeholder="وجّه القارئ للكود..."
-                className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-4 py-4 text-lg text-white outline-none focus:border-amber-500"
-              />
-              <div className="flex gap-2 mt-3">
-                <button onClick={() => void handleScan(scanCode)} className="px-5 py-3 rounded-xl bg-amber-500 text-neutral-950 font-bold">مسح الكود</button>
-                <button onClick={() => setScanCode('')} className="px-5 py-3 rounded-xl bg-neutral-800 text-white">مسح الحقل</button>
+              <input autoFocus value={scanCode} onChange={e=>setScanCode(e.target.value)}
+                onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();void handleScan(scanCode)}}}
+                placeholder="وجّه القارئ للكود..." className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-4 py-4 text-lg text-white outline-none focus:border-amber-500" />
+              <div className="flex flex-wrap gap-2 mt-3">
+                <button onClick={()=>void handleScan(scanCode)} className="px-5 py-3 rounded-xl bg-amber-500 text-neutral-950 font-bold">مسح الكود</button>
+                <button onClick={()=>{setScanCode('');setScanResult(null)}} className="px-5 py-3 rounded-xl bg-neutral-800 text-white">مسح الحقل</button>
               </div>
             </div>
 
+            {scanResult && (
+              <div className="bg-neutral-900 border border-amber-500/30 rounded-2xl p-5">
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <h3 className="font-bold text-white">نتيجة آخر Scan</h3>
+                  <span className="text-xs text-amber-400">{scanResult.scanType}</span>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                  <div className="bg-neutral-950 rounded-xl p-3"><span className="text-neutral-500 block">الكود</span><b className="font-mono text-amber-300 break-all">{scanResult.code}</b></div>
+                  <div className="bg-neutral-950 rounded-xl p-3"><span className="text-neutral-500 block">العميل</span><b>{scanResult.groomName || '—'}</b></div>
+                  <div className="bg-neutral-950 rounded-xl p-3"><span className="text-neutral-500 block">الهاتف</span><b>{scanResult.phone || '—'}</b></div>
+                  <div className="bg-neutral-950 rounded-xl p-3"><span className="text-neutral-500 block">الحالة</span><b>{scanResult.status || '—'}</b></div>
+                </div>
+                {scanResult.bookingId && (
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    <button onClick={()=>setWorkflowBooking(safeBookings.find((b:any)=>b.id===scanResult.bookingId)||null)} className="px-4 py-2.5 bg-amber-500 text-black rounded-xl font-bold">فتح ملف العمل</button>
+                    <button onClick={()=>setActiveTab('bookings')} className="px-4 py-2.5 bg-neutral-800 rounded-xl">فتح الحجز</button>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
-              <div className="p-5 border-b border-neutral-800 flex items-center justify-between">
-                <h3 className="font-bold text-white">سجل عمليات Scan</h3>
-                <span className="text-xs text-neutral-500">آخر 100 عملية</span>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-neutral-950 text-neutral-400">
-                    <tr><th className="p-3 text-right">الكود</th><th className="p-3 text-right">النوع</th><th className="p-3 text-right">النتيجة</th><th className="p-3 text-right">المشغل</th><th className="p-3 text-right">الوقت</th></tr>
-                  </thead>
-                  <tbody>
-                    {scanLogs.map((log: any) => (
-                      <tr key={log.id} className="border-t border-neutral-800">
-                        <td className="p-3 font-mono text-amber-300">{log.code}</td>
-                        <td className="p-3">{log.scanType}</td>
-                        <td className="p-3 text-neutral-300">{log.result}</td>
-                        <td className="p-3 text-neutral-400">{log.operator || '—'}</td>
-                        <td className="p-3 text-neutral-500">{log.createdAt?.toDate ? log.createdAt.toDate().toLocaleString('ar-DZ') : 'الآن'}</td>
-                      </tr>
-                    ))}
-                    {!scanLogs.length && <tr><td colSpan={5} className="p-8 text-center text-neutral-500">لا توجد عمليات Scan بعد.</td></tr>}
-                  </tbody>
-                </table>
-              </div>
+              <div className="p-5 border-b border-neutral-800 flex items-center justify-between"><h3 className="font-bold text-white">سجل عمليات Scan</h3><span className="text-xs text-neutral-500">آخر 100 عملية</span></div>
+              <div className="overflow-x-auto"><table className="w-full text-sm"><thead className="bg-neutral-950 text-neutral-400"><tr><th className="p-3 text-right">الكود</th><th className="p-3 text-right">النوع</th><th className="p-3 text-right">النتيجة</th><th className="p-3 text-right">العميل</th><th className="p-3 text-right">المشغل</th><th className="p-3 text-right">الوقت</th></tr></thead>
+                <tbody>{scanLogs.map((log:any)=><tr key={log.id} className="border-t border-neutral-800"><td className="p-3 font-mono text-amber-300">{log.code}</td><td className="p-3">{log.scanType}</td><td className="p-3 text-neutral-300">{log.result}</td><td className="p-3">{log.groomName||'—'}</td><td className="p-3 text-neutral-400">{log.operator||'—'}</td><td className="p-3 text-neutral-500">{log.createdAt?.toDate?log.createdAt.toDate().toLocaleString('ar-DZ'):'الآن'}</td></tr>)}
+                {!scanLogs.length&&<tr><td colSpan={6} className="p-8 text-center text-neutral-500">لا توجد عمليات Scan بعد.</td></tr>}</tbody>
+              </table></div>
             </div>
           </section>
         )}
+
 
         {activeTab === 'notifications' && (
             <div className="space-y-6">
