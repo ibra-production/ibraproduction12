@@ -27,6 +27,8 @@ import { ClientExperience } from './components/ClientExperience';
 import { ClientPortal } from './components/ClientPortal';
 import { ClientTrackingButton } from './components/ClientTrackingButton';
 import { MotionFX } from './components/MotionFX';
+import { PwaInstallPrompt } from './components/PwaInstallPrompt';
+import { MobileBottomNav } from './components/MobileBottomNav';
 import { AgencyExperience } from './components/AgencyExperience';
 import { QuickActions, ContactShortcut } from './components/QuickActions';
 import { ServiceItem, PackageItem } from './types';
@@ -47,6 +49,14 @@ function MainContent() {
     };
   }, []);
   const maintenance = settings.maintenanceMode === true;
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('booking') === '1') setBookingModalOpen(true);
+    if (params.get('tracking') === '1') {
+      window.setTimeout(() => document.querySelector<HTMLButtonElement>('[data-client-tracking]')?.click(), 250);
+    }
+  }, []);
 
   useEffect(() => {
     const title =
@@ -149,6 +159,8 @@ function MainContent() {
       />
       <WhatsAppFloat />
       <ContactShortcut />
+      <MobileBottomNav onOpenBooking={() => { setSelectedService(null); setSelectedPackage(null); setBookingModalOpen(true); }} />
+      <PwaInstallPrompt />
 
       <BookingModal
         isOpen={bookingModalOpen}
