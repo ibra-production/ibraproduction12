@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { auth, db } from '../firebase';
+import { auth, db, storage } from '../firebase';
 import { addDoc, collection, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { enablePushNotifications } from "../pushNotifications";
 import { useApp } from '../context/AppContext';
 import { TeamManagement } from './TeamManagement';
@@ -133,6 +134,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
   const [bookingStatusFilter, setBookingStatusFilter] = useState('all');
   const [bookingWilayaFilter, setBookingWilayaFilter] = useState('all');
   const [serviceModal, setServiceModal] = useState<any | null>(null);
+  const [serviceUploading, setServiceUploading] = useState(false);
   const [packageModal, setPackageModal] = useState<any | null>(null);
   const [portfolioModal, setPortfolioModal] = useState<any | null>(null);
 const [videoModal, setVideoModal] = useState<any | null>(null);
@@ -408,6 +410,38 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
       return String(ad).localeCompare(String(bd));
     });
 
+
+  const uploadServiceImage = async (file: File) => {
+    if (!file) return;
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('صيغة الصورة غير مدعومة. استعمل JPG أو PNG أو WEBP.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      alert('حجم الصورة كبير جداً. الحد الأقصى 10 MB.');
+      return;
+    }
+    try {
+      setServiceUploading(true);
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const path = `services/${Date.now()}_${safeName}`;
+      const storageRef = ref(storage, path);
+      await uploadBytes(storageRef, file, { contentType: file.type });
+      const url = await getDownloadURL(storageRef);
+      setServiceModal((current: any) => current ? ({
+        ...current,
+        image: url,
+        imagePath: path,
+        imageName: file.name
+      }) : current);
+    } catch (error) {
+      console.error('Service image upload error:', error);
+      alert('تعذر رفع صورة الخدمة. تأكد من تسجيل الدخول وصلاحيات Firebase Storage.');
+    } finally {
+      setServiceUploading(false);
+    }
+  };
 
   const getIdCardBlob = async (value: string) => {
     if (value.startsWith('data:')) {
@@ -3043,17 +3077,48 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"
               />
 
-              <input
-                placeholder="رابط الصورة"
-                value={serviceModal.image || ''}
-                onChange={e =>
-                  setServiceModal({
-                    ...serviceModal,
-                    image: e.target.value
-                  })
-                }
-                className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"
-              />
+              <div className="rounded-2xl border border-neutral-800 bg-neutral-950 p-4 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-bold text-white">صورة الخدمة</div>
+                    <div className="text-xs text-neutral-500 mt-1">ارفع الصورة مباشرة من الحاسوب — JPG / PNG / WEBP، حتى 10 MB.</div>
+                  </div>
+                  <label className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer ${serviceUploading ? 'bg-neutral-700 text-neutral-400 pointer-events-none' : 'bg-amber-500 text-neutral-950'}`}>
+                    <Upload className="w-4 h-4" />
+                    {serviceUploading ? 'جاري الرفع...' : 'اختيار صورة'}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      disabled={serviceUploading}
+                      onChange={e => {
+                        const file = e.target.files?.[0];
+                        if (file) void uploadServiceImage(file);
+                        e.currentTarget.value = '';
+                      }}
+                    />
+                  </label>
+                </div>
+
+                {serviceModal.image && (
+                  <div className="relative overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900">
+                    <img src={serviceModal.image} alt={serviceModal.titleAr || 'صورة الخدمة'} className="w-full h-48 object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setServiceModal({ ...serviceModal, image: '', imagePath: '', imageName: '' })}
+                      className="absolute top-3 right-3 px-3 py-2 rounded-lg bg-red-500/90 text-white text-xs font-bold"
+                    >
+                      حذف الصورة
+                    </button>
+                  </div>
+                )}
+
+                {!serviceModal.image && (
+                  <div className="rounded-xl border border-dashed border-neutral-700 py-8 text-center text-neutral-500 text-sm">
+                    لم يتم اختيار صورة بعد.
+                  </div>
+                )}
+              </div>
 
             </div>
 
@@ -3067,26 +3132,27 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               </button>
 
               <button
-                onClick={() => {
-
+                onClick={async () => {
                   if (!serviceModal.titleAr) {
                     alert('يرجى إدخال اسم الخدمة.');
                     return;
                   }
+                  if (serviceUploading) return;
 
-                  if (serviceModal.id) {
-                    updateService(
-                      serviceModal.id,
-                      serviceModal
-                    );
-                  } else {
-                    addService(serviceModal);
+                  try {
+                    if (serviceModal.id) {
+                      await updateService(serviceModal.id, serviceModal);
+                    } else {
+                      await addService(serviceModal);
+                    }
+                    setServiceModal(null);
+                  } catch (error) {
+                    console.error('Service save error:', error);
+                    alert('تعذر حفظ الخدمة. تحقق من اتصال Firebase ثم أعد المحاولة.');
                   }
-
-                  setServiceModal(null);
-
                 }}
-                className="px-6 py-2.5 bg-amber-500 text-neutral-950 rounded-xl text-sm font-bold"
+                disabled={serviceUploading}
+                className="px-6 py-2.5 bg-amber-500 text-neutral-950 rounded-xl text-sm font-bold disabled:opacity-50"
               >
                 حفظ الخدمة
               </button>
