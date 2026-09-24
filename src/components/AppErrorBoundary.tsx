@@ -5,10 +5,7 @@ interface ErrorBoundaryState {
   errorMessage: string;
 }
 
-export class AppErrorBoundary extends React.Component<
-  { children: React.ReactNode },
-  ErrorBoundaryState
-> {
+export class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, ErrorBoundaryState> {
   state: ErrorBoundaryState = {
     hasError: false,
     errorMessage: '',
