@@ -1200,3 +1200,124 @@ button, input, textarea, select, a {
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
+
+
+/* =========================================================
+   IBRA PRODUCTION — SMART TV COMPATIBILITY / PERFORMANCE
+   Clean rendering for TV browsers (Android TV / Google TV / Smart TV)
+   ========================================================= */
+.tv-mode,
+.tv-mode body {
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow-x: hidden !important;
+  -webkit-text-size-adjust: 100% !important;
+  text-rendering: optimizeLegibility;
+}
+
+/* Remove effects that can make older TV browsers look soft or stutter. */
+.tv-mode body::before,
+.tv-mode body::after,
+.tv-mode .ibra-hero-grid,
+.tv-mode .ibra-hero-vignette {
+  display: none !important;
+}
+
+.tv-mode *,
+.tv-mode *::before,
+.tv-mode *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+.tv-mode .glass-card,
+.tv-mode .glass-panel,
+.tv-mode .ibra-hero-side-panel,
+.tv-mode .ibra-quick-inner {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Use one lightweight, compatible hero image on TV.
+   This avoids AVIF/codec issues and avoids rendering five large images at once. */
+.tv-mode .ibra-hero-slide {
+  display: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  filter: brightness(.72) saturate(.82) contrast(1.04) !important;
+  width: 100% !important;
+  height: 100% !important;
+  inset: 0 !important;
+  object-fit: cover !important;
+}
+
+.tv-mode .ibra-hero-slide:first-child {
+  display: block !important;
+}
+
+.tv-mode .ibra-hero-shade {
+  background:
+    linear-gradient(90deg, rgba(5,4,6,.88) 0%, rgba(5,4,6,.54) 48%, rgba(5,4,6,.46) 100%),
+    linear-gradient(0deg, rgba(5,4,6,.82), transparent 55%) !important;
+}
+
+.tv-mode .ibra-hero {
+  min-height: 100vh !important;
+  height: 100vh !important;
+}
+
+.tv-mode .ibra-hero-content {
+  width: 100% !important;
+  max-width: 1800px !important;
+  box-sizing: border-box !important;
+}
+
+.tv-mode .ibra-hero h1 {
+  font-size: clamp(4.5rem, 8vw, 9rem) !important;
+  line-height: .95 !important;
+}
+
+.tv-mode .ibra-hero-tagline {
+  max-width: 900px !important;
+  line-height: 1.35 !important;
+}
+
+.tv-mode .ibra-hero-copy {
+  animation: none !important;
+}
+
+.tv-mode .ibra-hero-bottom {
+  pointer-events: none;
+}
+
+.tv-mode .ibra-hero-progress {
+  display: none !important;
+}
+
+/* Keep remote navigation obvious and readable. */
+.tv-mode button:focus,
+.tv-mode a:focus,
+.tv-mode input:focus,
+.tv-mode select:focus,
+.tv-mode textarea:focus {
+  outline: 4px solid var(--ibra-copper-light) !important;
+  outline-offset: 6px !important;
+}
+
+/* Prevent huge media files from overflowing TV browser layout. */
+.tv-mode img,
+.tv-mode video {
+  max-width: 100% !important;
+}
+
+@media (min-width: 1920px) {
+  .tv-mode .ibra-hero-content {
+    padding-inline: 6vw !important;
+  }
+
+  .tv-mode .ibra-hero-description {
+    max-width: 900px !important;
+    font-size: 1.18rem !important;
+  }
+}
