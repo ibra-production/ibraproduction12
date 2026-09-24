@@ -1,10 +1,20 @@
-import { auth } from './firebase';
-
-export const IBRA_R2_WORKER_URL =
-  'https://yellow-bar-9020ibra-id-card-upload.bahibarhouma15.workers.dev';
+import { auth, storage } from './firebase';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 
 const IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
+function safeFileName(name: string) {
+  return String(name || 'image')
+    .normalize('NFKD')
+    .replace(/[^a-zA-Z0-9._-]/g, '_')
+    .replace(/_+/g, '_')
+    .slice(-120);
+}
+
+/**
+ * Direct browser upload to Firebase Storage.
+ * Kept under the old function name so existing admin/gallery code needs no changes.
+ */
 export async function uploadImageToIbraR2(
   file: File,
   category = 'portfolio',
@@ -20,25 +30,40 @@ export async function uploadImageToIbraR2(
   }
 
   const token = await auth.currentUser.getIdToken();
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('type', 'portfolio');
-  formData.append('category', category);
+  if (!token) throw new Error('تعذر التحقق من جلسة الإدارة.');
 
-  const response = await fetch(IBRA_R2_WORKER_URL, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
-    body: formData,
-  });
+  const key = `${category}/${Date.now()}_${crypto.randomUUID()}_${safeFileName(file.name)}`;
+  const storageRef = ref(storage, key);
 
-  const data = await response.json().catch(() => null);
-  if (!response.ok || !data?.success || !data?.key) {
-    throw new Error(data?.message || data?.error || 'فشل رفع الصورة إلى التخزين.');
+  try {
+    const snapshot = await uploadBytes(storageRef, file, {
+      contentType: file.type,
+      customMetadata: {
+        originalName: file.name,
+        uploadedBy: auth.currentUser.uid,
+        category,
+      },
+    });
+
+    const url = await getDownloadURL(snapshot.ref);
+
+    return {
+      url,
+      key,
+      name: file.name,
+    };
+  } catch (error: any) {
+    console.error('Direct image upload error:', error);
+    const code = String(error?.code || '');
+    if (code.includes('storage/unauthorized')) {
+      throw new Error('ليس لديك صلاحية رفع الصور. تحقق من تسجيل دخول المسؤول وقواعد Storage.');
+    }
+    if (code.includes('storage/quota-exceeded')) {
+      throw new Error('تم تجاوز حصة التخزين المتاحة.');
+    }
+    if (code.includes('storage/canceled')) {
+      throw new Error('تم إلغاء رفع الصورة.');
+    }
+    throw new Error(error?.message || 'فشل رفع الصورة إلى التخزين.');
   }
-
-  return {
-    url: `${IBRA_R2_WORKER_URL}/?key=${encodeURIComponent(data.key)}`,
-    key: String(data.key),
-    name: file.name,
-  };
 }
