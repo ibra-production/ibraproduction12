@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { addDoc, collection, doc, getDocs, onSnapshot, query, serverTimestamp, setDoc, where } from 'firebase/firestore';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { BarChart3, BriefcaseBusiness, CalendarDays, CheckCircle2, CreditCard, FileText, Image as ImageIcon, LockKeyhole, Plus, Printer, RefreshCw, Search, ShieldCheck, Usb, Users, WalletCards, ScanLine, Upload } from 'lucide-react';
-import { db, storage } from '../firebase';
+import { db } from '../firebase';
+import { uploadImageToIbraR2 } from '../r2Upload';
 
 type Props = { bookings: any[]; teamMembers: any[] };
 
@@ -64,11 +64,9 @@ export const OperationsCenter: React.FC<Props> = ({ bookings, teamMembers }) => 
       for(const file of list){
         if(!allowed.includes(file.type))throw new Error('الصيغة غير مدعومة: '+file.name);
         if(file.size>15*1024*1024)throw new Error('الصورة أكبر من 15 MB: '+file.name);
-        const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
-        const path=`gallery/${bookingId}/${Date.now()}_${safe}`;
-        const storageRef=ref(storage,path);
-        await uploadBytes(storageRef,file,{contentType:file.type});
-        const url=await getDownloadURL(storageRef);
+        const result = await uploadImageToIbraR2(file, 'gallery', 15);
+        const url = result.url;
+        const path = result.key;
         await addDoc(collection(db,'galleryItems'),{
           bookingId,
           clientId:client?.id||null,
