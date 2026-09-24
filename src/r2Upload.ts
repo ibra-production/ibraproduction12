@@ -11,9 +11,35 @@ function safeFileName(name: string) {
     .slice(-120);
 }
 
+async function waitForAuthenticatedUser(timeoutMs = 10000) {
+  if (auth.currentUser) return auth.currentUser;
+
+  return new Promise<NonNullable<typeof auth.currentUser>>((resolve, reject) => {
+    let finished = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (finished) return;
+      if (user) {
+        finished = true;
+        if (timer) clearTimeout(timer);
+        unsubscribe();
+        resolve(user);
+      }
+    });
+
+    timer = setTimeout(() => {
+      if (finished) return;
+      finished = true;
+      unsubscribe();
+      reject(new Error('جلسة الإدارة غير جاهزة. أعد فتح لوحة الإدارة ثم حاول مرة أخرى.'));
+    }, timeoutMs);
+  });
+}
+
 /**
  * Direct browser upload to Firebase Storage.
- * Kept under the old function name so existing admin/gallery code needs no changes.
+ * The old function name is retained so all existing upload buttons keep working.
  */
 export async function uploadImageToIbraR2(
   file: File,
@@ -21,16 +47,19 @@ export async function uploadImageToIbraR2(
   maxSizeMb = 15,
 ): Promise<{ url: string; key: string; name: string }> {
   if (!file) throw new Error('لم يتم اختيار ملف.');
-  if (!auth.currentUser) throw new Error('انتهت جلسة الإدارة. أعد تسجيل الدخول.');
+
+  const user = await waitForAuthenticatedUser();
+
   if (!IMAGE_TYPES.includes(file.type)) {
     throw new Error('الصورة يجب أن تكون JPG أو PNG أو WEBP.');
   }
+
   if (file.size > maxSizeMb * 1024 * 1024) {
     throw new Error(`حجم الصورة يتجاوز ${maxSizeMb}MB.`);
   }
 
-  const token = await auth.currentUser.getIdToken();
-  if (!token) throw new Error('تعذر التحقق من جلسة الإدارة.');
+  // Force-refresh the Firebase ID token before Storage evaluates request.auth.
+  await user.getIdToken(true);
 
   const key = `${category}/${Date.now()}_${crypto.randomUUID()}_${safeFileName(file.name)}`;
   const storageRef = ref(storage, key);
@@ -40,7 +69,7 @@ export async function uploadImageToIbraR2(
       contentType: file.type,
       customMetadata: {
         originalName: file.name,
-        uploadedBy: auth.currentUser.uid,
+        uploadedBy: user.uid,
         category,
       },
     });
@@ -53,10 +82,13 @@ export async function uploadImageToIbraR2(
       name: file.name,
     };
   } catch (error: any) {
-    console.error('Direct image upload error:', error);
+    console.error('Direct Firebase Storage upload error:', error);
+
     const code = String(error?.code || '');
     if (code.includes('storage/unauthorized')) {
-      throw new Error('ليس لديك صلاحية رفع الصور. تحقق من تسجيل دخول المسؤول وقواعد Storage.');
+      throw new Error(
+        'Firebase Storage رفض الرفع. تأكد أن Storage Rules المنشورة تسمح للمستخدم admin@ibraprod.online بالكتابة.'
+      );
     }
     if (code.includes('storage/quota-exceeded')) {
       throw new Error('تم تجاوز حصة التخزين المتاحة.');
@@ -64,6 +96,7 @@ export async function uploadImageToIbraR2(
     if (code.includes('storage/canceled')) {
       throw new Error('تم إلغاء رفع الصورة.');
     }
+
     throw new Error(error?.message || 'فشل رفع الصورة إلى التخزين.');
   }
 }
