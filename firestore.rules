@@ -103,6 +103,35 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+    // Operations Center: private CRM and production records.
+    match /clients/{clientId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /galleryItems/{galleryId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /usbRecords/{recordId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /adminPermissions/{permissionId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /contracts/{contractId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /invoices/{invoiceId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /payments/{paymentId} {
+      allow read, write: if isAdmin();
+    }
+
     // Everything else is denied by default.
     match /{document=**} {
       allow read, write: if false;
