@@ -66,6 +66,9 @@ export interface PackageItem {
   isPopular: boolean;
   visible: boolean;
   order: number;
+  image?: string;
+  imagePath?: string;
+  imageName?: string;
 }
 
 export interface PortfolioItem {
