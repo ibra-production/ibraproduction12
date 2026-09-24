@@ -6,6 +6,7 @@ interface ErrorBoundaryState {
 }
 
 export class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, ErrorBoundaryState> {
+  readonly props!: { children: React.ReactNode };
   state: ErrorBoundaryState = {
     hasError: false,
     errorMessage: '',
