@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { addDoc, collection, doc, getDocs, onSnapshot, query, serverTimestamp, setDoc, where } from 'firebase/firestore';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { BarChart3, BriefcaseBusiness, CalendarDays, CheckCircle2, CreditCard, FileText, Image as ImageIcon, LockKeyhole, Plus, Printer, RefreshCw, Search, ShieldCheck, Usb, Users, WalletCards, ScanLine } from 'lucide-react';
-import { db } from '../firebase';
+import { db, storage } from '../firebase';
 
 type Props = { bookings: any[]; teamMembers: any[] };
 
@@ -33,6 +34,7 @@ export const OperationsCenter: React.FC<Props> = ({ bookings, teamMembers }) => 
   const [clientTab,setClientTab]=useState<'overview'|'bookings'|'finance'|'documents'|'gallery'|'usb'|'shoot'|'activity'>('overview');
   const [recordModal,setRecordModal]=useState<{type:'contract'|'invoice'|'payment';bookingId:string}|null>(null);
   const [recordForm,setRecordForm]=useState<any>({title:'',number:'',amount:'',method:'cash',status:'draft',notes:''});
+  const [galleryUploading,setGalleryUploading]=useState(false);
   const scanRef=useRef<HTMLInputElement>(null);
 
   useEffect(()=>onSnapshot(collection(db,'clients'),s=>setClients(s.docs.map(d=>({id:d.id,...d.data()})))),[]);
@@ -51,6 +53,42 @@ export const OperationsCenter: React.FC<Props> = ({ bookings, teamMembers }) => 
     const source=clients.length?clients:bookings.map(b=>({id:b.phone||b.id,phone:b.phone,groomName:b.groomName,brideName:b.brideName,email:b.email}));
     return source.filter(c=>!q||[c.groomName,c.brideName,c.phone,c.email,c.id].some(v=>String(v||'').toLowerCase().includes(q)));
   },[clients,bookings,search]);
+
+  const uploadClientGalleryFiles=async(files:FileList|File[],bookingId:string,client:any)=>{
+    const list=Array.from(files||[]);
+    if(!bookingId||!list.length)return;
+    const allowed=['image/jpeg','image/png','image/webp','image/jpg'];
+    try{
+      setGalleryUploading(true);
+      const clientCode=String(client?.clientCode||client?.barcode||'');
+      for(const file of list){
+        if(!allowed.includes(file.type))throw new Error('الصيغة غير مدعومة: '+file.name);
+        if(file.size>15*1024*1024)throw new Error('الصورة أكبر من 15 MB: '+file.name);
+        const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+        const path=`gallery/${bookingId}/${Date.now()}_${safe}`;
+        const storageRef=ref(storage,path);
+        await uploadBytes(storageRef,file,{contentType:file.type});
+        const url=await getDownloadURL(storageRef);
+        await addDoc(collection(db,'galleryItems'),{
+          bookingId,
+          clientId:client?.id||null,
+          clientCode:clientCode||null,
+          clientName:client?.groomName||client?.fullName||'',
+          url,
+          storagePath:path,
+          title:file.name,
+          type:'image',
+          visible:true,
+          createdAt:serverTimestamp(),
+          source:'Ibra Production Client Gallery'
+        });
+      }
+      alert('تم رفع صور العميل وربطها بملف الحجز والعميل.');
+    }catch(error){
+      console.error('Client gallery upload error:',error);
+      alert(error instanceof Error?error.message:'فشل رفع صور العميل.');
+    }finally{setGalleryUploading(false);}
+  };
 
   const upsertClient=async(b:any)=>{
     const id=String(b.phone||b.id||'').replace(/[^0-9A-Za-z_-]/g,'_');
@@ -236,7 +274,30 @@ export const OperationsCenter: React.FC<Props> = ({ bookings, teamMembers }) => 
     </div>}
 
     {tab==='gallery'&&<div className="space-y-4">
-      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5"><h3 className="text-xl font-black">Client Gallery / Cloudflare R2</h3><p className="text-xs text-neutral-400 mt-1">هذه الطبقة تحفظ بيانات المعرض وروابط الملفات؛ الرفع الفعلي إلى R2 يجب أن يتم عبر Presigned URL / Worker حتى لا تظهر مفاتيح R2 داخل المتصفح.</p><div className="grid md:grid-cols-2 gap-3 mt-4"><input id="gallery-booking" placeholder="Booking ID" className="bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2"/><input id="gallery-url" placeholder="Public/R2 URL للملف" className="bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2"/><input id="gallery-title" placeholder="اسم الملف / الوصف" className="bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2"/><button onClick={async()=>{const b=(document.getElementById('gallery-booking') as HTMLInputElement).value.trim();const u=(document.getElementById('gallery-url') as HTMLInputElement).value.trim();const t=(document.getElementById('gallery-title') as HTMLInputElement).value.trim();if(!b||!u)return alert('أدخل Booking ID وR2 URL');await addDoc(collection(db,'galleryItems'),{bookingId:b,url:u,title:t||'Gallery file',type:'image',visible:true,createdAt:serverTimestamp()});alert('تم حفظ عنصر المعرض.');}} className="bg-amber-500 text-black rounded-xl font-bold">إضافة عنصر</button></div></div>
+      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5">
+        <h3 className="text-xl font-black">Client Gallery</h3>
+        <p className="text-xs text-neutral-400 mt-1">رفع مباشر لصور العميل من الحاسوب وربطها تلقائياً بالحجز وملف العميل.</p>
+        <div className="grid md:grid-cols-2 gap-3 mt-4">
+          <input id="gallery-booking" placeholder="Booking ID" className="bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2"/>
+          <select id="gallery-client" className="bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2">
+            <option value="">اختر العميل (اختياري)</option>
+            {clients.map((cl:any)=><option key={cl.id} value={cl.id}>{cl.groomName||cl.fullName||'Client'} — {cl.phone||cl.clientCode||cl.id}</option>)}
+          </select>
+          <label className="md:col-span-2 flex items-center gap-3 cursor-pointer bg-neutral-950 border border-dashed border-amber-500/40 rounded-2xl px-4 py-5">
+            <Upload className="w-6 h-6 text-amber-400"/>
+            <div className="flex-1"><div className="font-bold">اختيار صور من الحاسوب</div><div className="text-xs text-neutral-500 mt-1">JPG / PNG / WEBP — حتى 15 MB للصورة — عدة صور مسموحة</div></div>
+            <span className="px-4 py-2 rounded-xl bg-amber-500 text-black font-black text-sm">{galleryUploading?'جاري الرفع...':'اختيار الصور'}</span>
+            <input type="file" multiple accept="image/jpeg,image/png,image/webp" className="hidden" disabled={galleryUploading} onChange={async e=>{
+              const bookingId=(document.getElementById('gallery-booking') as HTMLInputElement)?.value.trim();
+              const clientId=(document.getElementById('gallery-client') as HTMLSelectElement)?.value;
+              const client=clients.find((x:any)=>String(x.id)===String(clientId))||bookings.find((x:any)=>String(x.id)===String(bookingId));
+              if(!bookingId)return alert('أدخل Booking ID أولاً.');
+              await uploadClientGalleryFiles(e.target.files||[],bookingId,client);
+              e.currentTarget.value='';
+            }}/>
+          </label>
+        </div>
+      </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">{gallery.map(g=><div key={g.id} className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">{g.type==='image'&&<img src={g.url} alt="" className="w-full aspect-square object-cover" onError={e=>{(e.currentTarget as HTMLImageElement).style.display='none'}}/>}<div className="p-3 text-xs"><b>{g.title||'—'}</b><div className="text-neutral-500 mt-1">#{g.bookingId}</div></div></div>)}</div>
     </div>}
     {recordModal&&<div className="fixed inset-0 z-[160] bg-black/80 p-4 flex items-center justify-center"><div className="w-full max-w-lg bg-neutral-900 border border-neutral-700 rounded-3xl p-6"><div className="flex justify-between items-center mb-5"><h3 className="text-xl font-black">{recordModal.type==='contract'?'إنشاء عقد':recordModal.type==='invoice'?'إنشاء فاتورة':'تسجيل دفعة'}</h3><button onClick={()=>setRecordModal(null)} className="px-3 py-2 bg-neutral-800 rounded-xl">إغلاق</button></div><div className="space-y-3"><input value={recordForm.title} onChange={e=>setRecordForm((x:any)=>({...x,title:e.target.value}))} placeholder="العنوان" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3"/><input value={recordForm.number} onChange={e=>setRecordForm((x:any)=>({...x,number:e.target.value}))} placeholder="رقم المستند (اختياري)" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3"/>{recordModal.type!=='contract'&&<input type="number" value={recordForm.amount} onChange={e=>setRecordForm((x:any)=>({...x,amount:e.target.value}))} placeholder="المبلغ بالدينار" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3"/>}{recordModal.type==='payment'&&<select value={recordForm.method} onChange={e=>setRecordForm((x:any)=>({...x,method:e.target.value}))} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3"><option value="cash">نقداً</option><option value="baridimob">BaridiMob</option><option value="ccp">CCP</option><option value="bank">تحويل بنكي</option><option value="other">أخرى</option></select>}<textarea value={recordForm.notes} onChange={e=>setRecordForm((x:any)=>({...x,notes:e.target.value}))} placeholder="ملاحظات" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 min-h-24"/><button onClick={()=>void saveClientRecord()} className="w-full bg-amber-500 text-black rounded-xl py-3 font-black">حفظ وربط بالعميل</button></div></div></div>}
