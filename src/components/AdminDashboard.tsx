@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { auth, db, storage } from '../firebase';
+import { auth, db } from '../firebase';
 import { addDoc, collection, onSnapshot, serverTimestamp } from 'firebase/firestore';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { enablePushNotifications } from "../pushNotifications";
 import { useApp } from '../context/AppContext';
 import { TeamManagement } from './TeamManagement';
 import { BookingWorkflowPanel } from './BookingWorkflowPanel';
 import { ProFeaturesCenter } from './ProFeaturesCenter';
 import { OperationsCenter } from './OperationsCenter';
+import { uploadImageToIbraR2 } from '../r2Upload';
 import {
   LayoutDashboard,
   Calendar,
@@ -422,56 +422,28 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
   const uploadServiceImage = async (file: File) => {
     if (!file) return;
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
-    if (!allowedTypes.includes(file.type)) {
-      alert('صيغة الصورة غير مدعومة. استعمل JPG أو PNG أو WEBP.');
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      alert('حجم الصورة كبير جداً. الحد الأقصى 10 MB.');
-      return;
-    }
     try {
       setServiceUploading(true);
-      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-      const path = `services/${Date.now()}_${safeName}`;
-      const storageRef = ref(storage, path);
-      await uploadBytes(storageRef, file, { contentType: file.type });
-      const url = await getDownloadURL(storageRef);
+      const result = await uploadImageToIbraR2(file, 'services', 15);
       setServiceModal((current: any) => current ? ({
         ...current,
-        image: url,
-        imagePath: path,
-        imageName: file.name
+        image: result.url,
+        imagePath: result.key,
+        imageName: result.name
       }) : current);
     } catch (error) {
       console.error('Service image upload error:', error);
-      alert('تعذر رفع صورة الخدمة. تأكد من تسجيل الدخول وصلاحيات Firebase Storage.');
+      alert(error instanceof Error ? error.message : 'تعذر رفع صورة الخدمة.');
     } finally {
       setServiceUploading(false);
     }
   };
 
-  const uploadImageToStorage = async (
-    file: File,
-    folder: string,
-    maxSizeMb = 10
-  ): Promise<{ url: string; path: string; name: string }> => {
-    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
-    if (!allowed.includes(file.type)) throw new Error('صيغة الصورة غير مدعومة. استعمل JPG أو PNG أو WEBP.');
-    if (file.size > maxSizeMb * 1024 * 1024) throw new Error('حجم الصورة أكبر من الحد المسموح.');
-    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-    const path = `${folder}/${Date.now()}_${safeName}`;
-    const storageRef = ref(storage, path);
-    await uploadBytes(storageRef, file, { contentType: file.type });
-    return { url: await getDownloadURL(storageRef), path, name: file.name };
-  };
-
   const uploadPackageImage = async (file: File) => {
     try {
       setPackageUploading(true);
-      const result = await uploadImageToStorage(file, 'packages');
-      setPackageModal((m: any) => m ? ({ ...m, image: result.url, imagePath: result.path, imageName: result.name }) : m);
+      const result = await uploadImageToIbraR2(file, 'packages', 15);
+      setPackageModal((m: any) => m ? ({ ...m, image: result.url, imagePath: result.key, imageName: result.name }) : m);
     } catch (e) { alert(e instanceof Error ? e.message : 'فشل رفع صورة الباقة.'); }
     finally { setPackageUploading(false); }
   };
@@ -479,8 +451,8 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
   const uploadTestimonialImage = async (file: File) => {
     try {
       setTestimonialUploading(true);
-      const result = await uploadImageToStorage(file, 'testimonials');
-      setTestimonialModal((m: any) => m ? ({ ...m, image: result.url, imagePath: result.path, imageName: result.name }) : m);
+      const result = await uploadImageToIbraR2(file, 'testimonials', 15);
+      setTestimonialModal((m: any) => m ? ({ ...m, image: result.url, imagePath: result.key, imageName: result.name }) : m);
     } catch (e) { alert(e instanceof Error ? e.message : 'فشل رفع صورة العميل.'); }
     finally { setTestimonialUploading(false); }
   };
@@ -488,8 +460,8 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
   const uploadOfferImage = async (file: File) => {
     try {
       setOfferUploading(true);
-      const result = await uploadImageToStorage(file, 'offers');
-      setOfferModal((m: any) => m ? ({ ...m, image: result.url, imagePath: result.path, imageName: result.name }) : m);
+      const result = await uploadImageToIbraR2(file, 'offers', 15);
+      setOfferModal((m: any) => m ? ({ ...m, image: result.url, imagePath: result.key, imageName: result.name }) : m);
     } catch (e) { alert(e instanceof Error ? e.message : 'فشل رفع صورة العرض.'); }
     finally { setOfferUploading(false); }
   };
