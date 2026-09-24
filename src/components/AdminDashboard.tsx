@@ -136,6 +136,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
   const [serviceModal, setServiceModal] = useState<any | null>(null);
   const [serviceUploading, setServiceUploading] = useState(false);
   const [packageModal, setPackageModal] = useState<any | null>(null);
+  const [packageUploading, setPackageUploading] = useState(false);
+  const [testimonialModal, setTestimonialModal] = useState<any | null>(null);
+  const [testimonialUploading, setTestimonialUploading] = useState(false);
+  const [offerModal, setOfferModal] = useState<any | null>(null);
+  const [offerUploading, setOfferUploading] = useState(false);
   const [portfolioModal, setPortfolioModal] = useState<any | null>(null);
 const [videoModal, setVideoModal] = useState<any | null>(null);
   const [portfolioUploading, setPortfolioUploading] = useState(false);
@@ -441,6 +446,48 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
     } finally {
       setServiceUploading(false);
     }
+  };
+
+  const uploadImageToStorage = async (
+    file: File,
+    folder: string,
+    maxSizeMb = 10
+  ): Promise<{ url: string; path: string; name: string }> => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+    if (!allowed.includes(file.type)) throw new Error('صيغة الصورة غير مدعومة. استعمل JPG أو PNG أو WEBP.');
+    if (file.size > maxSizeMb * 1024 * 1024) throw new Error('حجم الصورة أكبر من الحد المسموح.');
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const path = `${folder}/${Date.now()}_${safeName}`;
+    const storageRef = ref(storage, path);
+    await uploadBytes(storageRef, file, { contentType: file.type });
+    return { url: await getDownloadURL(storageRef), path, name: file.name };
+  };
+
+  const uploadPackageImage = async (file: File) => {
+    try {
+      setPackageUploading(true);
+      const result = await uploadImageToStorage(file, 'packages');
+      setPackageModal((m: any) => m ? ({ ...m, image: result.url, imagePath: result.path, imageName: result.name }) : m);
+    } catch (e) { alert(e instanceof Error ? e.message : 'فشل رفع صورة الباقة.'); }
+    finally { setPackageUploading(false); }
+  };
+
+  const uploadTestimonialImage = async (file: File) => {
+    try {
+      setTestimonialUploading(true);
+      const result = await uploadImageToStorage(file, 'testimonials');
+      setTestimonialModal((m: any) => m ? ({ ...m, image: result.url, imagePath: result.path, imageName: result.name }) : m);
+    } catch (e) { alert(e instanceof Error ? e.message : 'فشل رفع صورة العميل.'); }
+    finally { setTestimonialUploading(false); }
+  };
+
+  const uploadOfferImage = async (file: File) => {
+    try {
+      setOfferUploading(true);
+      const result = await uploadImageToStorage(file, 'offers');
+      setOfferModal((m: any) => m ? ({ ...m, image: result.url, imagePath: result.path, imageName: result.name }) : m);
+    } catch (e) { alert(e instanceof Error ? e.message : 'فشل رفع صورة العرض.'); }
+    finally { setOfferUploading(false); }
   };
 
   const getIdCardBlob = async (value: string) => {
@@ -2027,8 +2074,9 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                   آراء العملاء
                 </h2>
                 <p className="text-xs text-neutral-400 mt-2">
-                  مراجعة شهادات وآراء العملاء.
+                  إدارة شهادات وآراء العملاء وصورهم.
                 </p>
+                <button onClick={()=>setTestimonialModal({clientName:'',rating:5,commentAr:'',commentFr:'',commentEn:'',date:new Date().toISOString().slice(0,10),approved:true,image:''})} className="mt-4 px-5 py-2.5 bg-amber-500 text-neutral-950 rounded-xl font-bold">+ إضافة رأي عميل</button>
               </div>
 
               <div className="space-y-4">
@@ -2042,7 +2090,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                     >
 
                       <div className="flex items-start justify-between gap-4">
-
+                        <button onClick={()=>setTestimonialModal({...item})} className="px-3 py-2 bg-neutral-800 rounded-xl text-xs font-bold"><Edit className="w-4 h-4 inline ml-1"/>تعديل</button>
                         <div>
                           <h3 className="font-bold text-white">
                             {item.name ||
@@ -2089,6 +2137,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 <p className="text-xs text-neutral-400 mt-2">
                   إدارة العروض التي تظهر للعملاء.
                 </p>
+                <button onClick={()=>setOfferModal({titleAr:'',titleFr:'',titleEn:'',descAr:'',descFr:'',descEn:'',oldPrice:'',newPrice:'',discountPercentage:'',startDate:'',endDate:'',image:'',active:true})} className="mt-4 px-5 py-2.5 bg-amber-500 text-neutral-950 rounded-xl font-bold">+ إضافة عرض</button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -2101,6 +2150,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                     >
 
                       <div className="flex items-center justify-between">
+                        <div className="flex gap-2"><button onClick={()=>setOfferModal({...offer})} className="px-3 py-2 bg-neutral-800 rounded-xl text-xs font-bold"><Edit className="w-4 h-4 inline ml-1"/>تعديل</button></div>
                         <Tag className="w-6 h-6 text-amber-400" />
 
                         <span className="text-xs text-neutral-500">
@@ -3309,6 +3359,43 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
           </div>
 
+        </div>
+      )}
+
+      {testimonialModal && (
+        <div className="fixed inset-0 z-[90] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="w-full max-w-2xl bg-neutral-900 border border-neutral-800 rounded-3xl p-6 my-8">
+            <div className="flex justify-between items-center mb-5"><h3 className="text-xl font-black text-white">{testimonialModal.id?'تعديل رأي العميل':'إضافة رأي عميل'}</h3><button onClick={()=>setTestimonialModal(null)} className="p-2 bg-neutral-800 rounded-full"><X className="w-5 h-5"/></button></div>
+            <div className="space-y-3">
+              <input value={testimonialModal.clientName||''} onChange={e=>setTestimonialModal({...testimonialModal,clientName:e.target.value})} placeholder="اسم العميل" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"/>
+              <input type="number" min="1" max="5" value={testimonialModal.rating??5} onChange={e=>setTestimonialModal({...testimonialModal,rating:Number(e.target.value)})} placeholder="التقييم من 5" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"/>
+              <textarea value={testimonialModal.commentAr||''} onChange={e=>setTestimonialModal({...testimonialModal,commentAr:e.target.value})} placeholder="رأي العميل بالعربية" rows={4} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"/>
+              <div className="rounded-2xl border border-neutral-800 bg-neutral-950 p-4">
+                <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 text-neutral-950 text-xs font-bold cursor-pointer"><Upload className="w-4 h-4"/>{testimonialUploading?'جاري الرفع...':'رفع صورة العميل'}<input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={testimonialUploading} onChange={e=>{const f=e.target.files?.[0];if(f)void uploadTestimonialImage(f);e.currentTarget.value='';}}/></label>
+                {testimonialModal.image&&<div className="relative mt-3 rounded-xl overflow-hidden"><img src={testimonialModal.image} className="w-full h-48 object-cover" alt="صورة العميل"/><button type="button" onClick={()=>setTestimonialModal({...testimonialModal,image:'',imagePath:'',imageName:''})} className="absolute top-2 right-2 bg-red-500 text-white rounded-lg px-3 py-2 text-xs">حذف</button></div>}
+              </div>
+              <label className="flex items-center gap-2 text-sm text-white"><input type="checkbox" checked={testimonialModal.approved!==false} onChange={e=>setTestimonialModal({...testimonialModal,approved:e.target.checked})}/> اعتماد الرأي وعرضه</label>
+              <div className="flex gap-2 pt-2"><button disabled={testimonialUploading} onClick={async()=>{if(!testimonialModal.clientName||!testimonialModal.commentAr)return alert('أدخل اسم العميل والرأي.');try{if(testimonialModal.id) await updateTestimonial(testimonialModal.id,testimonialModal);else await addTestimonial(testimonialModal);setTestimonialModal(null);}catch(e){alert('تعذر حفظ رأي العميل.');}}} className="flex-1 py-3 bg-amber-500 text-neutral-950 rounded-xl font-black">حفظ</button><button onClick={()=>setTestimonialModal(null)} className="px-5 bg-neutral-800 rounded-xl">إلغاء</button></div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {offerModal && (
+        <div className="fixed inset-0 z-[90] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="w-full max-w-2xl bg-neutral-900 border border-neutral-800 rounded-3xl p-6 my-8">
+            <div className="flex justify-between items-center mb-5"><h3 className="text-xl font-black text-white">{offerModal.id?'تعديل العرض':'إضافة عرض'}</h3><button onClick={()=>setOfferModal(null)} className="p-2 bg-neutral-800 rounded-full"><X className="w-5 h-5"/></button></div>
+            <div className="space-y-3">
+              <input value={offerModal.titleAr||''} onChange={e=>setOfferModal({...offerModal,titleAr:e.target.value})} placeholder="عنوان العرض بالعربية" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"/>
+              <input value={offerModal.titleFr||''} onChange={e=>setOfferModal({...offerModal,titleFr:e.target.value})} placeholder="عنوان العرض بالفرنسية" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"/>
+              <input value={offerModal.titleEn||''} onChange={e=>setOfferModal({...offerModal,titleEn:e.target.value})} placeholder="عنوان العرض بالإنجليزية" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"/>
+              <textarea value={offerModal.descAr||''} onChange={e=>setOfferModal({...offerModal,descAr:e.target.value})} placeholder="وصف العرض" rows={3} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"/>
+              <div className="grid grid-cols-2 gap-3"><input value={offerModal.oldPrice||''} onChange={e=>setOfferModal({...offerModal,oldPrice:e.target.value})} placeholder="السعر القديم" className="bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"/><input value={offerModal.newPrice||''} onChange={e=>setOfferModal({...offerModal,newPrice:e.target.value})} placeholder="السعر الجديد" className="bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"/></div>
+              <div className="rounded-2xl border border-neutral-800 bg-neutral-950 p-4"><label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 text-neutral-950 text-xs font-bold cursor-pointer"><Upload className="w-4 h-4"/>{offerUploading?'جاري الرفع...':'رفع صورة العرض'}<input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={offerUploading} onChange={e=>{const f=e.target.files?.[0];if(f)void uploadOfferImage(f);e.currentTarget.value='';}}/></label>{offerModal.image&&<div className="relative mt-3 rounded-xl overflow-hidden"><img src={offerModal.image} className="w-full h-48 object-cover" alt="صورة العرض"/><button type="button" onClick={()=>setOfferModal({...offerModal,image:'',imagePath:'',imageName:''})} className="absolute top-2 right-2 bg-red-500 text-white rounded-lg px-3 py-2 text-xs">حذف</button></div>}</div>
+              <label className="flex items-center gap-2 text-sm text-white"><input type="checkbox" checked={offerModal.active!==false} onChange={e=>setOfferModal({...offerModal,active:e.target.checked})}/> العرض نشط</label>
+              <div className="flex gap-2 pt-2"><button disabled={offerUploading} onClick={async()=>{if(!offerModal.titleAr)return alert('أدخل عنوان العرض.');try{if(offerModal.id) await updateOffer(offerModal.id,offerModal);else await addOffer(offerModal);setOfferModal(null);}catch(e){alert('تعذر حفظ العرض.');}}} className="flex-1 py-3 bg-amber-500 text-neutral-950 rounded-xl font-black">حفظ</button><button onClick={()=>setOfferModal(null)} className="px-5 bg-neutral-800 rounded-xl">إلغاء</button></div>
+            </div>
+          </div>
         </div>
       )}
 
