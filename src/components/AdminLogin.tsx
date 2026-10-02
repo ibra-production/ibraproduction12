@@ -10,21 +10,34 @@ interface AdminLoginProps {
 
 export const AdminLogin: React.FC<AdminLoginProps> = ({ isOpen, onClose, onLoginSuccess }) => {
   const { login, language } = useApp();
-  const [email, setEmail] = useState('admin@ibraprod.online');
+  const [email, setEmail] = useState('');
  const [password, setPassword] = useState('');
   const [error, setError] = useState(false);
+  const [attempts, setAttempts] = useState(0);
+  const [lockedUntil, setLockedUntil] = useState<number | null>(null);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (lockedUntil && Date.now() < lockedUntil) {
+      setError(true);
+      return;
+    }
     const success = await login(email, password);
     if (success) {
       setError(false);
       onLoginSuccess();
       onClose();
     } else {
+      const nextAttempts = attempts + 1;
+      setAttempts(nextAttempts);
       setError(true);
+      setPassword('');
+      if (nextAttempts >= 5) {
+        setLockedUntil(Date.now() + 60_000);
+        setAttempts(0);
+      }
     }
   };
 
@@ -52,9 +65,9 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ isOpen, onClose, onLogin
 
         {error && (
   <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-xs p-3 rounded-xl mb-6 text-center">
-    {language === 'ar'
-      ? 'بيانات الدخول غير صحيحة'
-      : 'Invalid email or password'}
+    {lockedUntil && Date.now() < lockedUntil
+      ? (language === 'ar' ? 'تم إيقاف المحاولات مؤقتاً. حاول بعد دقيقة.' : 'Too many attempts. Try again in one minute.')
+      : (language === 'ar' ? 'بيانات الدخول غير صحيحة' : 'Invalid email or password')}
   </div>
 )}
 
@@ -70,6 +83,8 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ isOpen, onClose, onLogin
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
+                autoComplete="username"
+                placeholder="admin@ibraprod.online"
                 className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white text-sm focus:border-amber-500 focus:outline-none pr-10"
               />
             </div>
@@ -86,6 +101,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ isOpen, onClose, onLogin
                 required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
+                autoComplete="current-password"
                 className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white text-sm focus:border-amber-500 focus:outline-none pr-10"
               />
             </div>
