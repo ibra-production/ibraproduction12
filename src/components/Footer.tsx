@@ -4,7 +4,7 @@ import { Facebook, Instagram, Youtube, Phone, Mail, MapPin } from 'lucide-react'
 
 interface FooterProps {}
 
-export const Footer: React.FC<FooterProps> = () {
+export const Footer: React.FC<FooterProps> = () => {
   const { language, settings } = useApp();
 
   return (
@@ -12,8 +12,6 @@ export const Footer: React.FC<FooterProps> = () {
       <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[36rem] h-64 rounded-full bg-amber-500/5 blur-3xl pointer-events-none" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-          
-          {/* Brand info */}
           <div>
             <div className="flex items-center gap-3 mb-6">
               <div className="w-11 h-11 rounded-full overflow-hidden shadow-lg shadow-amber-500/20 bg-neutral-900">
@@ -46,11 +44,8 @@ export const Footer: React.FC<FooterProps> = () {
                 <Youtube className="w-4 h-4" />
               </a>
             </div>
-
-            {/* Owner CMS is intentionally hidden from public visitors. */}
           </div>
 
-          {/* Quick links */}
           <div>
             <h4 className="text-white font-cinzel font-bold text-base mb-6 tracking-wide">
               {language === 'ar' ? 'روابط الموقع' : language === 'fr' ? 'Liens Rapides' : 'Quick Links'}
@@ -65,7 +60,6 @@ export const Footer: React.FC<FooterProps> = () {
             </ul>
           </div>
 
-          {/* Services */}
           <div>
             <h4 className="text-white font-cinzel font-bold text-base mb-6 tracking-wide">
               {language === 'ar' ? 'الخدمات' : language === 'fr' ? 'Services' : 'Services'}
@@ -79,7 +73,6 @@ export const Footer: React.FC<FooterProps> = () {
             </ul>
           </div>
 
-          {/* Contact */}
           <div>
             <h4 className="text-white font-cinzel font-bold text-base mb-6 tracking-wide">
               {language === 'ar' ? 'التواصل' : language === 'fr' ? 'Contact' : 'Contact'}
@@ -102,10 +95,8 @@ export const Footer: React.FC<FooterProps> = () {
               </li>
             </ul>
           </div>
-
         </div>
 
-        {/* Copyright */}
         <div className="border-t border-neutral-900 pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-neutral-500">
           <p>© 2026 IBRA PRODUCTION. All Rights Reserved.</p>
           <div className="flex gap-6 mt-4 sm:mt-0">
@@ -113,7 +104,6 @@ export const Footer: React.FC<FooterProps> = () {
             <a href="#home" className="hover:text-amber-400">Terms of Service</a>
           </div>
         </div>
-
       </div>
     </footer>
   );
