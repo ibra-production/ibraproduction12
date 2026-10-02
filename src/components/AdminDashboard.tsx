@@ -507,7 +507,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
       return raw;
     }
 
-    const key = raw.replace(/^\\/?(?:id-cards?\\/)?/, '');
+    const key = raw.replace(/^\\/?(?:id-cards?\\/)?/, '').replace(/^\\/+/, '');
     if (!key) throw new Error('مفتاح بطاقة التعريف غير صالح.');
 
     return ID_CARD_WORKER_URL + '/?key=' + encodeURIComponent(key);
@@ -613,7 +613,8 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
   };
 
   const downloadIdCard = async (booking: any) => {
-    if (!booking?.idCardUrl && !booking?.idCardKey) {
+    const card = getBookingIdCardValue(booking);
+    if (!card.url && !card.key) {
       alert('لا يوجد ملف بطاقة تعريف مرتبط بهذا الحجز.');
       return;
     }
@@ -621,7 +622,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
     try {
       setIdCardLoading(true);
 
-      const blob = await getIdCardBlob(String(booking.idCardUrl || booking.idCardKey || ''), booking);
+      const blob = await getIdCardBlob(String(card.url || card.key || ''), booking);
       const objectUrl = URL.createObjectURL(blob);
       const fileName = getSafeIdCardName(booking, blob);
 
