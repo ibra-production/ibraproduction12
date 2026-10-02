@@ -35,7 +35,7 @@ import { ServiceItem, PackageItem } from './types';
 
 function MainContent() {
   const { currentUser, settings, language } = useApp();
-  const isAdminRoute = window.location.pathname.replace(/\\/+$/, '') === '/admin';
+  const isAdminRoute = window.location.pathname.replace(//+$/, '') === '/admin';
 
   useEffect(() => {
     const ua = navigator.userAgent || '';
@@ -58,7 +58,6 @@ function MainContent() {
   const [selectedPackage, setSelectedPackage] = useState<PackageItem | null>(null);
 
   useEffect(() => {
-    // /admin is the direct entry point for IBRA ACCESS.
     if (isAdminRoute && !currentUser) {
       setAdminLoginOpen(true);
       setAdminDashboardOpen(false);
@@ -71,7 +70,6 @@ function MainContent() {
   }, [isAdminRoute, currentUser]);
 
   useEffect(() => {
-    // Hidden owner entry remains available for compatibility.
     const ownerEntry = window.location.pathname === '/ibra-owner' || window.location.hash === '#ibra-owner';
     const openOwnerLogin = () => {
       setAdminLoginOpen(true);
