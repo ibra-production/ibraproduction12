@@ -468,9 +468,24 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
   const ID_CARD_WORKER_URL = 'https://yellow-bar-9020ibra-id-card-upload.bahibarhouma15.workers.dev';
 
+  const getBookingIdCardValue = (booking: any) => {
+    if (!booking) return { url: '', key: '', name: '' };
+    const url = String(
+      booking.idCardUrl || booking.identityCardUrl || booking.idCard || booking.identityCard || ''
+    ).trim();
+    const key = String(
+      booking.idCardKey || booking.identityCardKey || booking.idCardPath || ''
+    ).trim();
+    const name = String(
+      booking.idCardName || booking.identityCardName || booking.idCardFileName || ''
+    ).trim();
+    return { url, key, name };
+  };
+
   const resolveIdCardUrl = (value: string, booking?: any) => {
-    const explicitKey = String(booking?.idCardKey || '').trim();
-    const raw = String(value || '').trim();
+    const legacy = getBookingIdCardValue(booking);
+    const explicitKey = String(legacy.key || '').trim();
+    const raw = String(value || legacy.url || '').trim();
 
     if (explicitKey) {
       return ID_CARD_WORKER_URL + '/?key=' + encodeURIComponent(explicitKey);
@@ -552,7 +567,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
   };
 
   const getSafeIdCardName = (booking: any, blob?: Blob) => {
-    const original = String(booking?.idCardName || '').trim();
+    const original = getBookingIdCardValue(booking).name;
     if (original) return original;
 
     const mime = String(blob?.type || '').toLowerCase();
@@ -566,7 +581,8 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
   };
 
   const previewIdCard = async (booking: any) => {
-    if (!booking?.idCardUrl && !booking?.idCardKey) {
+    const card = getBookingIdCardValue(booking);
+    if (!card.url && !card.key) {
       alert('لا يوجد ملف بطاقة تعريف مرتبط بهذا الحجز.');
       return;
     }
@@ -579,7 +595,8 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
         setIdCardPreview(null);
       }
 
-      const blob = await getIdCardBlob(String(booking.idCardUrl || booking.idCardKey || ''), booking);
+      const card = getBookingIdCardValue(booking);
+      const blob = await getIdCardBlob(String(card.url || card.key || ''), booking);
       const objectUrl = URL.createObjectURL(blob);
 
       setIdCardPreview({
@@ -2399,7 +2416,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 <p className="text-xs text-neutral-400 mt-2">معاينة وتحميل آمن لبطاقات التعريف المرفوعة مع الحجوزات.</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                {safeBookings.filter((b:any) => b.idCardUrl || b.idCardKey).map((b:any) => (
+                {safeBookings.filter((b:any) => { const card = getBookingIdCardValue(b); return !!(card.url || card.key); }).map((b:any) => (
                   <div key={b.id} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5">
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -2411,7 +2428,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                     <div className="text-xs text-neutral-400 mt-4 space-y-1">
                       <div>الهاتف: {b.phone || '-'}</div>
                       <div>التاريخ: {Array.isArray(b.eventDates) && b.eventDates.length ? b.eventDates.join('، ') : (b.eventDate || '-')}</div>
-                      <div className="break-all">الملف: {b.idCardName || 'بطاقة التعريف'}</div>
+                      <div className="break-all">الملف: {getBookingIdCardValue(b).name || 'بطاقة التعريف'}</div>
                       <div className="text-[11px] text-green-400 mt-1">✓ الملف مرتبط بالتخزين الآمن</div>
                     </div>
                     <div className="grid grid-cols-2 gap-2 mt-4">
@@ -2424,7 +2441,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                     </div>
                   </div>
                 ))}
-                {safeBookings.filter((b:any) => b.idCardUrl || b.idCardKey).length === 0 && (
+                {safeBookings.filter((b:any) => { const card = getBookingIdCardValue(b); return !!(card.url || card.key); }).length === 0 && (
                   <div className="col-span-full bg-neutral-900 border border-neutral-800 rounded-2xl p-10 text-center text-neutral-500">لا توجد بطاقات تعريف مسجلة.</div>
                 )}
               </div>
