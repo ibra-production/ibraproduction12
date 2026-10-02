@@ -51,11 +51,25 @@ function MainContent() {
   const maintenance = settings.maintenanceMode === true;
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('booking') === '1') setBookingModalOpen(true);
-    if (params.get('tracking') === '1') {
-      window.setTimeout(() => document.querySelector<HTMLButtonElement>('[data-client-tracking]')?.click(), 250);
-    }
+    // Hidden owner entry: no public admin button/link is exposed.
+    // The real security boundary remains Firebase Authentication + Firestore rules.
+    const ownerEntry = window.location.pathname === '/ibra-owner' || window.location.hash === '#ibra-owner';
+    const openOwnerLogin = () => {
+      setAdminLoginOpen(true);
+      window.history.replaceState({}, '', window.location.pathname + window.location.search);
+    };
+
+    if (ownerEntry) openOwnerLogin();
+
+    const onOwnerShortcut = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.shiftKey && event.altKey && event.key.toLowerCase() === 'i') {
+        event.preventDefault();
+        openOwnerLogin();
+      }
+    };
+
+    window.addEventListener('keydown', onOwnerShortcut);
+    return () => window.removeEventListener('keydown', onOwnerShortcut);
   }, []);
 
   useEffect(() => {
