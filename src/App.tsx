@@ -35,6 +35,7 @@ import { ServiceItem, PackageItem } from './types';
 
 function MainContent() {
   const { currentUser, settings, language } = useApp();
+  const isAdminRoute = window.location.pathname.replace(/\\/+$/, '') === '/admin';
 
   useEffect(() => {
     const ua = navigator.userAgent || '';
@@ -48,18 +49,37 @@ function MainContent() {
       document.body.classList.remove('tv-mode');
     };
   }, []);
+
   const maintenance = settings.maintenanceMode === true;
+  const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  const [adminLoginOpen, setAdminLoginOpen] = useState(isAdminRoute);
+  const [adminDashboardOpen, setAdminDashboardOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
+  const [selectedPackage, setSelectedPackage] = useState<PackageItem | null>(null);
 
   useEffect(() => {
-    // Hidden owner entry: no public admin button/link is exposed.
-    // The real security boundary remains Firebase Authentication + Firestore rules.
+    // /admin is the direct entry point for IBRA ACCESS.
+    if (isAdminRoute && !currentUser) {
+      setAdminLoginOpen(true);
+      setAdminDashboardOpen(false);
+    }
+
+    if (isAdminRoute && currentUser) {
+      setAdminLoginOpen(false);
+      setAdminDashboardOpen(true);
+    }
+  }, [isAdminRoute, currentUser]);
+
+  useEffect(() => {
+    // Hidden owner entry remains available for compatibility.
     const ownerEntry = window.location.pathname === '/ibra-owner' || window.location.hash === '#ibra-owner';
     const openOwnerLogin = () => {
       setAdminLoginOpen(true);
+      setAdminDashboardOpen(false);
       window.history.replaceState({}, '', window.location.pathname + window.location.search);
     };
 
-    if (ownerEntry) openOwnerLogin();
+    if (ownerEntry && !currentUser) openOwnerLogin();
 
     const onOwnerShortcut = (event: KeyboardEvent) => {
       if (event.ctrlKey && event.shiftKey && event.altKey && event.key.toLowerCase() === 'i') {
@@ -70,7 +90,7 @@ function MainContent() {
 
     window.addEventListener('keydown', onOwnerShortcut);
     return () => window.removeEventListener('keydown', onOwnerShortcut);
-  }, []);
+  }, [currentUser]);
 
   useEffect(() => {
     const title =
@@ -92,11 +112,6 @@ function MainContent() {
     document.documentElement.lang = language;
     document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
   }, [settings, language]);
-  const [bookingModalOpen, setBookingModalOpen] = useState(false);
-  const [adminLoginOpen, setAdminLoginOpen] = useState(false);
-  const [adminDashboardOpen, setAdminDashboardOpen] = useState(false);
-  const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
-  const [selectedPackage, setSelectedPackage] = useState<PackageItem | null>(null);
 
   const handleOpenBookingWithService = (service: ServiceItem) => {
     setSelectedService(service);
@@ -171,7 +186,10 @@ function MainContent() {
       <AdminLogin
         isOpen={adminLoginOpen}
         onClose={() => setAdminLoginOpen(false)}
-        onLoginSuccess={() => setAdminDashboardOpen(true)}
+        onLoginSuccess={() => {
+          setAdminLoginOpen(false);
+          setAdminDashboardOpen(true);
+        }}
       />
 
       {adminDashboardOpen && (
@@ -188,4 +206,3 @@ export default function App() {
     </AppProvider>
   );
 }
-
