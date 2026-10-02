@@ -2000,6 +2000,10 @@ export const AppProvider: React.FC<{
                     data.idCardUrl ||
                     "",
 
+                  idCardKey:
+                    data.idCardKey ||
+                    "",
+
                   idCardName:
                     data.idCardName ||
                     "",
