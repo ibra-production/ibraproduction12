@@ -566,7 +566,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
   };
 
   const previewIdCard = async (booking: any) => {
-    if (!booking?.idCardUrl) {
+    if (!booking?.idCardUrl && !booking?.idCardKey) {
       alert('لا يوجد ملف بطاقة تعريف مرتبط بهذا الحجز.');
       return;
     }
@@ -579,7 +579,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
         setIdCardPreview(null);
       }
 
-      const blob = await getIdCardBlob(String(booking.idCardUrl), booking);
+      const blob = await getIdCardBlob(String(booking.idCardUrl || booking.idCardKey || ''), booking);
       const objectUrl = URL.createObjectURL(blob);
 
       setIdCardPreview({
@@ -596,7 +596,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
   };
 
   const downloadIdCard = async (booking: any) => {
-    if (!booking?.idCardUrl) {
+    if (!booking?.idCardUrl && !booking?.idCardKey) {
       alert('لا يوجد ملف بطاقة تعريف مرتبط بهذا الحجز.');
       return;
     }
@@ -2399,7 +2399,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 <p className="text-xs text-neutral-400 mt-2">معاينة وتحميل آمن لبطاقات التعريف المرفوعة مع الحجوزات.</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                {safeBookings.filter((b:any) => b.idCardUrl).map((b:any) => (
+                {safeBookings.filter((b:any) => b.idCardUrl || b.idCardKey).map((b:any) => (
                   <div key={b.id} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5">
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -2412,6 +2412,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                       <div>الهاتف: {b.phone || '-'}</div>
                       <div>التاريخ: {Array.isArray(b.eventDates) && b.eventDates.length ? b.eventDates.join('، ') : (b.eventDate || '-')}</div>
                       <div className="break-all">الملف: {b.idCardName || 'بطاقة التعريف'}</div>
+                      <div className="text-[11px] text-green-400 mt-1">✓ الملف مرتبط بالتخزين الآمن</div>
                     </div>
                     <div className="grid grid-cols-2 gap-2 mt-4">
                       <button type="button" disabled={idCardLoading} onClick={() => previewIdCard(b)} className="flex items-center justify-center gap-2 px-3 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl text-xs font-bold disabled:opacity-50">
@@ -2423,7 +2424,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                     </div>
                   </div>
                 ))}
-                {safeBookings.filter((b:any) => b.idCardUrl).length === 0 && (
+                {safeBookings.filter((b:any) => b.idCardUrl || b.idCardKey).length === 0 && (
                   <div className="col-span-full bg-neutral-900 border border-neutral-800 rounded-2xl p-10 text-center text-neutral-500">لا توجد بطاقات تعريف مسجلة.</div>
                 )}
               </div>
@@ -2437,7 +2438,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                         <div className="text-xs text-neutral-500 truncate">{idCardPreview.name}</div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <a href={idCardPreview.url} download={idCardPreview.name} className="px-4 py-2 bg-amber-500 text-neutral-950 rounded-xl text-xs font-bold">تحميل</a>
+                        <a href={idCardPreview.url} download={idCardPreview.name} target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-amber-500 text-neutral-950 rounded-xl text-xs font-bold">تحميل</a>
                         <button type="button" onClick={() => { URL.revokeObjectURL(idCardPreview.url); setIdCardPreview(null); }} className="p-2 bg-neutral-800 text-white rounded-xl">
                           <X className="w-5 h-5" />
                         </button>
