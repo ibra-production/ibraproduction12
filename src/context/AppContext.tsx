@@ -960,6 +960,51 @@ export const AppProvider: React.FC<{
   }, []);
 
   // =========================================================
+  // FIRESTORE REALTIME - BOOKINGS (ADMIN ONLY)
+  // =========================================================
+
+  useEffect(() => {
+    if (!currentUser) {
+      setBookings([]);
+      return;
+    }
+
+    const unsubscribe = onSnapshot(
+      collection(db, "bookings"),
+      (snapshot) => {
+        const items = snapshot.docs.map((bookingDoc) => {
+          const data = bookingDoc.data() as any;
+          const createdAtValue = data.createdAt;
+          const createdAt =
+            typeof createdAtValue === "string"
+              ? createdAtValue
+              : createdAtValue?.toDate
+                ? createdAtValue.toDate().toISOString()
+                : new Date().toISOString();
+
+          return {
+            ...data,
+            id: bookingDoc.id,
+            createdAt,
+          } as BookingItem;
+        });
+
+        items.sort((a: any, b: any) =>
+          String(b.createdAt || "").localeCompare(String(a.createdAt || ""))
+        );
+        setBookings(items);
+        console.log("🔥 Bookings loaded:", items.length);
+      },
+      (error) => {
+        console.error("❌ Firestore bookings listener error:", error);
+        setBookings([]);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [currentUser]);
+
+  // =========================================================
   // SERVICES - CRUD
   // =========================================================
 
