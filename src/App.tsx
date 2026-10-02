@@ -35,7 +35,7 @@ import { ServiceItem, PackageItem } from './types';
 
 function MainContent() {
   const { currentUser, settings, language } = useApp();
-  const isAdminRoute = window.location.pathname.replace(//+$/, '') === '/admin';
+  const isAdminRoute = window.location.pathname.replace(/\/+$/, '') === '/admin';
 
   useEffect(() => {
     const ua = navigator.userAgent || '';
