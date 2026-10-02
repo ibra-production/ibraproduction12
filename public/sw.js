@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ibra-shell-v1';
+const CACHE_NAME = 'ibra-shell-v2-phone-access';
 const SHELL = ['/', '/logo.jpg', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {
@@ -16,31 +16,12 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   if (request.method !== 'GET') return;
-
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
-
-  // Never cache Firestore/private/API data. Static navigation falls back to the app shell.
   if (url.pathname.startsWith('/api/') || url.pathname.includes('firestore') || url.pathname.includes('googleapis')) return;
-
   if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request).then((response) => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put('/', copy));
-        return response;
-      }).catch(() => caches.match('/'))
-    );
+    event.respondWith(fetch(request).then((response) => { const copy = response.clone(); caches.open(CACHE_NAME).then((cache) => cache.put('/', copy)); return response; }).catch(() => caches.match('/')));
     return;
   }
-
-  event.respondWith(
-    caches.match(request).then((cached) => cached || fetch(request).then((response) => {
-      if (response.ok && url.origin === self.location.origin) {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-      }
-      return response;
-    }))
-  );
+  event.respondWith(caches.match(request).then((cached) => cached || fetch(request).then((response) => { if (response.ok) { const copy = response.clone(); caches.open(CACHE_NAME).then((cache) => cache.put(request, copy)); } return response; })));
 });
