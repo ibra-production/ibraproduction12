@@ -303,7 +303,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       throw new Error(data?.error || 'تعذر رفع بطاقة التعريف.');
     }
 
-    return `${ID_CARD_WORKER_URL}/?key=${encodeURIComponent(data.key)}`;
+    return { url: `${ID_CARD_WORKER_URL}/?key=${encodeURIComponent(data.key)}`, key: String(data.key) };
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -393,7 +393,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
     try {
       setIsSubmitting(true);
-      const uploadedIdCardUrl = await uploadIdCardToR2();
+      const uploadedIdCard = await uploadIdCardToR2();
       await addBooking({
         groomName,
         brideName,
@@ -415,7 +415,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         notes,
 
         // Required ID card
-        idCardUrl: uploadedIdCardUrl,
+        idCardUrl: uploadedIdCard.url,
+        idCardKey: uploadedIdCard.key,
         idCardName,
       });
 
