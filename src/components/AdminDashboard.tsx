@@ -468,22 +468,38 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
   const ID_CARD_WORKER_URL = 'https://yellow-bar-9020ibra-id-card-upload.bahibarhouma15.workers.dev';
 
-  const resolveIdCardUrl = (value: string) => {
+  const resolveIdCardUrl = (value: string, booking?: any) => {
+    const explicitKey = String(booking?.idCardKey || '').trim();
     const raw = String(value || '').trim();
+
+    if (explicitKey) {
+      return ID_CARD_WORKER_URL + '/?key=' + encodeURIComponent(explicitKey);
+    }
+
     if (!raw) throw new Error('رابط بطاقة التعريف غير موجود.');
+
+    try {
+      const parsed = new URL(raw);
+      const queryKey = parsed.searchParams.get('key');
+      if (queryKey) {
+        return ID_CARD_WORKER_URL + '/?key=' + encodeURIComponent(queryKey);
+      }
+    } catch {
+      // Not a full URL; treat it as a storage key below.
+    }
 
     if (raw.startsWith('http://') || raw.startsWith('https://')) {
       return raw;
     }
 
-    const key = raw.replace(/^\/?(?:id-cards?\/)?/, '');
+    const key = raw.replace(/^\\/?(?:id-cards?\\/)?/, '');
     if (!key) throw new Error('مفتاح بطاقة التعريف غير صالح.');
 
     return ID_CARD_WORKER_URL + '/?key=' + encodeURIComponent(key);
   };
 
   const getIdCardBlob = async (value: string) => {
-    const url = resolveIdCardUrl(value);
+    const url = resolveIdCardUrl(value, arguments[1]);
 
     if (url.startsWith('data:')) {
       const response = await fetch(url);
@@ -563,7 +579,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
         setIdCardPreview(null);
       }
 
-      const blob = await getIdCardBlob(String(booking.idCardUrl));
+      const blob = await getIdCardBlob(String(booking.idCardUrl), booking);
       const objectUrl = URL.createObjectURL(blob);
 
       setIdCardPreview({
@@ -588,7 +604,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
     try {
       setIdCardLoading(true);
 
-      const blob = await getIdCardBlob(String(booking.idCardUrl));
+      const blob = await getIdCardBlob(String(booking.idCardUrl), booking);
       const objectUrl = URL.createObjectURL(blob);
       const fileName = getSafeIdCardName(booking, blob);
 
