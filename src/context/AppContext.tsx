@@ -21,7 +21,6 @@ import {
 } from "firebase/firestore";
 
 import {
-  signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
 } from "firebase/auth";
@@ -79,11 +78,6 @@ interface AppContextType {
   deleteTeamMember: (id: string) => Promise<void>;
 
   currentUser: AdminUser | null;
-
-  login: (
-    email: string,
-    pass: string
-  ) => Promise<boolean>;
 
   logout: () => Promise<void>;
 
@@ -521,94 +515,49 @@ export const AppProvider: React.FC<{
   };
 
   // =========================================================
-  // Firebase Authentication
+  // Firebase Authentication — Ibra Access / Phone
   // =========================================================
-
-  const login = async (
-    email: string,
-    pass: string
-  ): Promise<boolean> => {
-    const normalizedEmail = email.trim().toLowerCase();
-    if (!normalizedEmail || !pass) return false;
-
-    try {
-      const credential = await signInWithEmailAndPassword(
-        auth,
-        normalizedEmail,
-        pass
-      );
-
-      const signedInEmail = (credential.user.email || "").trim().toLowerCase();
-      if (signedInEmail !== "admin@ibraprod.online") {
-        await signOut(auth);
-        alert("هذا الحساب غير مخول للوصول إلى لوحة الإدارة.");
-        return false;
-      }
-
-      setCurrentUser(users[0]);
-      return true;
-    } catch (error: any) {
-      console.error("Firebase login error:", error);
-      const code = String(error?.code || "");
-      const messages: Record<string, string> = {
-        "auth/invalid-credential": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
-        "auth/invalid-login-credentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
-        "auth/user-not-found": "حساب المدير غير موجود في Firebase Authentication.",
-        "auth/wrong-password": "كلمة مرور المدير غير صحيحة.",
-        "auth/invalid-email": "البريد الإلكتروني غير صالح.",
-        "auth/too-many-requests": "تم إيقاف محاولات الدخول مؤقتاً. حاول لاحقاً.",
-        "auth/network-request-failed": "تعذر الاتصال بخدمة Firebase Authentication.",
-        "auth/operation-not-allowed": "تسجيل الدخول بالبريد وكلمة المرور غير مفعّل في Firebase Authentication.",
-        "auth/configuration-not-found": "إعدادات Firebase Authentication غير مكتملة.",
-      };
-      alert(messages[code] || "فشل تسجيل الدخول. تحقق من حساب admin@ibraprod.online وكلمة المرور وإعدادات Firebase Authentication.");
-      return false;
-    }
-  };
 
   const logout = async (): Promise<void> => {
     try {
       await signOut(auth);
     } catch (error) {
-      console.error(
-        "Firebase logout error:",
-        error
-      );
-
-      alert(
-        "حدث خطأ أثناء تسجيل الخروج"
-      );
+      console.error("Firebase logout error:", error);
+      alert("حدث خطأ أثناء تسجيل الخروج");
     }
   };
 
   // =========================================================
   // Firebase Auth State
+  // Only the owner's verified phone numbers can open the CMS.
+  // Firestore rules enforce the same boundary server-side.
   // =========================================================
 
   useEffect(() => {
-    const unsubscribe =
-      onAuthStateChanged(
-        auth,
-        (firebaseUser) => {
-          if (firebaseUser) {
-            const signedInEmail = (firebaseUser.email || "").trim().toLowerCase();
-            if (signedInEmail !== "admin@ibraprod.online") {
-              signOut(auth).catch(() => undefined);
-              setCurrentUser(null);
-              return;
-            }
+    const ownerPhones = new Set([
+      "+213556967093",
+      "+213779000833",
+      "+213558948485",
+    ]);
 
-            const adminUser = users[0];
-            setCurrentUser(adminUser);
-          } else {
-            setCurrentUser(null);
-          }
-        }
-      );
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (!firebaseUser) {
+        setCurrentUser(null);
+        return;
+      }
 
-    return () => {
-      unsubscribe();
-    };
+      const phone = firebaseUser.phoneNumber || "";
+      if (!ownerPhones.has(phone)) {
+        signOut(auth).catch(() => undefined);
+        setCurrentUser(null);
+        return;
+      }
+
+      const adminUser = users[0];
+      setCurrentUser(adminUser);
+    });
+
+    return () => unsubscribe();
   }, [users]);
 
   // =========================================================
@@ -2610,7 +2559,6 @@ export const AppProvider: React.FC<{
         deleteTeamMember,
 
         currentUser,
-        login,
         logout,
 
         addService,
