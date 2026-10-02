@@ -604,7 +604,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
     try {
       setIdCardLoading(true);
 
-      const blob = await getIdCardBlob(String(booking.idCardUrl), booking);
+      const blob = await getIdCardBlob(String(booking.idCardUrl || booking.idCardKey || ''), booking);
       const objectUrl = URL.createObjectURL(blob);
       const fileName = getSafeIdCardName(booking, blob);
 
