@@ -1,64 +1,18 @@
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
-import twilio from "twilio";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT || 3000);
 
-app.use(express.json());
-
-// API route to send SMS notification to client
-app.post("/api/send-sms", async (req, res) => {
-  try {
-    const { to, message, bookingId } = req.body;
-
-    if (!to || !message) {
-      return res.status(400).json({ success: false, error: "Missing phone number or message content." });
-    }
-
-    const accountSid = process.env.TWILIO_ACCOUNT_SID;
-    const authToken = process.env.TWILIO_AUTH_TOKEN;
-    const fromNumber = process.env.TWILIO_PHONE_NUMBER;
-
-    // Check if Twilio is configured with valid credentials
-    if (accountSid && authToken && fromNumber && !accountSid.includes("YOUR_")) {
-      const client = twilio(accountSid, authToken);
-      const response = await client.messages.create({
-        body: message,
-        from: fromNumber,
-        to: to
-      });
-
-      console.log(`[Twilio SMS Sent] Message SID: ${response.sid} to ${to}`);
-      return res.json({ 
-        success: true, 
-        provider: 'twilio', 
-        messageSid: response.sid,
-        info: `SMS successfully sent via Twilio to ${to}` 
-      });
-    } else {
-      // Simulation / Local fallback mode when Twilio keys aren't set yet
-      console.log(`[SMS API Simulation] Booking #${bookingId || 'N/A'} - To: ${to} - Message: ${message}`);
-      return res.json({ 
-        success: true, 
-        provider: 'simulation',
-        info: `Simulated SMS sent successfully to ${to}. To enable real Twilio SMS gateway, configure TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_PHONE_NUMBER in environment settings.` 
-      });
-    }
-  } catch (error: any) {
-    console.error("SMS API Error:", error);
-    return res.status(500).json({ success: false, error: error.message || "Failed to send SMS." });
-  }
-});
-
+app.use(express.json({ limit: "1mb" }));
 
 // =========================================================
 // Ibra Production — server-side automation runner
-// Call POST /api/automation/run from a trusted scheduler.
-// Never expose provider secrets to the browser.
+// Provider credentials stay server-side.
+// GitHub Actions is the production scheduler.
 // =========================================================
 app.post("/api/automation/run", async (req, res) => {
   const expected = process.env.AUTOMATION_CRON_SECRET;
@@ -98,44 +52,24 @@ app.post("/api/automation/run", async (req, res) => {
           continue;
         }
 
-        if (data.type === "status_change" || data.type === "event_reminder" || data.type === "payment_due") {
-          const accountSid = process.env.TWILIO_ACCOUNT_SID;
-          const authToken = process.env.TWILIO_AUTH_TOKEN;
-          const fromNumber = process.env.TWILIO_PHONE_NUMBER;
-
-          if (!accountSid || !authToken || !fromNumber) {
-            await item.ref.update({
-              status: "waiting_provider",
-              lastError: "Twilio is not configured.",
-              updatedAt: FieldValue.serverTimestamp(),
-            });
-            continue;
-          }
-
-          const to = String(data.phone || "").trim();
-          const body = String(data.message || "").trim();
-
-          if (!to || !body) {
-            await item.ref.update({
-              status: "failed",
-              lastError: "Missing phone or message.",
-              updatedAt: FieldValue.serverTimestamp(),
-            });
-            failed++;
-            continue;
-          }
-
-          const client = twilio(accountSid, authToken);
-          const response = await client.messages.create({ body, from: fromNumber, to });
-
+        // SMS/Bar9 delivery is handled by scripts/automation-runner.mjs
+        // in GitHub Actions. Do not send provider messages from this public
+        // browser-facing Express server.
+        if (["status_change", "event_reminder", "payment_due"].includes(data.type)) {
           await item.ref.update({
-            status: "sent",
-            provider: "twilio",
-            messageSid: response.sid,
-            sentAt: FieldValue.serverTimestamp(),
+            status: "queued",
+            processor: "server",
+            note: "Waiting for GitHub Actions Bar9 processor.",
+            updatedAt: FieldValue.serverTimestamp(),
           });
-          processed++;
+          continue;
         }
+
+        await item.ref.update({
+          status: "ignored",
+          processor: "server",
+          processedAt: FieldValue.serverTimestamp(),
+        });
       } catch (error: any) {
         failed++;
         await item.ref.update({
@@ -162,30 +96,36 @@ app.post("/api/automation/run", async (req, res) => {
   }
 });
 
-// Health check endpoint
-app.get("/api/health", (req, res) => {
+// Health check
+app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
 async function startServer() {
-  // Vite middleware for development or static serving for production
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        host: "127.0.0.1",
+        strictPort: true,
+      },
       appType: "spa",
     });
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
-    app.get("*", (req, res) => {
+    app.get("*", (_req, res) => {
       res.sendFile(path.join(distPath, "index.html"));
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://0.0.0.0:${PORT}`);
+  app.listen(PORT, "127.0.0.1", () => {
+    console.log(`Server running on http://127.0.0.1:${PORT}`);
   });
 }
 
-startServer();
+startServer().catch((error) => {
+  console.error("Server startup failed:", error);
+  process.exit(1);
+});
