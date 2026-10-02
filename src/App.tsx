@@ -121,13 +121,6 @@ function MainContent() {
           setSelectedPackage(null);
           setBookingModalOpen(true);
         }}
-        onOpenAdmin={() => {
-          if (currentUser) {
-            setAdminDashboardOpen(true);
-          } else {
-            setAdminLoginOpen(true);
-          }
-        }}
       />
 
       {maintenance ? (
@@ -162,15 +155,7 @@ function MainContent() {
         </main>
       )}
 
-      <Footer
-        onOpenAdmin={() => {
-          if (currentUser) {
-            setAdminDashboardOpen(true);
-          } else {
-            setAdminLoginOpen(true);
-          }
-        }}
-      />
+      <Footer />
       <WhatsAppFloat />
       <ContactShortcut />
       <MobileBottomNav onOpenBooking={() => { setSelectedService(null); setSelectedPackage(null); setBookingModalOpen(true); }} />
