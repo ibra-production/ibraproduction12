@@ -528,10 +528,13 @@ export const AppProvider: React.FC<{
     email: string,
     pass: string
   ): Promise<boolean> => {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail || !pass) return false;
+
     try {
       const credential = await signInWithEmailAndPassword(
         auth,
-        email.trim(),
+        normalizedEmail,
         pass
       );
 
@@ -542,22 +545,23 @@ export const AppProvider: React.FC<{
         return false;
       }
 
+      setCurrentUser(users[0]);
       return true;
-    } catch (error) {
-      console.error(
-        "Firebase login error:",
-        error
-      );
-
-      alert(
-        "فشل تسجيل الدخول: " +
-          String(
-            error instanceof Error
-              ? error.message
-              : error
-          )
-      );
-
+    } catch (error: any) {
+      console.error("Firebase login error:", error);
+      const code = String(error?.code || "");
+      const messages: Record<string, string> = {
+        "auth/invalid-credential": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+        "auth/invalid-login-credentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+        "auth/user-not-found": "حساب المدير غير موجود في Firebase Authentication.",
+        "auth/wrong-password": "كلمة مرور المدير غير صحيحة.",
+        "auth/invalid-email": "البريد الإلكتروني غير صالح.",
+        "auth/too-many-requests": "تم إيقاف محاولات الدخول مؤقتاً. حاول لاحقاً.",
+        "auth/network-request-failed": "تعذر الاتصال بخدمة Firebase Authentication.",
+        "auth/operation-not-allowed": "تسجيل الدخول بالبريد وكلمة المرور غير مفعّل في Firebase Authentication.",
+        "auth/configuration-not-found": "إعدادات Firebase Authentication غير مكتملة.",
+      };
+      alert(messages[code] || "فشل تسجيل الدخول. تحقق من حساب admin@ibraprod.online وكلمة المرور وإعدادات Firebase Authentication.");
       return false;
     }
   };
