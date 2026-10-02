@@ -466,32 +466,113 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
     finally { setOfferUploading(false); }
   };
 
+  const ID_CARD_WORKER_URL = 'https://yellow-bar-9020ibra-id-card-upload.bahibarhouma15.workers.dev';
+
+  const resolveIdCardUrl = (value: string) => {
+    const raw = String(value || '').trim();
+    if (!raw) throw new Error('رابط بطاقة التعريف غير موجود.');
+
+    if (raw.startsWith('http://') || raw.startsWith('https://')) {
+      return raw;
+    }
+
+    const key = raw.replace(/^\/?(?:id-cards?\/)?/, '');
+    if (!key) throw new Error('مفتاح بطاقة التعريف غير صالح.');
+
+    return ID_CARD_WORKER_URL + '/?key=' + encodeURIComponent(key);
+  };
+
   const getIdCardBlob = async (value: string) => {
-    if (value.startsWith('data:')) {
-      const response = await fetch(value);
+    const url = resolveIdCardUrl(value);
+
+    if (url.startsWith('data:')) {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('تعذر قراءة ملف بطاقة التعريف.');
       return response.blob();
     }
+
     const currentUser = auth.currentUser;
     if (!currentUser) throw new Error('يجب تسجيل الدخول كمسؤول.');
-    const token = await currentUser.getIdToken();
-    const response = await fetch(value, {
-      headers: { Authorization: 'Bearer ' + token }
+
+    // Force a fresh Firebase ID token so private R2 files continue to work
+    // after a long admin session.
+    const token = await currentUser.getIdToken(true);
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: 'Bearer ' + token,
+        Accept: 'image/*,application/pdf,application/octet-stream'
+      },
+      cache: 'no-store',
+      credentials: 'omit'
     });
+
     if (!response.ok) {
-      const text = await response.text().catch(() => '');
-      throw new Error(text || ('تعذر الوصول إلى بطاقة التعريف (' + response.status + ')'));
+      const body = await response.text().catch(() => '');
+      let detail = body;
+      try {
+        const parsed = JSON.parse(body);
+        detail = parsed?.error || parsed?.message || body;
+      } catch {
+        // Worker may return plain text.
+      }
+
+      if (response.status === 401 || response.status === 403) {
+        throw new Error('رفض الوصول إلى بطاقة التعريف. انتهت جلسة المسؤول أو صلاحية البطاقة.');
+      }
+
+      if (response.status === 404) {
+        throw new Error('بطاقة التعريف غير موجودة في التخزين.');
+      }
+
+      throw new Error(detail || ('تعذر الوصول إلى بطاقة التعريف (' + response.status + ')'));
     }
-    return response.blob();
+
+    const blob = await response.blob();
+    if (!blob.size) throw new Error('ملف بطاقة التعريف فارغ أو غير صالح.');
+
+    return blob;
+  };
+
+  const getSafeIdCardName = (booking: any, blob?: Blob) => {
+    const original = String(booking?.idCardName || '').trim();
+    if (original) return original;
+
+    const mime = String(blob?.type || '').toLowerCase();
+    const extension =
+      mime.includes('pdf') ? 'pdf' :
+      mime.includes('png') ? 'png' :
+      mime.includes('webp') ? 'webp' :
+      'jpg';
+
+    return 'ibra-id-card-' + String(booking?.id || 'client').slice(-8) + '.' + extension;
   };
 
   const previewIdCard = async (booking: any) => {
-    if (!booking?.idCardUrl) return;
+    if (!booking?.idCardUrl) {
+      alert('لا يوجد ملف بطاقة تعريف مرتبط بهذا الحجز.');
+      return;
+    }
+
     try {
       setIdCardLoading(true);
+
+      if (idCardPreview?.url) {
+        URL.revokeObjectURL(idCardPreview.url);
+        setIdCardPreview(null);
+      }
+
       const blob = await getIdCardBlob(String(booking.idCardUrl));
       const objectUrl = URL.createObjectURL(blob);
-      setIdCardPreview({ url: objectUrl, name: booking.idCardName || 'id-card', type: blob.type || 'application/octet-stream' });
+
+      setIdCardPreview({
+        url: objectUrl,
+        name: getSafeIdCardName(booking, blob),
+        type: blob.type || 'application/octet-stream'
+      });
     } catch (error) {
+      console.error('ID card preview error:', error);
       alert(error instanceof Error ? error.message : 'تعذر معاينة بطاقة التعريف.');
     } finally {
       setIdCardLoading(false);
@@ -499,19 +580,29 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
   };
 
   const downloadIdCard = async (booking: any) => {
-    if (!booking?.idCardUrl) return;
+    if (!booking?.idCardUrl) {
+      alert('لا يوجد ملف بطاقة تعريف مرتبط بهذا الحجز.');
+      return;
+    }
+
     try {
       setIdCardLoading(true);
+
       const blob = await getIdCardBlob(String(booking.idCardUrl));
       const objectUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = objectUrl;
-      a.download = booking.idCardName || 'id-card';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+      const fileName = getSafeIdCardName(booking, blob);
+
+      const anchor = document.createElement('a');
+      anchor.href = objectUrl;
+      anchor.download = fileName;
+      anchor.rel = 'noopener';
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
     } catch (error) {
+      console.error('ID card download error:', error);
       alert(error instanceof Error ? error.message : 'تعذر تحميل بطاقة التعريف.');
     } finally {
       setIdCardLoading(false);
