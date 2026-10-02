@@ -659,6 +659,11 @@ export const AppProvider: React.FC<{
   // =========================================================
 
   useEffect(() => {
+    if (!currentUser) {
+      setTeamMembers([]);
+      return;
+    }
+
     const unsubscribe = onSnapshot(
       collection(db, "teamMembers"),
       (snapshot) => {
@@ -676,7 +681,7 @@ export const AppProvider: React.FC<{
     );
 
     return () => unsubscribe();
-  }, []);
+  }, [currentUser]);
 
   // =========================================================
   // TEAM - CRUD
@@ -1913,6 +1918,11 @@ export const AppProvider: React.FC<{
   // =========================================================
 
   useEffect(() => {
+    if (!currentUser) {
+      setBookings([]);
+      return;
+    }
+
     const unsubscribe =
       onSnapshot(
         collection(
@@ -2038,7 +2048,7 @@ export const AppProvider: React.FC<{
     return () => {
       unsubscribe();
     };
-  }, []);
+  }, [currentUser]);
 
 
   const syncClientPortal = async (bookingId: string, patch: Record<string, unknown>) => {
