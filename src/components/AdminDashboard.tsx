@@ -507,7 +507,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
       return raw;
     }
 
-    const key = raw.replace(/^\\/?(?:id-cards?\\/)?/, '').replace(/^\\/+/, '');
+    const key = raw.replace(/^\/?(?:id-cards?\/)?/, '').replace(/^\/+/, '');
     if (!key) throw new Error('مفتاح بطاقة التعريف غير صالح.');
 
     return ID_CARD_WORKER_URL + '/?key=' + encodeURIComponent(key);
