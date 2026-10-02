@@ -498,8 +498,8 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
     return ID_CARD_WORKER_URL + '/?key=' + encodeURIComponent(key);
   };
 
-  const getIdCardBlob = async (value: string) => {
-    const url = resolveIdCardUrl(value, arguments[1]);
+  const getIdCardBlob = async (value: string, booking?: any) => {
+    const url = resolveIdCardUrl(value, booking);
 
     if (url.startsWith('data:')) {
       const response = await fetch(url);
