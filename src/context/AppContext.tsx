@@ -515,7 +515,7 @@ export const AppProvider: React.FC<{
   };
 
   // =========================================================
-  // Firebase Authentication — Ibra Access / Phone
+  // Firebase Authentication — Ibra Access / Phone + PIN
   // =========================================================
 
   const logout = async (): Promise<void> => {
@@ -529,15 +529,16 @@ export const AppProvider: React.FC<{
 
   // =========================================================
   // Firebase Auth State
-  // Only the owner's verified phone numbers can open the CMS.
-  // Firestore rules enforce the same boundary server-side.
+  // The phone number is mapped to a private Firebase email identity.
+  // The actual sign-in credential remains hidden from the UI.
+  // Firestore rules enforce the same owner boundary server-side.
   // =========================================================
 
   useEffect(() => {
-    const ownerPhones = new Set([
-      "+213556967093",
-      "+213779000833",
-      "+213558948485",
+    const ownerEmails = new Set([
+      "owner556967093@ibraprod.online",
+      "owner779000833@ibraprod.online",
+      "owner558948485@ibraprod.online",
     ]);
 
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -546,8 +547,8 @@ export const AppProvider: React.FC<{
         return;
       }
 
-      const phone = firebaseUser.phoneNumber || "";
-      if (!ownerPhones.has(phone)) {
+      const email = (firebaseUser.email || "").toLowerCase();
+      if (!ownerEmails.has(email)) {
         signOut(auth).catch(() => undefined);
         setCurrentUser(null);
         return;
