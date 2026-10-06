@@ -467,21 +467,43 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
   };
 
   const getIdCardBlob = async (value: string) => {
-    if (value.startsWith('data:')) {
-      const response = await fetch(value);
+    const raw = String(value || '').trim();
+    if (!raw) throw new Error('رابط بطاقة التعريف غير موجود.');
+
+    if (raw.startsWith('data:') || raw.startsWith('blob:')) {
+      const response = await fetch(raw);
+      if (!response.ok) throw new Error('تعذر قراءة ملف بطاقة التعريف.');
       return response.blob();
     }
+
     const currentUser = auth.currentUser;
-    if (!currentUser) throw new Error('ÙŠØ¬Ø¨ ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„ ÙƒÙ…Ø³Ø¤ÙˆÙ„.');
-    const token = await currentUser.getIdToken();
-    const response = await fetch(value, {
-      headers: { Authorization: 'Bearer ' + token }
+    if (!currentUser) throw new Error('يجب تسجيل الدخول كمسؤول.');
+
+    const token = await currentUser.getIdToken(true);
+    const requestUrl = raw.startsWith('http://') || raw.startsWith('https://')
+      ? raw
+      : new URL(raw, window.location.origin).toString();
+
+    const response = await fetch(requestUrl, {
+      method: 'GET',
+      headers: {
+        Authorization: 'Bearer ' + token,
+        Accept: 'image/*,application/pdf,application/octet-stream,*/*'
+      },
+      cache: 'no-store'
     });
+
     if (!response.ok) {
       const text = await response.text().catch(() => '');
-      throw new Error(text || ('ØªØ¹Ø°Ø± Ø§Ù„ÙˆØµÙˆÙ„ Ø¥Ù„Ù‰ Ø¨Ø·Ø§Ù‚Ø© Ø§Ù„ØªØ¹Ø±ÙŠÙ (' + response.status + ')'));
+      throw new Error(
+        text ||
+        ('تعذر الوصول إلى بطاقة التعريف. رمز الخادم: ' + response.status)
+      );
     }
-    return response.blob();
+
+    const blob = await response.blob();
+    if (!blob.size) throw new Error('ملف بطاقة التعريف فارغ أو غير متاح.');
+    return blob;
   };
 
   const previewIdCard = async (booking: any) => {
@@ -499,20 +521,32 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
   };
 
   const downloadIdCard = async (booking: any) => {
-    if (!booking?.idCardUrl) return;
+    if (!booking?.idCardUrl) {
+      alert('لا توجد بطاقة تعريف مرتبطة بهذا الحجز.');
+      return;
+    }
+
     try {
       setIdCardLoading(true);
       const blob = await getIdCardBlob(String(booking.idCardUrl));
       const objectUrl = URL.createObjectURL(blob);
+
+      const originalName = String(booking.idCardName || 'id-card').trim();
+      const hasExtension = /\.[a-z0-9]{2,5}$/i.test(originalName);
+      const extension = blob.type.includes('pdf') ? '.pdf' : blob.type.includes('png') ? '.png' : '.jpg';
+      const fileName = hasExtension ? originalName : originalName + extension;
+
       const a = document.createElement('a');
       a.href = objectUrl;
-      a.download = booking.idCardName || 'id-card';
+      a.download = fileName;
+      a.rel = 'noopener';
       document.body.appendChild(a);
       a.click();
       a.remove();
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'ØªØ¹Ø°Ø± ØªØ­Ù…ÙŠÙ„ Ø¨Ø·Ø§Ù‚Ø© Ø§Ù„ØªØ¹Ø±ÙŠÙ.');
+      alert(error instanceof Error ? error.message : 'تعذر تحميل بطاقة التعريف.');
     } finally {
       setIdCardLoading(false);
     }
