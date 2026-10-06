@@ -162,6 +162,14 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
   const [scanMessage, setScanMessage] = useState('جاهز للمسح');
   const safeBookings = Array.isArray(bookings) ? bookings.filter(b => b && typeof b === 'object') : [];
   const [scanResult, setScanResult] = useState<any | null>(null);
+  const [adminClock, setAdminClock] = useState(() => new Date());
+  const [adminNavSearch, setAdminNavSearch] = useState('');
+  const [showAdminCommandBar, setShowAdminCommandBar] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setAdminClock(new Date()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'scanLogs'), snapshot => {
@@ -742,18 +750,18 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-neutral-950 text-neutral-100 flex flex-col overflow-hidden font-sans">
+    <div className="fixed inset-0 z-50 bg-neutral-950 text-neutral-100 flex flex-col overflow-hidden font-sans ibra-admin-shell" data-admin-dashboard>
 
-      <header className="bg-neutral-900 border-b border-neutral-800 px-6 py-4 flex items-center justify-between shrink-0">
+      <header className="ibra-admin-header bg-neutral-900/90 border-b border-neutral-800 px-4 sm:px-6 py-3.5 flex items-center justify-between shrink-0 backdrop-blur-xl">
 
         <div className="flex items-center gap-3">
 
-          <div className="w-10 h-10 rounded-full bg-amber-500 text-neutral-950 font-bold flex items-center justify-center">
+          <div className="ibra-admin-logo w-10 h-10 rounded-2xl bg-amber-500 text-neutral-950 font-bold flex items-center justify-center">
             IP
           </div>
 
           <div>
-            <h1 className="font-bold text-lg text-white">
+            <h1 className="font-bold text-lg text-white ibra-admin-title">
               IBRA PRODUCTION • لوحة التحكم
             </h1>
 
@@ -765,7 +773,12 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl bg-neutral-950/70 border border-neutral-800 text-xs text-neutral-300">
+            <span className="ibra-live-pulse" />
+            <span>النظام مباشر</span>
+            <span className="text-amber-400 font-mono">{adminClock.toLocaleTimeString('ar-DZ')}</span>
+          </div>
 
           <button
             onClick={() => {
@@ -791,8 +804,9 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
       <div className="flex flex-1 overflow-hidden">
 
-        <aside className="w-64 bg-neutral-900/60 border-r border-neutral-800 p-4 space-y-1.5 overflow-y-auto shrink-0 hidden md:block">
+        <aside className="ibra-admin-sidebar w-64 bg-neutral-900/70 border-r border-neutral-800 p-3 space-y-1.5 overflow-y-auto shrink-0 hidden md:block backdrop-blur-xl">
 
+          <div className="ibra-admin-sidebar-label">CONTROL CENTER</div>
           {[
             {
               id: 'dash',
@@ -893,7 +907,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+              className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-all ibra-admin-nav-item ${
                 activeTab === tab.id
                   ? 'bg-amber-500 text-neutral-950 font-bold'
                   : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'
@@ -906,8 +920,30 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
         </aside>
 
-        <main className="flex-1 overflow-y-auto p-4 sm:p-8 lg:p-10 bg-neutral-950">
-          <div className="md:hidden sticky top-0 z-20 mb-5 -mx-1 bg-neutral-950/95 backdrop-blur-md py-2">
+        <main className="ibra-admin-main flex-1 overflow-y-auto p-4 sm:p-6 lg:p-9 bg-neutral-950">
+          <div className="ibra-admin-command-strip mb-5">
+  <div className="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <div className="text-[10px] uppercase tracking-[.22em] text-amber-400/80">IBRA CONTROL CENTER</div>
+      <div className="text-lg sm:text-xl font-bold text-white mt-1">مركز إدارة Ibra Production</div>
+    </div>
+    <div className="flex flex-wrap gap-2">
+      <button onClick={() => setActiveTab('bookings')} className="ibra-admin-quick-btn"><Calendar className="w-4 h-4" /> الحجوزات <b>{activeBookings.length}</b></button>
+      <button onClick={() => setActiveTab('notifications')} className="ibra-admin-quick-btn"><Send className="w-4 h-4" /> الأتمتة <b>{automationNotifications.length}</b></button>
+      <button onClick={() => setActiveTab('scan')} className="ibra-admin-quick-btn"><ShieldCheck className="w-4 h-4" /> Scan</button>
+      <button onClick={() => setShowAdminCommandBar(v => !v)} className="ibra-admin-quick-btn ibra-admin-quick-primary"><BarChart3 className="w-4 h-4" /> نظرة سريعة</button>
+    </div>
+  </div>
+  {showAdminCommandBar && (
+    <div className="ibra-admin-command-grid mt-4">
+      <div><span>جديد</span><strong>{newBookingsCount}</strong></div>
+      <div><span>مؤكد</span><strong>{confirmedBookingsCount}</strong></div>
+      <div><span>رسائل غير مقروءة</span><strong>{unreadMessagesCount}</strong></div>
+      <div><span>المتبقي</span><strong>{analyticsRemaining.toLocaleString('fr-DZ')} DA</strong></div>
+    </div>
+  )}
+</div>
+<div className="md:hidden sticky top-0 z-20 mb-5 -mx-1 bg-neutral-950/95 backdrop-blur-md py-2 ibra-admin-mobile-nav">
             <select
               value={activeTab}
               onChange={e => setActiveTab(e.target.value as any)}
@@ -943,7 +979,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
           )}
 
           {activeTab === 'dash' && (
-            <div className="space-y-8">
+            <div className="space-y-8 ibra-admin-dashboard-home">
 
               <div>
                 <h2 className="text-2xl font-bold text-white mb-2">
