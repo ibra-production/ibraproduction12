@@ -18,10 +18,10 @@ function json(body: unknown, status = 200) {
   });
 }
 
-export const onRequestOptions: PagesFunction = async () =>
+export const onRequestOptions = async () =>
   new Response(null, { status: 204, headers: corsHeaders });
 
-export const onRequestGet: PagesFunction = async ({ request }) => {
+export const onRequestGet = async ({ request }: { request: Request }) => {
   try {
     const auth = request.headers.get("Authorization");
     if (!auth || !/^Bearer\s+\S+$/i.test(auth)) {
