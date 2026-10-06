@@ -474,9 +474,10 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
     finally { setOfferUploading(false); }
   };
 
-  const getIdCardBlob = async (value: string) => {
+  const getIdCardBlob = async (value: string, key?: string) => {
     const raw = String(value || '').trim();
-    if (!raw) throw new Error('رابط بطاقة التعريف غير موجود.');
+    const normalizedKey = String(key || '').trim();
+    if (!raw && !normalizedKey) throw new Error('رابط بطاقة التعريف غير موجود.');
 
     if (raw.startsWith('data:') || raw.startsWith('blob:')) {
       const response = await fetch(raw);
@@ -488,9 +489,11 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
     if (!currentUser) throw new Error('يجب تسجيل الدخول كمسؤول.');
 
     const token = await currentUser.getIdToken(true);
-    const requestUrl = raw.startsWith('http://') || raw.startsWith('https://')
-      ? raw
-      : new URL(raw, window.location.origin).toString();
+    const requestUrl = raw
+      ? (raw.startsWith('http://') || raw.startsWith('https://')
+          ? raw
+          : new URL(raw, window.location.origin).toString())
+      : `https://yellow-bar-9020ibra-id-card-upload.bahibarhouma15.workers.dev/?key=${encodeURIComponent(normalizedKey)}`;
 
     const response = await fetch(requestUrl, {
       method: 'GET',
@@ -518,7 +521,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
     if (!booking?.idCardUrl) return;
     try {
       setIdCardLoading(true);
-      const blob = await getIdCardBlob(String(booking.idCardUrl));
+      const blob = await getIdCardBlob(String(booking.idCardUrl || ''), String(booking.idCardKey || ''));
       const objectUrl = URL.createObjectURL(blob);
       setIdCardPreview({ url: objectUrl, name: booking.idCardName || 'id-card', type: blob.type || 'application/octet-stream' });
     } catch (error) {
@@ -536,7 +539,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
     try {
       setIdCardLoading(true);
-      const blob = await getIdCardBlob(String(booking.idCardUrl));
+      const blob = await getIdCardBlob(String(booking.idCardUrl || ''), String(booking.idCardKey || ''));
       const objectUrl = URL.createObjectURL(blob);
 
       const originalName = String(booking.idCardName || 'id-card').trim();
@@ -2040,7 +2043,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 <p className="text-xs text-neutral-400 mt-2">Ù�Ø¹Ø§Ù�Ù�Ø© Ù�ØªØ­Ù�Ù�Ù� Ø¢Ù�Ù� Ù�Ø¨Ø·Ø§Ù�Ø§Øª Ø§Ù�ØªØ¹Ø±Ù�Ù Ø§Ù�Ù�Ø±ÙÙ�Ø¹Ø© Ù�Ø¹ Ø§Ù�Ø­Ø¬Ù�Ø²Ø§Øª.</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                {safeBookings.filter((b:any) => b.idCardUrl).map((b:any) => (
+                {safeBookings.filter((b:any) => b.idCardUrl || b.idCardKey || b.idCardFileUrl || b.idCard?.url || b.idCard?.key).map((b:any) => (
                   <div key={b.id} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5">
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -2052,7 +2055,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                     <div className="text-xs text-neutral-400 mt-4 space-y-1">
                       <div>Ø§Ù�Ù�Ø§ØªÙ: {b.phone || '-'}</div>
                       <div>Ø§Ù�ØªØ§Ø±Ù�Ø®: {Array.isArray(b.eventDates) && b.eventDates.length ? b.eventDates.join('Ø� ') : (b.eventDate || '-')}</div>
-                      <div className="break-all">Ø§Ù�Ù�Ù�Ù: {b.idCardName || 'Ø¨Ø·Ø§Ù�Ø© Ø§Ù�ØªØ¹Ø±Ù�Ù'}</div>
+                      <div className="break-all">Ø§Ù�Ù�Ù�Ù: {b.idCardName || b.idCard?.name || 'بطاقة التعريف'}</div>
                     </div>
                     <div className="grid grid-cols-2 gap-2 mt-4">
                       <button type="button" disabled={idCardLoading} onClick={() => previewIdCard(b)} className="flex items-center justify-center gap-2 px-3 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl text-xs font-bold disabled:opacity-50">
@@ -2064,7 +2067,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                     </div>
                   </div>
                 ))}
-                {safeBookings.filter((b:any) => b.idCardUrl).length === 0 && (
+                {safeBookings.filter((b:any) => b.idCardUrl || b.idCardKey || b.idCardFileUrl || b.idCard?.url || b.idCard?.key).length === 0 && (
                   <div className="col-span-full bg-neutral-900 border border-neutral-800 rounded-2xl p-10 text-center text-neutral-500">Ù�Ø§ ØªÙ�Ø¬Ø¯ Ø¨Ø·Ø§Ù�Ø§Øª ØªØ¹Ø±Ù�Ù Ù�Ø³Ø¬Ù�Ø©.</div>
                 )}
               </div>
