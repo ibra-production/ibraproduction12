@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { Menu, X, Globe, Calendar } from 'lucide-react';
+import { Menu, X, Globe, Lock, Calendar, ChevronDown } from 'lucide-react';
 
 interface NavbarProps {
   onOpenBooking: () => void;
+  onOpenAdmin: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onOpenAdmin }) => {
   const { language, setLanguage, settings } = useApp();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -103,9 +104,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking }) => {
               </button>
             </div>
 
-            {/* Owner CMS is intentionally not exposed in the public navigation. */}
+            {/* Admin Login Icon */}
+            <button
+              onClick={onOpenAdmin}
+              title="لوحة الإدارة (Admin)"
+              className="p-2.5 text-neutral-400 hover:text-amber-400 bg-neutral-900/80 border border-neutral-800 rounded-full hover:border-amber-500/50 transition-all"
+            >
+              <Lock className="w-4 h-4" />
+            </button>
 
-          {/* Book Now Button */}
+            {/* Book Now Button */}
             <button
               onClick={onOpenBooking}
               className="gold-pulse relative inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-neutral-950 font-bold text-sm tracking-wider uppercase shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:from-amber-400 hover:to-amber-500 transition-all transform hover:-translate-y-0.5"
@@ -161,6 +169,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking }) => {
                 <span>{language === 'ar' ? 'احجز موعدك الآن' : language === 'fr' ? 'Réserver maintenant' : 'Book Your Session'}</span>
               </button>
 
+              <button
+                onClick={() => { setMobileMenuOpen(false); onOpenAdmin(); }}
+                className="w-full py-2.5 rounded-xl bg-neutral-900 border border-neutral-800 text-neutral-300 font-medium text-center flex items-center justify-center gap-2"
+              >
+                <Lock className="w-4 h-4 text-amber-500" />
+                <span>{language === 'ar' ? 'لوحة تحكم المالك (Admin)' : language === 'fr' ? 'Admin Dashboard' : 'Admin Dashboard'}</span>
+              </button>
             </div>
           </div>
         </div>

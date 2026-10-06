@@ -142,7 +142,6 @@ export interface BookingItem {
 
   // Mandatory national ID card copy for new bookings
   idCardUrl?: string;
-  idCardKey?: string;
   idCardName?: string;
 
   status: 'new' | 'confirmed' | 'processing' | 'completed' | 'cancelled';

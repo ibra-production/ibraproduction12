@@ -35,7 +35,6 @@ import { ServiceItem, PackageItem } from './types';
 
 function MainContent() {
   const { currentUser, settings, language } = useApp();
-  const isAdminRoute = window.location.pathname.replace(/\/+$/, '') === '/admin';
 
   useEffect(() => {
     const ua = navigator.userAgent || '';
@@ -49,46 +48,15 @@ function MainContent() {
       document.body.classList.remove('tv-mode');
     };
   }, []);
-
   const maintenance = settings.maintenanceMode === true;
-  const [bookingModalOpen, setBookingModalOpen] = useState(false);
-  const [adminLoginOpen, setAdminLoginOpen] = useState(isAdminRoute);
-  const [adminDashboardOpen, setAdminDashboardOpen] = useState(false);
-  const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
-  const [selectedPackage, setSelectedPackage] = useState<PackageItem | null>(null);
 
   useEffect(() => {
-    if (isAdminRoute && !currentUser) {
-      setAdminLoginOpen(true);
-      setAdminDashboardOpen(false);
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('booking') === '1') setBookingModalOpen(true);
+    if (params.get('tracking') === '1') {
+      window.setTimeout(() => document.querySelector<HTMLButtonElement>('[data-client-tracking]')?.click(), 250);
     }
-
-    if (isAdminRoute && currentUser) {
-      setAdminLoginOpen(false);
-      setAdminDashboardOpen(true);
-    }
-  }, [isAdminRoute, currentUser]);
-
-  useEffect(() => {
-    const ownerEntry = window.location.pathname === '/ibra-owner' || window.location.hash === '#ibra-owner';
-    const openOwnerLogin = () => {
-      setAdminLoginOpen(true);
-      setAdminDashboardOpen(false);
-      window.history.replaceState({}, '', window.location.pathname + window.location.search);
-    };
-
-    if (ownerEntry && !currentUser) openOwnerLogin();
-
-    const onOwnerShortcut = (event: KeyboardEvent) => {
-      if (event.ctrlKey && event.shiftKey && event.altKey && event.key.toLowerCase() === 'i') {
-        event.preventDefault();
-        openOwnerLogin();
-      }
-    };
-
-    window.addEventListener('keydown', onOwnerShortcut);
-    return () => window.removeEventListener('keydown', onOwnerShortcut);
-  }, [currentUser]);
+  }, []);
 
   useEffect(() => {
     const title =
@@ -110,6 +78,11 @@ function MainContent() {
     document.documentElement.lang = language;
     document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
   }, [settings, language]);
+  const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  const [adminLoginOpen, setAdminLoginOpen] = useState(false);
+  const [adminDashboardOpen, setAdminDashboardOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
+  const [selectedPackage, setSelectedPackage] = useState<PackageItem | null>(null);
 
   const handleOpenBookingWithService = (service: ServiceItem) => {
     setSelectedService(service);
@@ -133,6 +106,13 @@ function MainContent() {
           setSelectedService(null);
           setSelectedPackage(null);
           setBookingModalOpen(true);
+        }}
+        onOpenAdmin={() => {
+          if (currentUser) {
+            setAdminDashboardOpen(true);
+          } else {
+            setAdminLoginOpen(true);
+          }
         }}
       />
 
@@ -168,7 +148,15 @@ function MainContent() {
         </main>
       )}
 
-      <Footer />
+      <Footer
+        onOpenAdmin={() => {
+          if (currentUser) {
+            setAdminDashboardOpen(true);
+          } else {
+            setAdminLoginOpen(true);
+          }
+        }}
+      />
       <WhatsAppFloat />
       <ContactShortcut />
       <MobileBottomNav onOpenBooking={() => { setSelectedService(null); setSelectedPackage(null); setBookingModalOpen(true); }} />
@@ -184,10 +172,7 @@ function MainContent() {
       <AdminLogin
         isOpen={adminLoginOpen}
         onClose={() => setAdminLoginOpen(false)}
-        onLoginSuccess={() => {
-          setAdminLoginOpen(false);
-          setAdminDashboardOpen(true);
-        }}
+        onLoginSuccess={() => setAdminDashboardOpen(true)}
       />
 
       {adminDashboardOpen && (
@@ -204,3 +189,4 @@ export default function App() {
     </AppProvider>
   );
 }
+

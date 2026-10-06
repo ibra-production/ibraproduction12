@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -17,11 +17,6 @@ export const app = initializeApp(firebaseConfig);
 
 export const db = getFirestore(app);
 export const auth = getAuth(app);
-
-// Keep the owner session stable across page refreshes and deployments.
-setPersistence(auth, browserLocalPersistence).catch((error) => {
-  console.error("Firebase auth persistence error:", error);
-});
 export const storage = getStorage(app);
 
 export const vapidKey = "BOZm_0LT3xDvXw3yKFAmzlIbqhDzpJ8IMbc-b13DsPBhOf0YEZxr4at5noBWb_O-igMGxSVixuZIyPrVCJmlUuQ";

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
 import { auth, db } from '../firebase';
 import { addDoc, collection, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { enablePushNotifications } from "../pushNotifications";
@@ -112,16 +112,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
 
   const [adminNotes, setAdminNotes] = useState<string>(() =>
     localStorage.getItem('ibra_admin_notes') ||
-    'قائمة المهام اليومية:\n1. تأكيد مواعيد عطلة نهاية الأسبوع\n2. تسليم ألبومات الصور للعرسان\n3. شحن بطاريات كاميرات 4K'
+    'Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ù…Ù‡Ø§Ù… Ø§Ù„ÙŠÙˆÙ…ÙŠØ©:\n1. ØªØ£ÙƒÙŠØ¯ Ù…ÙˆØ§Ø¹ÙŠØ¯ Ø¹Ø·Ù„Ø© Ù†Ù‡Ø§ÙŠØ© Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹\n2. ØªØ³Ù„ÙŠÙ… Ø£Ù„Ø¨ÙˆÙ…Ø§Øª Ø§Ù„ØµÙˆØ± Ù„Ù„Ø¹Ø±Ø³Ø§Ù†\n3. Ø´Ø­Ù† Ø¨Ø·Ø§Ø±ÙŠØ§Øª ÙƒØ§Ù…ÙŠØ±Ø§Øª 4K'
   );
 
   const handleEnablePushNotifications = async () => {
     const token = await enablePushNotifications();
 
     if (token) {
-      alert("✅ تم تفعيل إشعارات Ibra Production بنجاح.");
+      alert("âœ… ØªÙ… ØªÙØ¹ÙŠÙ„ Ø¥Ø´Ø¹Ø§Ø±Ø§Øª Ibra Production Ø¨Ù†Ø¬Ø§Ø­.");
     } else {
-      alert("⚠️ لم يتم تفعيل الإشعارات. تأكد من السماح بالإشعارات في المتصفح.");
+      alert("âš ï¸ Ù„Ù… ÙŠØªÙ… ØªÙØ¹ÙŠÙ„ Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª. ØªØ£ÙƒØ¯ Ù…Ù† Ø§Ù„Ø³Ù…Ø§Ø­ Ø¨Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª ÙÙŠ Ø§Ù„Ù…ØªØµÙØ­.");
     }
   };
 
@@ -159,17 +159,9 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
   const [calendarView, setCalendarView] = useState<'month' | 'list'>('month');
   const [scanCode, setScanCode] = useState('');
   const [scanLogs, setScanLogs] = useState<any[]>([]);
-  const [scanMessage, setScanMessage] = useState('جاهز للمسح');
+  const [scanMessage, setScanMessage] = useState('Ø¬Ø§Ù‡Ø² Ù„Ù„Ù…Ø³Ø­');
   const safeBookings = Array.isArray(bookings) ? bookings.filter(b => b && typeof b === 'object') : [];
   const [scanResult, setScanResult] = useState<any | null>(null);
-  const [adminClock, setAdminClock] = useState(() => new Date());
-  const [adminNavSearch, setAdminNavSearch] = useState('');
-  const [showAdminCommandBar, setShowAdminCommandBar] = useState(false);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setAdminClock(new Date()), 1000);
-    return () => window.clearInterval(timer);
-  }, []);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'scanLogs'), snapshot => {
@@ -192,7 +184,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
     setScanCode('');
     const normalized = code.toUpperCase();
     let scanType = 'unknown';
-    let result = 'لم يتم التعرف على نوع الكود';
+    let result = 'Ù„Ù… ÙŠØªÙ… Ø§Ù„ØªØ¹Ø±Ù Ø¹Ù„Ù‰ Ù†ÙˆØ¹ Ø§Ù„ÙƒÙˆØ¯';
     let match: any = null;
     let targetTab = '';
 
@@ -202,48 +194,48 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
       scanType = 'booking';
       const key = suffix('BOOK-');
       match = safeBookings.find((b: any) => String(b.id).toLowerCase() === key || String(b.id).toLowerCase().endsWith(key));
-      result = match ? `تم العثور على الحجز: ${match.groomName || 'عميل'}` : 'الكود لا يطابق حجزاً موجوداً';
+      result = match ? `ØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ Ø§Ù„Ø­Ø¬Ø²: ${match.groomName || 'Ø¹Ù…ÙŠÙ„'}` : 'Ø§Ù„ÙƒÙˆØ¯ Ù„Ø§ ÙŠØ·Ø§Ø¨Ù‚ Ø­Ø¬Ø²Ø§Ù‹ Ù…ÙˆØ¬ÙˆØ¯Ø§Ù‹';
       targetTab = 'bookings';
     } else if (normalized.startsWith('CLIENT-')) {
       scanType = 'client';
       const key = suffix('CLIENT-');
       match = safeBookings.find((b: any) => String(b.id).toLowerCase() === key || String(b.id).toLowerCase().endsWith(key));
-      result = match ? `تم العثور على بوابة العميل: ${match.groomName || 'عميل'}` : 'الكود لا يطابق حجزاً موجوداً';
+      result = match ? `ØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„Ø¹Ù…ÙŠÙ„: ${match.groomName || 'Ø¹Ù…ÙŠÙ„'}` : 'Ø§Ù„ÙƒÙˆØ¯ Ù„Ø§ ÙŠØ·Ø§Ø¨Ù‚ Ø­Ø¬Ø²Ø§Ù‹ Ù…ÙˆØ¬ÙˆØ¯Ø§Ù‹';
       targetTab = 'workflow';
     } else if (normalized.startsWith('USB-')) {
       scanType = 'usb';
       const key = suffix('USB-');
       match = safeBookings.find((b: any) => String(b.id).toLowerCase() === key || String(b.id).toLowerCase().endsWith(key));
-      result = match ? `USB مرتبط بالحجز: ${match.groomName || 'عميل'}` : 'تم التعرف على كود USB';
+      result = match ? `USB Ù…Ø±ØªØ¨Ø· Ø¨Ø§Ù„Ø­Ø¬Ø²: ${match.groomName || 'Ø¹Ù…ÙŠÙ„'}` : 'ØªÙ… Ø§Ù„ØªØ¹Ø±Ù Ø¹Ù„Ù‰ ÙƒÙˆØ¯ USB';
       targetTab = match ? 'workflow' : 'scan';
     } else if (normalized.startsWith('TEAM-')) {
       scanType = 'team';
-      result = 'تم التعرف على كود عضو الفريق';
+      result = 'ØªÙ… Ø§Ù„ØªØ¹Ø±Ù Ø¹Ù„Ù‰ ÙƒÙˆØ¯ Ø¹Ø¶Ùˆ Ø§Ù„ÙØ±ÙŠÙ‚';
       targetTab = 'team';
     } else if (normalized.startsWith('PAY-')) {
       scanType = 'payment';
       const key = suffix('PAY-');
       match = safeBookings.find((b: any) => String(b.id).toLowerCase() === key || String(b.id).toLowerCase().endsWith(key));
-      result = match ? `فتح الدفعات: ${match.groomName || 'عميل'}` : 'تم التعرف على كود الدفع';
+      result = match ? `ÙØªØ­ Ø§Ù„Ø¯ÙØ¹Ø§Øª: ${match.groomName || 'Ø¹Ù…ÙŠÙ„'}` : 'ØªÙ… Ø§Ù„ØªØ¹Ø±Ù Ø¹Ù„Ù‰ ÙƒÙˆØ¯ Ø§Ù„Ø¯ÙØ¹';
       targetTab = 'workflow';
     } else if (normalized.startsWith('DELIVERY-')) {
       scanType = 'delivery';
       const key = suffix('DELIVERY-');
       match = safeBookings.find((b: any) => String(b.id).toLowerCase() === key || String(b.id).toLowerCase().endsWith(key));
-      result = match ? `ملف التسليم: ${match.groomName || 'عميل'}` : 'تم التعرف على كود التسليم';
+      result = match ? `Ù…Ù„Ù Ø§Ù„ØªØ³Ù„ÙŠÙ…: ${match.groomName || 'Ø¹Ù…ÙŠÙ„'}` : 'ØªÙ… Ø§Ù„ØªØ¹Ø±Ù Ø¹Ù„Ù‰ ÙƒÙˆØ¯ Ø§Ù„ØªØ³Ù„ÙŠÙ…';
       targetTab = 'workflow';
     } else if (normalized.startsWith('ALBUM-')) {
       scanType = 'album';
       const key = suffix('ALBUM-');
       match = safeBookings.find((b: any) => String(b.id).toLowerCase() === key || String(b.id).toLowerCase().endsWith(key));
-      result = match ? `ألبوم العميل: ${match.groomName || 'عميل'}` : 'تم التعرف على كود الألبوم';
+      result = match ? `Ø£Ù„Ø¨ÙˆÙ… Ø§Ù„Ø¹Ù…ÙŠÙ„: ${match.groomName || 'Ø¹Ù…ÙŠÙ„'}` : 'ØªÙ… Ø§Ù„ØªØ¹Ø±Ù Ø¹Ù„Ù‰ ÙƒÙˆØ¯ Ø§Ù„Ø£Ù„Ø¨ÙˆÙ…';
       targetTab = 'workflow';
     } else {
       const direct = safeBookings.find((b: any) => String(b.id).toLowerCase() === code.toLowerCase());
       if (direct) {
         scanType = 'booking';
         match = direct;
-        result = `تم العثور على الحجز: ${direct.groomName || 'عميل'}`;
+        result = `ØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ Ø§Ù„Ø­Ø¬Ø²: ${direct.groomName || 'Ø¹Ù…ÙŠÙ„'}`;
         targetTab = 'bookings';
       }
     }
@@ -271,7 +263,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
       });
     } catch (error) {
       console.error('Scan log error:', error);
-      setScanMessage('تمت القراءة لكن تعذر حفظ السجل');
+      setScanMessage('ØªÙ…Øª Ø§Ù„Ù‚Ø±Ø§Ø¡Ø© Ù„ÙƒÙ† ØªØ¹Ø°Ø± Ø­ÙØ¸ Ø§Ù„Ø³Ø¬Ù„');
     }
 
     if (match && targetTab === 'workflow') {
@@ -314,12 +306,12 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
         .slice(0, 50);
       if (initialized && 'Notification' in window && Notification.permission === 'granted') {
         items.filter((item:any) => !knownIds.has(item.id)).forEach((item:any) => {
-          new Notification('Ibra Production — إشعار جديد', {
+          new Notification('Ibra Production â€” Ø¥Ø´Ø¹Ø§Ø± Ø¬Ø¯ÙŠØ¯', {
             body: item.type === 'status_change'
-              ? `تغيير حالة الحجز: ${item.groomName || 'عميل'} → ${item.toStatus || ''}`
+              ? `ØªØºÙŠÙŠØ± Ø­Ø§Ù„Ø© Ø§Ù„Ø­Ø¬Ø²: ${item.groomName || 'Ø¹Ù…ÙŠÙ„'} â†’ ${item.toStatus || ''}`
               : item.type === 'whatsapp_manual'
-                ? `تم تجهيز رسالة WhatsApp لـ ${item.groomName || 'العميل'}`
-                : 'تم إنشاء عملية أتمتة جديدة.',
+                ? `ØªÙ… ØªØ¬Ù‡ÙŠØ² Ø±Ø³Ø§Ù„Ø© WhatsApp Ù„Ù€ ${item.groomName || 'Ø§Ù„Ø¹Ù…ÙŠÙ„'}`
+                : 'ØªÙ… Ø¥Ù†Ø´Ø§Ø¡ Ø¹Ù…Ù„ÙŠØ© Ø£ØªÙ…ØªØ© Ø¬Ø¯ÙŠØ¯Ø©.',
             icon: '/logo.jpg'
           });
         });
@@ -335,13 +327,13 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
   const openWhatsAppAutomation = async (booking: any, action: 'confirmation' | 'reminder' | 'payment') => {
     const rawPhone = String(booking?.phone || '').replace(/\D/g, '');
-    if (!rawPhone) return alert('رقم هاتف العميل غير موجود.');
+    if (!rawPhone) return alert('Ø±Ù‚Ù… Ù‡Ø§ØªÙ Ø§Ù„Ø¹Ù…ÙŠÙ„ ØºÙŠØ± Ù…ÙˆØ¬ÙˆØ¯.');
     const phone = rawPhone.startsWith('213') ? rawPhone : rawPhone.startsWith('0') ? '213' + rawPhone.slice(1) : rawPhone;
-    const dateText = getBookingDates(booking).join(' • ') || booking.eventDate || '—';
+    const dateText = getBookingDates(booking).join(' â€¢ ') || booking.eventDate || 'â€”';
     const messages = {
-      confirmation: `مرحباً ${booking.groomName || ''}، معكم Ibra Production. تم تأكيد حجزكم رقم #${String(booking.id).slice(-6)}. التاريخ: ${dateText}. الوقت: ${booking.eventTime || '—'}. المكان: ${booking.venue || '—'}. شكراً لثقتكم بنا.`,
-      reminder: `مرحباً ${booking.groomName || ''}، تذكير من Ibra Production بخصوص مناسبتكم بتاريخ ${dateText} على الساعة ${booking.eventTime || '—'} في ${booking.venue || '—'}.`,
-      payment: `مرحباً ${booking.groomName || ''}، هذا تذكير من Ibra Production بخصوص الدفعة المستحقة لحجزكم #${String(booking.id).slice(-6)}. يرجى التواصل معنا لتأكيد الدفع.`
+      confirmation: `Ù…Ø±Ø­Ø¨Ø§Ù‹ ${booking.groomName || ''}ØŒ Ù…Ø¹ÙƒÙ… Ibra Production. ØªÙ… ØªØ£ÙƒÙŠØ¯ Ø­Ø¬Ø²ÙƒÙ… Ø±Ù‚Ù… #${String(booking.id).slice(-6)}. Ø§Ù„ØªØ§Ø±ÙŠØ®: ${dateText}. Ø§Ù„ÙˆÙ‚Øª: ${booking.eventTime || 'â€”'}. Ø§Ù„Ù…ÙƒØ§Ù†: ${booking.venue || 'â€”'}. Ø´ÙƒØ±Ø§Ù‹ Ù„Ø«Ù‚ØªÙƒÙ… Ø¨Ù†Ø§.`,
+      reminder: `Ù…Ø±Ø­Ø¨Ø§Ù‹ ${booking.groomName || ''}ØŒ ØªØ°ÙƒÙŠØ± Ù…Ù† Ibra Production Ø¨Ø®ØµÙˆØµ Ù…Ù†Ø§Ø³Ø¨ØªÙƒÙ… Ø¨ØªØ§Ø±ÙŠØ® ${dateText} Ø¹Ù„Ù‰ Ø§Ù„Ø³Ø§Ø¹Ø© ${booking.eventTime || 'â€”'} ÙÙŠ ${booking.venue || 'â€”'}.`,
+      payment: `Ù…Ø±Ø­Ø¨Ø§Ù‹ ${booking.groomName || ''}ØŒ Ù‡Ø°Ø§ ØªØ°ÙƒÙŠØ± Ù…Ù† Ibra Production Ø¨Ø®ØµÙˆØµ Ø§Ù„Ø¯ÙØ¹Ø© Ø§Ù„Ù…Ø³ØªØ­Ù‚Ø© Ù„Ø­Ø¬Ø²ÙƒÙ… #${String(booking.id).slice(-6)}. ÙŠØ±Ø¬Ù‰ Ø§Ù„ØªÙˆØ§ØµÙ„ Ù…Ø¹Ù†Ø§ Ù„ØªØ£ÙƒÙŠØ¯ Ø§Ù„Ø¯ÙØ¹.`
     };
     const message = messages[action];
     try {
@@ -441,7 +433,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
       }) : current);
     } catch (error) {
       console.error('Service image upload error:', error);
-      alert(error instanceof Error ? error.message : 'تعذر رفع صورة الخدمة.');
+      alert(error instanceof Error ? error.message : 'ØªØ¹Ø°Ø± Ø±ÙØ¹ ØµÙˆØ±Ø© Ø§Ù„Ø®Ø¯Ù…Ø©.');
     } finally {
       setServiceUploading(false);
     }
@@ -452,7 +444,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
       setPackageUploading(true);
       const result = await uploadImageToIbraR2(file, 'packages', 15);
       setPackageModal((m: any) => m ? ({ ...m, image: result.url, imagePath: result.key, imageName: result.name }) : m);
-    } catch (e) { alert(e instanceof Error ? e.message : 'فشل رفع صورة الباقة.'); }
+    } catch (e) { alert(e instanceof Error ? e.message : 'ÙØ´Ù„ Ø±ÙØ¹ ØµÙˆØ±Ø© Ø§Ù„Ø¨Ø§Ù‚Ø©.'); }
     finally { setPackageUploading(false); }
   };
 
@@ -461,7 +453,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
       setTestimonialUploading(true);
       const result = await uploadImageToIbraR2(file, 'testimonials', 15);
       setTestimonialModal((m: any) => m ? ({ ...m, image: result.url, imagePath: result.key, imageName: result.name }) : m);
-    } catch (e) { alert(e instanceof Error ? e.message : 'فشل رفع صورة العميل.'); }
+    } catch (e) { alert(e instanceof Error ? e.message : 'ÙØ´Ù„ Ø±ÙØ¹ ØµÙˆØ±Ø© Ø§Ù„Ø¹Ù…ÙŠÙ„.'); }
     finally { setTestimonialUploading(false); }
   };
 
@@ -470,198 +462,57 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
       setOfferUploading(true);
       const result = await uploadImageToIbraR2(file, 'offers', 15);
       setOfferModal((m: any) => m ? ({ ...m, image: result.url, imagePath: result.key, imageName: result.name }) : m);
-    } catch (e) { alert(e instanceof Error ? e.message : 'فشل رفع صورة العرض.'); }
+    } catch (e) { alert(e instanceof Error ? e.message : 'ÙØ´Ù„ Ø±ÙØ¹ ØµÙˆØ±Ø© Ø§Ù„Ø¹Ø±Ø¶.'); }
     finally { setOfferUploading(false); }
   };
 
-  const ID_CARD_WORKER_URL = 'https://yellow-bar-9020ibra-id-card-upload.bahibarhouma15.workers.dev';
-
-  const getBookingIdCardValue = (booking: any) => {
-    if (!booking) return { url: '', key: '', name: '' };
-    const url = String(
-      booking.idCardUrl || booking.identityCardUrl || booking.idCard || booking.identityCard || ''
-    ).trim();
-    const key = String(
-      booking.idCardKey || booking.identityCardKey || booking.idCardPath || ''
-    ).trim();
-    const name = String(
-      booking.idCardName || booking.identityCardName || booking.idCardFileName || ''
-    ).trim();
-    return { url, key, name };
-  };
-
-  const resolveIdCardUrl = (value: string, booking?: any) => {
-    const legacy = getBookingIdCardValue(booking);
-    const explicitKey = String(legacy.key || '').trim();
-    const raw = String(value || legacy.url || '').trim();
-
-    // ID cards are stored in Cloudflare R2 and served by the Worker.
-    // There is intentionally no /api/id-card endpoint in this Vite/Pages app.
-    const buildWorkerUrl = (key: string) => {
-      const cleanKey = String(key || '').trim().replace(/^\\/+/, '');
-      if (!cleanKey) throw new Error('مفتاح بطاقة التعريف غير صالح.');
-      return ID_CARD_WORKER_URL + '/?key=' + encodeURIComponent(cleanKey);
-    };
-
-    if (explicitKey) {
-      return buildWorkerUrl(explicitKey);
-    }
-
-    if (!raw) throw new Error('رابط بطاقة التعريف غير موجود.');
-
-    try {
-      const parsed = new URL(raw);
-      const queryKey = parsed.searchParams.get('key');
-      if (queryKey) {
-        return buildWorkerUrl(queryKey);
-      }
-
-      // Keep only the supported private Worker URL, never silently trust
-      // an unrelated external URL for an identity document.
-      if (parsed.origin === new URL(ID_CARD_WORKER_URL).origin) {
-        return parsed.toString();
-      }
-    } catch {
-      // Not a full URL; treat it as a storage key below.
-    }
-
-    if (raw.startsWith('data:')) {
-      return raw;
-    }
-
-    if (raw.startsWith('http://') || raw.startsWith('https://')) {
-      throw new Error('رابط بطاقة التعريف غير صالح أو لا ينتمي إلى تخزين Ibra.');
-    }
-
-    const key = raw.replace(/^\\/?(?:id-cards?\\/)?/, '').replace(/^\\/+/, '');
-    return buildWorkerUrl(key);
-  };
-
-  const getIdCardBlob = async (value: string, booking?: any) => {
-    const url = resolveIdCardUrl(value, booking);
-
-    if (url.startsWith('data:')) {
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('تعذر قراءة ملف بطاقة التعريف.');
+  const getIdCardBlob = async (value: string) => {
+    if (value.startsWith('data:')) {
+      const response = await fetch(value);
       return response.blob();
     }
-
     const currentUser = auth.currentUser;
-    if (!currentUser) throw new Error('يجب تسجيل الدخول كمسؤول.');
-
-    // Force a fresh Firebase ID token so private R2 files continue to work
-    // after a long admin session.
-    const token = await currentUser.getIdToken(true);
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        Authorization: 'Bearer ' + token,
-        Accept: 'image/*,application/pdf,application/octet-stream'
-      },
-      cache: 'no-store',
-      credentials: 'omit'
+    if (!currentUser) throw new Error('ÙŠØ¬Ø¨ ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„ ÙƒÙ…Ø³Ø¤ÙˆÙ„.');
+    const token = await currentUser.getIdToken();
+    const response = await fetch(value, {
+      headers: { Authorization: 'Bearer ' + token }
     });
-
     if (!response.ok) {
-      const body = await response.text().catch(() => '');
-      let detail = body;
-      try {
-        const parsed = JSON.parse(body);
-        detail = parsed?.error || parsed?.message || body;
-      } catch {
-        // Worker may return plain text.
-      }
-
-      if (response.status === 401 || response.status === 403) {
-        throw new Error('رفض الوصول إلى بطاقة التعريف. انتهت جلسة المسؤول أو صلاحية البطاقة.');
-      }
-
-      if (response.status === 404) {
-        throw new Error('بطاقة التعريف غير موجودة في التخزين.');
-      }
-
-      throw new Error(detail || ('تعذر الوصول إلى بطاقة التعريف (' + response.status + ')'));
+      const text = await response.text().catch(() => '');
+      throw new Error(text || ('ØªØ¹Ø°Ø± Ø§Ù„ÙˆØµÙˆÙ„ Ø¥Ù„Ù‰ Ø¨Ø·Ø§Ù‚Ø© Ø§Ù„ØªØ¹Ø±ÙŠÙ (' + response.status + ')'));
     }
-
-    const blob = await response.blob();
-    if (!blob.size) throw new Error('ملف بطاقة التعريف فارغ أو غير صالح.');
-
-    return blob;
-  };
-
-  const getSafeIdCardName = (booking: any, blob?: Blob) => {
-    const original = getBookingIdCardValue(booking).name;
-    if (original) return original;
-
-    const mime = String(blob?.type || '').toLowerCase();
-    const extension =
-      mime.includes('pdf') ? 'pdf' :
-      mime.includes('png') ? 'png' :
-      mime.includes('webp') ? 'webp' :
-      'jpg';
-
-    return 'ibra-id-card-' + String(booking?.id || 'client').slice(-8) + '.' + extension;
+    return response.blob();
   };
 
   const previewIdCard = async (booking: any) => {
-    const card = getBookingIdCardValue(booking);
-    if (!card.url && !card.key) {
-      alert('لا يوجد ملف بطاقة تعريف مرتبط بهذا الحجز.');
-      return;
-    }
-
+    if (!booking?.idCardUrl) return;
     try {
       setIdCardLoading(true);
-
-      if (idCardPreview?.url) {
-        URL.revokeObjectURL(idCardPreview.url);
-        setIdCardPreview(null);
-      }
-
-      const card = getBookingIdCardValue(booking);
-      const blob = await getIdCardBlob(String(card.url || card.key || ''), booking);
+      const blob = await getIdCardBlob(String(booking.idCardUrl));
       const objectUrl = URL.createObjectURL(blob);
-
-      setIdCardPreview({
-        url: objectUrl,
-        name: getSafeIdCardName(booking, blob),
-        type: blob.type || 'application/octet-stream'
-      });
+      setIdCardPreview({ url: objectUrl, name: booking.idCardName || 'id-card', type: blob.type || 'application/octet-stream' });
     } catch (error) {
-      console.error('ID card preview error:', error);
-      alert(error instanceof Error ? error.message : 'تعذر معاينة بطاقة التعريف.');
+      alert(error instanceof Error ? error.message : 'ØªØ¹Ø°Ø± Ù…Ø¹Ø§ÙŠÙ†Ø© Ø¨Ø·Ø§Ù‚Ø© Ø§Ù„ØªØ¹Ø±ÙŠÙ.');
     } finally {
       setIdCardLoading(false);
     }
   };
 
   const downloadIdCard = async (booking: any) => {
-    const card = getBookingIdCardValue(booking);
-    if (!card.url && !card.key) {
-      alert('لا يوجد ملف بطاقة تعريف مرتبط بهذا الحجز.');
-      return;
-    }
-
+    if (!booking?.idCardUrl) return;
     try {
       setIdCardLoading(true);
-
-      const blob = await getIdCardBlob(String(card.url || card.key || ''), booking);
+      const blob = await getIdCardBlob(String(booking.idCardUrl));
       const objectUrl = URL.createObjectURL(blob);
-      const fileName = getSafeIdCardName(booking, blob);
-
-      const anchor = document.createElement('a');
-      anchor.href = objectUrl;
-      anchor.download = fileName;
-      anchor.rel = 'noopener';
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-
-      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = booking.idCardName || 'id-card';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
     } catch (error) {
-      console.error('ID card download error:', error);
-      alert(error instanceof Error ? error.message : 'تعذر تحميل بطاقة التعريف.');
+      alert(error instanceof Error ? error.message : 'ØªØ¹Ø°Ø± ØªØ­Ù…ÙŠÙ„ Ø¨Ø·Ø§Ù‚Ø© Ø§Ù„ØªØ¹Ø±ÙŠÙ.');
     } finally {
       setIdCardLoading(false);
     }
@@ -692,10 +543,10 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
     if (newStatus === 'confirmed') {
       const smsText =
-        `[IBRA PRODUCTION] مرحباً بالعريس ${booking.groomName || ''} والعروس ${booking.brideName || ''}! ` +
-        `تم تأكيد حجزكم رقم (#${String(booking.id).slice(-4)}) ` +
-        `لمناسبة ${booking.eventType || ''} بتاريخ ${booking.eventDate || ''}. ` +
-        `للاستفسار: ${settings.phone}`;
+        `[IBRA PRODUCTION] Ù…Ø±Ø­Ø¨Ø§Ù‹ Ø¨Ø§Ù„Ø¹Ø±ÙŠØ³ ${booking.groomName || ''} ÙˆØ§Ù„Ø¹Ø±ÙˆØ³ ${booking.brideName || ''}! ` +
+        `ØªÙ… ØªØ£ÙƒÙŠØ¯ Ø­Ø¬Ø²ÙƒÙ… Ø±Ù‚Ù… (#${String(booking.id).slice(-4)}) ` +
+        `Ù„Ù…Ù†Ø§Ø³Ø¨Ø© ${booking.eventType || ''} Ø¨ØªØ§Ø±ÙŠØ® ${booking.eventDate || ''}. ` +
+        `Ù„Ù„Ø§Ø³ØªÙØ³Ø§Ø±: ${settings.phone}`;
 
       setSmsModalData({
         booking,
@@ -740,9 +591,9 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
       const success = restoreData(content);
 
       if (success) {
-        alert('تم استعادة البيانات وإعدادات الموقع بنجاح!');
+        alert('ØªÙ… Ø§Ø³ØªØ¹Ø§Ø¯Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª ÙˆØ¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ù…ÙˆÙ‚Ø¹ Ø¨Ù†Ø¬Ø§Ø­!');
       } else {
-        alert('خطأ في استعادة الملف.');
+        alert('Ø®Ø·Ø£ ÙÙŠ Ø§Ø³ØªØ¹Ø§Ø¯Ø© Ø§Ù„Ù…Ù„Ù.');
       }
     };
 
@@ -750,35 +601,30 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-neutral-950 text-neutral-100 flex flex-col overflow-hidden font-sans ibra-admin-shell" data-admin-dashboard>
+    <div className="fixed inset-0 z-50 bg-neutral-950 text-neutral-100 flex flex-col overflow-hidden font-sans">
 
-      <header className="ibra-admin-header bg-neutral-900/90 border-b border-neutral-800 px-4 sm:px-6 py-3.5 flex items-center justify-between shrink-0 backdrop-blur-xl">
+      <header className="bg-neutral-900 border-b border-neutral-800 px-6 py-4 flex items-center justify-between shrink-0">
 
         <div className="flex items-center gap-3">
 
-          <div className="ibra-admin-logo w-10 h-10 rounded-2xl bg-amber-500 text-neutral-950 font-bold flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-amber-500 text-neutral-950 font-bold flex items-center justify-center">
             IP
           </div>
 
           <div>
-            <h1 className="font-bold text-lg text-white ibra-admin-title">
-              IBRA PRODUCTION • لوحة التحكم
+            <h1 className="font-bold text-lg text-white">
+              IBRA PRODUCTION â€¢ Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ…
             </h1>
 
             <span className="text-xs text-amber-400 flex items-center gap-1">
               <ShieldCheck className="w-3.5 h-3.5" />
-              صلاحيات المسؤول مفعلة
+              ØµÙ„Ø§Ø­ÙŠØ§Øª Ø§Ù„Ù…Ø³Ø¤ÙˆÙ„ Ù…ÙØ¹Ù„Ø©
             </span>
           </div>
 
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl bg-neutral-950/70 border border-neutral-800 text-xs text-neutral-300">
-            <span className="ibra-live-pulse" />
-            <span>النظام مباشر</span>
-            <span className="text-amber-400 font-mono">{adminClock.toLocaleTimeString('ar-DZ')}</span>
-          </div>
+        <div className="flex items-center gap-3">
 
           <button
             onClick={() => {
@@ -788,7 +634,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
             className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-400 border border-red-500/30 rounded-xl text-xs font-semibold"
           >
             <LogOut className="w-4 h-4" />
-            تسجيل الخروج
+            ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø®Ø±ÙˆØ¬
           </button>
 
           <button
@@ -804,83 +650,82 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
       <div className="flex flex-1 overflow-hidden">
 
-        <aside className="ibra-admin-sidebar w-64 bg-neutral-900/70 border-r border-neutral-800 p-3 space-y-1.5 overflow-y-auto shrink-0 hidden md:block backdrop-blur-xl">
+        <aside className="w-64 bg-neutral-900/60 border-r border-neutral-800 p-4 space-y-1.5 overflow-y-auto shrink-0 hidden md:block">
 
-          <div className="ibra-admin-sidebar-label">CONTROL CENTER</div>
           {[
             {
               id: 'dash',
-              label: 'لوحة القيادة العامة',
+              label: 'Ù„ÙˆØ­Ø© Ø§Ù„Ù‚ÙŠØ§Ø¯Ø© Ø§Ù„Ø¹Ø§Ù…Ø©',
               icon: <LayoutDashboard className="w-4 h-4" />
             },
             {
               id: 'bookings',
-              label: `الحجوزات والطلبات (${newBookingsCount} جديدة)`,
+              label: `Ø§Ù„Ø­Ø¬ÙˆØ²Ø§Øª ÙˆØ§Ù„Ø·Ù„Ø¨Ø§Øª (${newBookingsCount} Ø¬Ø¯ÙŠØ¯Ø©)`,
               icon: <Calendar className="w-4 h-4" />
             },
             {
               id: 'analytics',
-              label: 'الإحصائيات والأرباح',
+              label: 'Ø§Ù„Ø¥Ø­ØµØ§Ø¦ÙŠØ§Øª ÙˆØ§Ù„Ø£Ø±Ø¨Ø§Ø­',
               icon: <BarChart3 className="w-4 h-4" />
             },
             {
               id: 'calendar',
-              label: 'تقويم المواعيد',
+              label: 'ØªÙ‚ÙˆÙŠÙ… Ø§Ù„Ù…ÙˆØ§Ø¹ÙŠØ¯',
               icon: <CalendarDays className="w-4 h-4" />
             },
             {
               id: 'services',
-              label: 'إدارة الخدمات',
+              label: 'Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ø®Ø¯Ù…Ø§Øª',
               icon: <Camera className="w-4 h-4" />
             },
             {
               id: 'packages',
-              label: 'الباقات والأسعار',
+              label: 'Ø§Ù„Ø¨Ø§Ù‚Ø§Øª ÙˆØ§Ù„Ø£Ø³Ø¹Ø§Ø±',
               icon: <Package className="w-4 h-4" />
             },
             {
               id: 'portfolio',
-              label: 'معرض الأعمال',
+              label: 'Ù…Ø¹Ø±Ø¶ Ø§Ù„Ø£Ø¹Ù…Ø§Ù„',
               icon: <ImageIcon className="w-4 h-4" />
             },
             {
               id: 'videos',
-              label: 'الفيديوهات',
+              label: 'Ø§Ù„ÙÙŠØ¯ÙŠÙˆÙ‡Ø§Øª',
               icon: <Video className="w-4 h-4" />
             },
             {
               id: 'messages',
-              label: `رسائل التواصل (${unreadMessagesCount})`,
+              label: `Ø±Ø³Ø§Ø¦Ù„ Ø§Ù„ØªÙˆØ§ØµÙ„ (${unreadMessagesCount})`,
               icon: <Mail className="w-4 h-4" />
             },
             {
               id: 'testimonials',
-              label: 'آراء العملاء',
+              label: 'Ø¢Ø±Ø§Ø¡ Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡',
               icon: <MessageSquare className="w-4 h-4" />
             },
             {
               id: 'offers',
-              label: 'العروض الخاصة',
+              label: 'Ø§Ù„Ø¹Ø±ÙˆØ¶ Ø§Ù„Ø®Ø§ØµØ©',
               icon: <Tag className="w-4 h-4" />
             },
             {
               id: 'idcards',
-              label: 'بطاقات التعريف',
+              label: 'Ø¨Ø·Ø§Ù‚Ø§Øª Ø§Ù„ØªØ¹Ø±ÙŠÙ',
               icon: <FileText className="w-4 h-4" />
             },
             {
               id: 'team',
-              label: 'إدارة فريق العمل',
+              label: 'Ø¥Ø¯Ø§Ø±Ø© ÙØ±ÙŠÙ‚ Ø§Ù„Ø¹Ù…Ù„',
               icon: <Users className="w-4 h-4" />
             },
             {
               id: 'workflow',
-              label: 'سير عمل الحجوزات',
+              label: 'Ø³ÙŠØ± Ø¹Ù…Ù„ Ø§Ù„Ø­Ø¬ÙˆØ²Ø§Øª',
               icon: <CheckSquare className="w-4 h-4" />
             },
             {
               id: 'notifications',
-              label: `الإشعارات والأتمتة (${automationNotifications.length})`,
+              label: `Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª ÙˆØ§Ù„Ø£ØªÙ…ØªØ© (${automationNotifications.length})`,
               icon: <Send className="w-4 h-4" />
             },
             {
@@ -890,24 +735,24 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
             },
             {
               id: 'pro',
-              label: 'مركز 50 ميزة احترافية',
+              label: 'Ù…Ø±ÙƒØ² 50 Ù…ÙŠØ²Ø© Ø§Ø­ØªØ±Ø§ÙÙŠØ©',
               icon: <BarChart3 className="w-4 h-4" />
             },
             {
               id: 'settings',
-              label: 'إعدادات الموقع',
+              label: 'Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ù…ÙˆÙ‚Ø¹',
               icon: <Settings className="w-4 h-4" />
             },
             {
               id: 'logs',
-              label: 'سجل العمليات',
+              label: 'Ø³Ø¬Ù„ Ø§Ù„Ø¹Ù…Ù„ÙŠØ§Øª',
               icon: <History className="w-4 h-4" />
             }
           ].map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-all ibra-admin-nav-item ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                 activeTab === tab.id
                   ? 'bg-amber-500 text-neutral-950 font-bold'
                   : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'
@@ -920,53 +765,31 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
         </aside>
 
-        <main className="ibra-admin-main flex-1 overflow-y-auto p-4 sm:p-6 lg:p-9 bg-neutral-950">
-          <div className="ibra-admin-command-strip mb-5">
-  <div className="flex flex-wrap items-center justify-between gap-3">
-    <div>
-      <div className="text-[10px] uppercase tracking-[.22em] text-amber-400/80">IBRA CONTROL CENTER</div>
-      <div className="text-lg sm:text-xl font-bold text-white mt-1">مركز إدارة Ibra Production</div>
-    </div>
-    <div className="flex flex-wrap gap-2">
-      <button onClick={() => setActiveTab('bookings')} className="ibra-admin-quick-btn"><Calendar className="w-4 h-4" /> الحجوزات <b>{activeBookings.length}</b></button>
-      <button onClick={() => setActiveTab('notifications')} className="ibra-admin-quick-btn"><Send className="w-4 h-4" /> الأتمتة <b>{automationNotifications.length}</b></button>
-      <button onClick={() => setActiveTab('scan')} className="ibra-admin-quick-btn"><ShieldCheck className="w-4 h-4" /> Scan</button>
-      <button onClick={() => setShowAdminCommandBar(v => !v)} className="ibra-admin-quick-btn ibra-admin-quick-primary"><BarChart3 className="w-4 h-4" /> نظرة سريعة</button>
-    </div>
-  </div>
-  {showAdminCommandBar && (
-    <div className="ibra-admin-command-grid mt-4">
-      <div><span>جديد</span><strong>{newBookingsCount}</strong></div>
-      <div><span>مؤكد</span><strong>{confirmedBookingsCount}</strong></div>
-      <div><span>رسائل غير مقروءة</span><strong>{unreadMessagesCount}</strong></div>
-      <div><span>المتبقي</span><strong>{analyticsRemaining.toLocaleString('fr-DZ')} DA</strong></div>
-    </div>
-  )}
-</div>
-<div className="md:hidden sticky top-0 z-20 mb-5 -mx-1 bg-neutral-950/95 backdrop-blur-md py-2 ibra-admin-mobile-nav">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-8 lg:p-10 bg-neutral-950">
+          <div className="md:hidden sticky top-0 z-20 mb-5 -mx-1 bg-neutral-950/95 backdrop-blur-md py-2">
             <select
               value={activeTab}
               onChange={e => setActiveTab(e.target.value as any)}
               className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-amber-500"
             >
-              <option value="dash">لوحة القيادة العامة</option>
-              <option value="bookings">الحجوزات والطلبات</option>
-              <option value="analytics">الإحصائيات والأرباح</option>
-              <option value="calendar">تقويم المواعيد</option>
-              <option value="services">إدارة الخدمات</option>
-              <option value="packages">الباقات والأسعار</option>
-              <option value="portfolio">معرض الأعمال</option>
-              <option value="videos">الفيديوهات</option>
-              <option value="messages">رسائل التواصل</option>
-              <option value="testimonials">آراء العملاء</option>
-              <option value="offers">العروض الخاصة</option>
-              <option value="idcards">بطاقات التعريف</option>
-              <option value="team">إدارة فريق العمل</option>
-              <option value="workflow">سير عمل الحجوزات</option>
-              <option value="notifications">الإشعارات والأتمتة</option>
-              <option value="pro">مركز 50 ميزة احترافية</option>
-              <option value="settings">إعدادات الموقع</option>
-              <option value="logs">سجل العمليات</option>
+              <option value="dash">Ù„ÙˆØ­Ø© Ø§Ù„Ù‚ÙŠØ§Ø¯Ø© Ø§Ù„Ø¹Ø§Ù…Ø©</option>
+              <option value="bookings">Ø§Ù„Ø­Ø¬ÙˆØ²Ø§Øª ÙˆØ§Ù„Ø·Ù„Ø¨Ø§Øª</option>
+              <option value="analytics">Ø§Ù„Ø¥Ø­ØµØ§Ø¦ÙŠØ§Øª ÙˆØ§Ù„Ø£Ø±Ø¨Ø§Ø­</option>
+              <option value="calendar">ØªÙ‚ÙˆÙŠÙ… Ø§Ù„Ù…ÙˆØ§Ø¹ÙŠØ¯</option>
+              <option value="services">Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ø®Ø¯Ù…Ø§Øª</option>
+              <option value="packages">Ø§Ù„Ø¨Ø§Ù‚Ø§Øª ÙˆØ§Ù„Ø£Ø³Ø¹Ø§Ø±</option>
+              <option value="portfolio">Ù…Ø¹Ø±Ø¶ Ø§Ù„Ø£Ø¹Ù…Ø§Ù„</option>
+              <option value="videos">Ø§Ù„ÙÙŠØ¯ÙŠÙˆÙ‡Ø§Øª</option>
+              <option value="messages">Ø±Ø³Ø§Ø¦Ù„ Ø§Ù„ØªÙˆØ§ØµÙ„</option>
+              <option value="testimonials">Ø¢Ø±Ø§Ø¡ Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡</option>
+              <option value="offers">Ø§Ù„Ø¹Ø±ÙˆØ¶ Ø§Ù„Ø®Ø§ØµØ©</option>
+              <option value="idcards">Ø¨Ø·Ø§Ù‚Ø§Øª Ø§Ù„ØªØ¹Ø±ÙŠÙ</option>
+              <option value="team">Ø¥Ø¯Ø§Ø±Ø© ÙØ±ÙŠÙ‚ Ø§Ù„Ø¹Ù…Ù„</option>
+              <option value="workflow">Ø³ÙŠØ± Ø¹Ù…Ù„ Ø§Ù„Ø­Ø¬ÙˆØ²Ø§Øª</option>
+              <option value="notifications">Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª ÙˆØ§Ù„Ø£ØªÙ…ØªØ©</option>
+              <option value="pro">Ù…Ø±ÙƒØ² 50 Ù…ÙŠØ²Ø© Ø§Ø­ØªØ±Ø§ÙÙŠØ©</option>
+              <option value="settings">Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ù…ÙˆÙ‚Ø¹</option>
+              <option value="logs">Ø³Ø¬Ù„ Ø§Ù„Ø¹Ù…Ù„ÙŠØ§Øª</option>
             </select>
           </div>
 
@@ -979,15 +802,15 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
           )}
 
           {activeTab === 'dash' && (
-            <div className="space-y-8 ibra-admin-dashboard-home">
+            <div className="space-y-8">
 
               <div>
                 <h2 className="text-2xl font-bold text-white mb-2">
-                  مرحباً بك مجدداً في لوحة تحكم IBRA PRODUCTION
+                  Ù…Ø±Ø­Ø¨Ø§Ù‹ Ø¨Ùƒ Ù…Ø¬Ø¯Ø¯Ø§Ù‹ ÙÙŠ Ù„ÙˆØ­Ø© ØªØ­ÙƒÙ… IBRA PRODUCTION
                 </h2>
 
                 <p className="text-sm text-neutral-400">
-                  إدارة الحجوزات والخدمات ومحتوى الموقع.
+                  Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ø­Ø¬ÙˆØ²Ø§Øª ÙˆØ§Ù„Ø®Ø¯Ù…Ø§Øª ÙˆÙ…Ø­ØªÙˆÙ‰ Ø§Ù„Ù…ÙˆÙ‚Ø¹.
                 </p>
               </div>
 
@@ -995,19 +818,19 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
                 <div className="glass-card p-6 rounded-2xl border border-neutral-800 hover:border-amber-500/30 hover:-translate-y-1 transition-all duration-300">
                   <span className="text-xs text-neutral-400">
-                    إجمالي الحجوزات
+                    Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø­Ø¬ÙˆØ²Ø§Øª
                   </span>
                   <div className="text-3xl font-bold text-white mt-3">
                     {safeBookings.length}
                   </div>
                   <span className="text-xs text-amber-400">
-                    {newBookingsCount} طلب جديد
+                    {newBookingsCount} Ø·Ù„Ø¨ Ø¬Ø¯ÙŠØ¯
                   </span>
                 </div>
 
                 <div className="glass-card p-6 rounded-2xl border border-neutral-800">
                   <span className="text-xs text-neutral-400">
-                    الحجوزات المؤكدة
+                    Ø§Ù„Ø­Ø¬ÙˆØ²Ø§Øª Ø§Ù„Ù…Ø¤ÙƒØ¯Ø©
                   </span>
                   <div className="text-3xl font-bold text-white mt-3">
                     {confirmedBookingsCount}
@@ -1016,7 +839,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
                 <div className="glass-card p-6 rounded-2xl border border-neutral-800">
                   <span className="text-xs text-neutral-400">
-                    الخدمات
+                    Ø§Ù„Ø®Ø¯Ù…Ø§Øª
                   </span>
                   <div className="text-3xl font-bold text-white mt-3">
                     {services.length}
@@ -1025,7 +848,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
                 <div className="glass-card p-6 rounded-2xl border border-neutral-800">
                   <span className="text-xs text-neutral-400">
-                    رسائل غير مقروءة
+                    Ø±Ø³Ø§Ø¦Ù„ ØºÙŠØ± Ù…Ù‚Ø±ÙˆØ¡Ø©
                   </span>
                   <div className="text-3xl font-bold text-white mt-3">
                     {unreadMessagesCount}
@@ -1041,7 +864,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                   <div className="flex items-center gap-2">
                     <CheckSquare className="w-5 h-5 text-amber-400" />
                     <span className="text-white font-bold">
-                      مفكرة المهام
+                      Ù…ÙÙƒØ±Ø© Ø§Ù„Ù…Ù‡Ø§Ù…
                     </span>
                   </div>
 
@@ -1051,11 +874,11 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                         'ibra_admin_notes',
                         adminNotes
                       );
-                      alert('تم حفظ الملاحظات بنجاح!');
+                      alert('ØªÙ… Ø­ÙØ¸ Ø§Ù„Ù…Ù„Ø§Ø­Ø¸Ø§Øª Ø¨Ù†Ø¬Ø§Ø­!');
                     }}
                     className="px-4 py-2 bg-amber-500 text-neutral-950 rounded-xl font-bold text-xs"
                   >
-                    حفظ
+                    Ø­ÙØ¸
                   </button>
 
                 </div>
@@ -1077,11 +900,11 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
               <div>
                 <h2 className="text-2xl font-bold text-white">
-                  إدارة الحجوزات والطلبات الواردة
+                  Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ø­Ø¬ÙˆØ²Ø§Øª ÙˆØ§Ù„Ø·Ù„Ø¨Ø§Øª Ø§Ù„ÙˆØ§Ø±Ø¯Ø©
                 </h2>
 
                 <p className="text-xs text-neutral-400 mt-2">
-                  جميع الحجوزات القادمة من الموقع.
+                  Ø¬Ù…ÙŠØ¹ Ø§Ù„Ø­Ø¬ÙˆØ²Ø§Øª Ø§Ù„Ù‚Ø§Ø¯Ù…Ø© Ù…Ù† Ø§Ù„Ù…ÙˆÙ‚Ø¹.
                 </p>
               </div>
 
@@ -1090,7 +913,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                   <input
                     value={bookingSearch}
                     onChange={e => setBookingSearch(e.target.value)}
-                    placeholder="بحث بالاسم، الهاتف، البريد، المناسبة، المكان أو رقم الحجز..."
+                    placeholder="Ø¨Ø­Ø« Ø¨Ø§Ù„Ø§Ø³Ù…ØŒ Ø§Ù„Ù‡Ø§ØªÙØŒ Ø§Ù„Ø¨Ø±ÙŠØ¯ØŒ Ø§Ù„Ù…Ù†Ø§Ø³Ø¨Ø©ØŒ Ø§Ù„Ù…ÙƒØ§Ù† Ø£Ùˆ Ø±Ù‚Ù… Ø§Ù„Ø­Ø¬Ø²..."
                     className="md:col-span-1 bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-amber-500"
                   />
                   <select
@@ -1098,29 +921,29 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                     onChange={e => setBookingStatusFilter(e.target.value)}
                     className="bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white text-sm"
                   >
-                    <option value="all">كل الحالات</option>
-                    <option value="new">جديد</option>
-                    <option value="confirmed">مؤكد</option>
-                    <option value="processing">قيد المعالجة</option>
-                    <option value="completed">مكتمل</option>
-                    <option value="cancelled">ملغي</option>
+                    <option value="all">ÙƒÙ„ Ø§Ù„Ø­Ø§Ù„Ø§Øª</option>
+                    <option value="new">Ø¬Ø¯ÙŠØ¯</option>
+                    <option value="confirmed">Ù…Ø¤ÙƒØ¯</option>
+                    <option value="processing">Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø¹Ø§Ù„Ø¬Ø©</option>
+                    <option value="completed">Ù…ÙƒØªÙ…Ù„</option>
+                    <option value="cancelled">Ù…Ù„ØºÙŠ</option>
                   </select>
                   <select
                     value={bookingWilayaFilter}
                     onChange={e => setBookingWilayaFilter(e.target.value)}
                     className="bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white text-sm"
                   >
-                    <option value="all">كل الولايات</option>
+                    <option value="all">ÙƒÙ„ Ø§Ù„ÙˆÙ„Ø§ÙŠØ§Øª</option>
                     {bookingWilayas.map(w => <option key={w} value={w}>{w}</option>)}
                   </select>
                 </div>
                 <div className="flex flex-wrap items-center justify-between gap-3 mt-3 text-xs text-neutral-500">
-                  <span>عرض {filteredBookings.length} من {safeBookings.length} حجز</span>
+                  <span>Ø¹Ø±Ø¶ {filteredBookings.length} Ù…Ù† {safeBookings.length} Ø­Ø¬Ø²</span>
                   <button
                     onClick={() => { setBookingSearch(''); setBookingStatusFilter('all'); setBookingWilayaFilter('all'); }}
                     className="px-3 py-2 rounded-lg bg-neutral-800 text-neutral-300 hover:text-white"
                   >
-                    إعادة ضبط البحث
+                    Ø¥Ø¹Ø§Ø¯Ø© Ø¶Ø¨Ø· Ø§Ù„Ø¨Ø­Ø«
                   </button>
                 </div>
               </div>
@@ -1130,32 +953,32 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                   <div key={booking.id} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 hover:border-amber-500/30 transition-all">
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div>
-                        <div className="font-bold text-white">{booking.groomName || 'بدون اسم'}</div>
-                        <div className="text-xs text-neutral-500 mt-1">{booking.brideName || '—'} • #{String(booking.id || '').slice(-6)}</div>
+                        <div className="font-bold text-white">{booking.groomName || 'Ø¨Ø¯ÙˆÙ† Ø§Ø³Ù…'}</div>
+                        <div className="text-xs text-neutral-500 mt-1">{booking.brideName || 'â€”'} â€¢ #{String(booking.id || '').slice(-6)}</div>
                       </div>
                       <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-neutral-800 text-amber-400 border border-amber-500/20">
-                        {booking.status === 'new' ? 'جديد' : booking.status === 'confirmed' ? 'مؤكد' : booking.status === 'processing' ? 'قيد المعالجة' : booking.status === 'completed' ? 'مكتمل' : 'ملغي'}
+                        {booking.status === 'new' ? 'Ø¬Ø¯ÙŠØ¯' : booking.status === 'confirmed' ? 'Ù…Ø¤ÙƒØ¯' : booking.status === 'processing' ? 'Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø¹Ø§Ù„Ø¬Ø©' : booking.status === 'completed' ? 'Ù…ÙƒØªÙ…Ù„' : 'Ù…Ù„ØºÙŠ'}
                       </span>
                     </div>
                     <div className="grid grid-cols-2 gap-3 text-xs mb-4">
-                      <div className="bg-neutral-950 rounded-xl p-3"><span className="text-neutral-500 block mb-1">المناسبة</span><span className="text-neutral-200">{booking.eventType || '—'}</span></div>
-                      <div className="bg-neutral-950 rounded-xl p-3"><span className="text-neutral-500 block mb-1">التاريخ</span><span className="text-neutral-200">{Array.isArray(booking.eventDates) && booking.eventDates.length ? booking.eventDates.join(' • ') : booking.eventDate || '—'}</span></div>
-                      <div className="bg-neutral-950 rounded-xl p-3"><span className="text-neutral-500 block mb-1">الولاية</span><span className="text-neutral-200">{booking.wilaya || '—'}</span></div>
-                      <div className="bg-neutral-950 rounded-xl p-3"><span className="text-neutral-500 block mb-1">الهاتف</span><a href={`tel:${booking.phone || ''}`} className="text-amber-400">{booking.phone || '—'}</a></div>
+                      <div className="bg-neutral-950 rounded-xl p-3"><span className="text-neutral-500 block mb-1">Ø§Ù„Ù…Ù†Ø§Ø³Ø¨Ø©</span><span className="text-neutral-200">{booking.eventType || 'â€”'}</span></div>
+                      <div className="bg-neutral-950 rounded-xl p-3"><span className="text-neutral-500 block mb-1">Ø§Ù„ØªØ§Ø±ÙŠØ®</span><span className="text-neutral-200">{Array.isArray(booking.eventDates) && booking.eventDates.length ? booking.eventDates.join(' â€¢ ') : booking.eventDate || 'â€”'}</span></div>
+                      <div className="bg-neutral-950 rounded-xl p-3"><span className="text-neutral-500 block mb-1">Ø§Ù„ÙˆÙ„Ø§ÙŠØ©</span><span className="text-neutral-200">{booking.wilaya || 'â€”'}</span></div>
+                      <div className="bg-neutral-950 rounded-xl p-3"><span className="text-neutral-500 block mb-1">Ø§Ù„Ù‡Ø§ØªÙ</span><a href={`tel:${booking.phone || ''}`} className="text-amber-400">{booking.phone || 'â€”'}</a></div>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <button onClick={() => setInvoiceModalData(booking)} className="flex-1 min-w-[110px] px-3 py-2.5 rounded-xl bg-amber-500 text-neutral-950 font-bold text-xs">عرض التفاصيل</button>
+                      <button onClick={() => setInvoiceModalData(booking)} className="flex-1 min-w-[110px] px-3 py-2.5 rounded-xl bg-amber-500 text-neutral-950 font-bold text-xs">Ø¹Ø±Ø¶ Ø§Ù„ØªÙØ§ØµÙŠÙ„</button>
                       <button onClick={() => setBookingEditModal({
                         ...booking,
                         eventDates: Array.isArray(booking.eventDates) && booking.eventDates.length ? booking.eventDates.join("\n") : (booking.eventDate || ''),
                         totalPrice: booking.totalPrice ?? booking.total ?? booking.price ?? '',
                         totalPaid: booking.totalPaid ?? booking.paidAmount ?? booking.paid ?? ''
-                      })} className="px-3 py-2.5 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400 text-xs font-bold">تعديل</button>
-                      {booking.phone && <a href={`https://wa.me/${String(booking.phone).replace(/[^0-9]/g,'')}`} target="_blank" rel="noreferrer" className="px-3 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold">واتساب</a>}
+                      })} className="px-3 py-2.5 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400 text-xs font-bold">ØªØ¹Ø¯ÙŠÙ„</button>
+                      {booking.phone && <a href={`https://wa.me/${String(booking.phone).replace(/[^0-9]/g,'')}`} target="_blank" rel="noreferrer" className="px-3 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold">ÙˆØ§ØªØ³Ø§Ø¨</a>}
                     </div>
                   </div>
                 ))}
-                {!filteredBookings.length && <div className="text-center py-12 text-neutral-500 bg-neutral-900 border border-neutral-800 rounded-2xl">لا توجد حجوزات مطابقة للبحث.</div>}
+                {!filteredBookings.length && <div className="text-center py-12 text-neutral-500 bg-neutral-900 border border-neutral-800 rounded-2xl">Ù„Ø§ ØªÙˆØ¬Ø¯ Ø­Ø¬ÙˆØ²Ø§Øª Ù…Ø·Ø§Ø¨Ù‚Ø© Ù„Ù„Ø¨Ø­Ø«.</div>}
               </div>
 
               <div className="hidden md:block bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
@@ -1166,12 +989,12 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
                     <thead className="bg-neutral-950 text-neutral-400 border-b border-neutral-800">
                       <tr>
-                        <th className="p-4">العريس والعروس</th>
-                        <th className="p-4">الهاتف</th>
-                        <th className="p-4">المناسبة والتاريخ</th>
-                        <th className="p-4">المكان</th>
-                        <th className="p-4">الحالة</th>
-                        <th className="p-4">الإجراءات</th>
+                        <th className="p-4">Ø§Ù„Ø¹Ø±ÙŠØ³ ÙˆØ§Ù„Ø¹Ø±ÙˆØ³</th>
+                        <th className="p-4">Ø§Ù„Ù‡Ø§ØªÙ</th>
+                        <th className="p-4">Ø§Ù„Ù…Ù†Ø§Ø³Ø¨Ø© ÙˆØ§Ù„ØªØ§Ø±ÙŠØ®</th>
+                        <th className="p-4">Ø§Ù„Ù…ÙƒØ§Ù†</th>
+                        <th className="p-4">Ø§Ù„Ø­Ø§Ù„Ø©</th>
+                        <th className="p-4">Ø§Ù„Ø¥Ø¬Ø±Ø§Ø¡Ø§Øª</th>
                       </tr>
                     </thead>
 
@@ -1183,7 +1006,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                             colSpan={6}
                             className="p-10 text-center text-neutral-500"
                           >
-                            {safeBookings.length === 0 ? 'لا توجد حجوزات حتى الآن.' : 'لا توجد نتائج مطابقة للبحث.'}
+                            {safeBookings.length === 0 ? 'Ù„Ø§ ØªÙˆØ¬Ø¯ Ø­Ø¬ÙˆØ²Ø§Øª Ø­ØªÙ‰ Ø§Ù„Ø¢Ù†.' : 'Ù„Ø§ ØªÙˆØ¬Ø¯ Ù†ØªØ§Ø¦Ø¬ Ù…Ø·Ø§Ø¨Ù‚Ø© Ù„Ù„Ø¨Ø­Ø«.'}
                           </td>
                         </tr>
                       ) : (
@@ -1230,9 +1053,9 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                             <td className="p-4">
                               <span className="px-3 py-1 rounded-full text-xs bg-neutral-800 text-neutral-200">
                                 {b.status === 'new'
-                                  ? 'جديد'
+                                  ? 'Ø¬Ø¯ÙŠØ¯'
                                   : b.status === 'confirmed'
-                                  ? 'مؤكد'
+                                  ? 'Ù…Ø¤ÙƒØ¯'
                                   : b.status || '-'}
                               </span>
                             </td>
@@ -1250,18 +1073,18 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                                   }
                                   className="bg-neutral-950 border border-amber-500/30 rounded-lg px-3 py-1.5 text-xs text-white"
                                 >
-                                  <option value="new">جديد</option>
+                                  <option value="new">Ø¬Ø¯ÙŠØ¯</option>
                                   <option value="confirmed">
-                                    تأكيد الحجز
+                                    ØªØ£ÙƒÙŠØ¯ Ø§Ù„Ø­Ø¬Ø²
                                   </option>
                                   <option value="processing">
-                                    قيد المعالجة
+                                    Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø¹Ø§Ù„Ø¬Ø©
                                   </option>
                                   <option value="completed">
-                                    مكتمل
+                                    Ù…ÙƒØªÙ…Ù„
                                   </option>
                                   <option value="cancelled">
-                                    ملغي
+                                    Ù…Ù„ØºÙŠ
                                   </option>
                                 </select>
 
@@ -1270,7 +1093,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                                     setInvoiceModalData(b)
                                   }
                                   className="p-2 bg-neutral-800 text-amber-400 rounded-lg"
-                                  title="عرض كل تفاصيل الحجز"
+                                  title="Ø¹Ø±Ø¶ ÙƒÙ„ ØªÙØ§ØµÙŠÙ„ Ø§Ù„Ø­Ø¬Ø²"
                                 >
                                   <Eye className="w-4 h-4" />
                                 </button>
@@ -1283,14 +1106,14 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                                     totalPaid: b.totalPaid ?? b.paidAmount ?? b.paid ?? ''
                                   })}
                                   className="p-2 bg-neutral-800 text-sky-400 rounded-lg"
-                                  title="تعديل الحجز بالكامل"
+                                  title="ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ø­Ø¬Ø² Ø¨Ø§Ù„ÙƒØ§Ù…Ù„"
                                 >
                                   <Edit className="w-4 h-4" />
                                 </button>
                                 <button
                                   onClick={() => setWorkflowBooking(b)}
                                   className="p-2 bg-neutral-800 text-amber-400 rounded-lg"
-                                  title="سير عمل الحجز"
+                                  title="Ø³ÙŠØ± Ø¹Ù…Ù„ Ø§Ù„Ø­Ø¬Ø²"
                                 >
                                   <CheckSquare className="w-4 h-4" />
                                 </button>
@@ -1298,7 +1121,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                                 <a
                                   href={b.phone ? `tel:${b.phone}` : '#'}
                                   className="p-2 bg-neutral-800 text-green-400 rounded-lg"
-                                  title="اتصال"
+                                  title="Ø§ØªØµØ§Ù„"
                                 >
                                   <PhoneCall className="w-4 h-4" />
                                 </a>
@@ -1308,7 +1131,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                                     deleteBooking(b.id)
                                   }
                                   className="p-2 text-red-400 rounded-lg hover:bg-red-500/10"
-                                  title="حذف"
+                                  title="Ø­Ø°Ù"
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </button>
@@ -1333,18 +1156,18 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
            {activeTab === 'workflow' && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-2xl font-bold text-white">سير عمل الحجوزات</h2>
-                <p className="text-xs text-neutral-400 mt-2">اختر حجزاً لإدارة Timeline و Checklist و Payment Schedule و Automation.</p>
+                <h2 className="text-2xl font-bold text-white">Ø³ÙŠØ± Ø¹Ù…Ù„ Ø§Ù„Ø­Ø¬ÙˆØ²Ø§Øª</h2>
+                <p className="text-xs text-neutral-400 mt-2">Ø§Ø®ØªØ± Ø­Ø¬Ø²Ø§Ù‹ Ù„Ø¥Ø¯Ø§Ø±Ø© Timeline Ùˆ Checklist Ùˆ Payment Schedule Ùˆ Automation.</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {safeBookings.filter((b:any)=>b.status!=='cancelled').map((b:any)=>(
                   <button key={b.id} onClick={()=>setWorkflowBooking(b)} className="text-right bg-neutral-900 border border-neutral-800 rounded-2xl p-5 hover:border-amber-500/40 transition-all">
-                    <div className="font-bold text-white">{b.groomName || 'بدون اسم'} {b.brideName ? '× '+b.brideName : ''}</div>
-                    <div className="text-xs text-neutral-500 mt-2">#{b.id} • {b.eventDate || 'بدون تاريخ'}</div>
-                    <div className="text-xs text-amber-400 mt-3">فتح سير العمل ←</div>
+                    <div className="font-bold text-white">{b.groomName || 'Ø¨Ø¯ÙˆÙ† Ø§Ø³Ù…'} {b.brideName ? 'Ã— '+b.brideName : ''}</div>
+                    <div className="text-xs text-neutral-500 mt-2">#{b.id} â€¢ {b.eventDate || 'Ø¨Ø¯ÙˆÙ† ØªØ§Ø±ÙŠØ®'}</div>
+                    <div className="text-xs text-amber-400 mt-3">ÙØªØ­ Ø³ÙŠØ± Ø§Ù„Ø¹Ù…Ù„ â†</div>
                   </button>
                 ))}
-                {!safeBookings.filter((b:any)=>b.status!=='cancelled').length && <div className="text-neutral-500">لا توجد حجوزات نشطة.</div>}
+                {!safeBookings.filter((b:any)=>b.status!=='cancelled').length && <div className="text-neutral-500">Ù„Ø§ ØªÙˆØ¬Ø¯ Ø­Ø¬ÙˆØ²Ø§Øª Ù†Ø´Ø·Ø©.</div>}
               </div>
             </div>
           )}
@@ -1354,19 +1177,19 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
               <div>
                 <h2 className="text-2xl font-bold text-white">
-                  الإحصائيات والأرباح
+                  Ø§Ù„Ø¥Ø­ØµØ§Ø¦ÙŠØ§Øª ÙˆØ§Ù„Ø£Ø±Ø¨Ø§Ø­
                 </h2>
                 <p className="text-xs text-neutral-400 mt-2">
-                  نظرة عامة على أداء الحجوزات والخدمات.
+                  Ù†Ø¸Ø±Ø© Ø¹Ø§Ù…Ø© Ø¹Ù„Ù‰ Ø£Ø¯Ø§Ø¡ Ø§Ù„Ø­Ø¬ÙˆØ²Ø§Øª ÙˆØ§Ù„Ø®Ø¯Ù…Ø§Øª.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  ['إجمالي الحجوزات', safeBookings.length, ''],
-                  ['الحجوزات النشطة', activeBookings.length, ''],
-                  ['الإيراد المتوقع', analyticsRevenue.toLocaleString('ar-DZ') + ' DA', ''],
-                  ['المبلغ المحصل', analyticsPaid.toLocaleString('ar-DZ') + ' DA', ''],
+                  ['Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø­Ø¬ÙˆØ²Ø§Øª', safeBookings.length, ''],
+                  ['Ø§Ù„Ø­Ø¬ÙˆØ²Ø§Øª Ø§Ù„Ù†Ø´Ø·Ø©', activeBookings.length, ''],
+                  ['Ø§Ù„Ø¥ÙŠØ±Ø§Ø¯ Ø§Ù„Ù…ØªÙˆÙ‚Ø¹', analyticsRevenue.toLocaleString('ar-DZ') + ' DA', ''],
+                  ['Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ù…Ø­ØµÙ„', analyticsPaid.toLocaleString('ar-DZ') + ' DA', ''],
                 ].map(([label,value]) => (
                   <div key={String(label)} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 hover:border-amber-500/30 transition-all">
                     <div className="text-xs text-neutral-400">{label}</div>
@@ -1377,21 +1200,21 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 hover:border-amber-500/20 transition-all">
-                  <h3 className="font-bold text-white mb-4">توزيع الحالات</h3>
+                  <h3 className="font-bold text-white mb-4">ØªÙˆØ²ÙŠØ¹ Ø§Ù„Ø­Ø§Ù„Ø§Øª</h3>
                   <div className="grid grid-cols-2 gap-3">
                     {Object.entries(statusCounts).map(([key,value]) => (
                       <div key={key} className="bg-neutral-950 rounded-xl p-4">
-                        <div className="text-xs text-neutral-500">{key === 'new' ? 'جديد' : key === 'confirmed' ? 'مؤكد' : key === 'processing' ? 'قيد المعالجة' : 'مكتمل'}</div>
+                        <div className="text-xs text-neutral-500">{key === 'new' ? 'Ø¬Ø¯ÙŠØ¯' : key === 'confirmed' ? 'Ù…Ø¤ÙƒØ¯' : key === 'processing' ? 'Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø¹Ø§Ù„Ø¬Ø©' : 'Ù…ÙƒØªÙ…Ù„'}</div>
                         <div className="text-xl font-black text-amber-400 mt-1">{value}</div>
                       </div>
                     ))}
                   </div>
                 </div>
                 <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5">
-                  <h3 className="font-bold text-white mb-4">الوضع المالي</h3>
+                  <h3 className="font-bold text-white mb-4">Ø§Ù„ÙˆØ¶Ø¹ Ø§Ù„Ù…Ø§Ù„ÙŠ</h3>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-neutral-950 rounded-xl p-4"><div className="text-xs text-neutral-500">المتبقي</div><div className="text-xl font-black text-white mt-1">{analyticsRemaining.toLocaleString('ar-DZ')} DA</div></div>
-                    <div className="bg-neutral-950 rounded-xl p-4"><div className="text-xs text-neutral-500">نسبة التحصيل</div><div className="text-xl font-black text-amber-400 mt-1">{analyticsRevenue > 0 ? Math.round((analyticsPaid / analyticsRevenue) * 100) : 0}%</div></div>
+                    <div className="bg-neutral-950 rounded-xl p-4"><div className="text-xs text-neutral-500">Ø§Ù„Ù…ØªØ¨Ù‚ÙŠ</div><div className="text-xl font-black text-white mt-1">{analyticsRemaining.toLocaleString('ar-DZ')} DA</div></div>
+                    <div className="bg-neutral-950 rounded-xl p-4"><div className="text-xs text-neutral-500">Ù†Ø³Ø¨Ø© Ø§Ù„ØªØ­ØµÙŠÙ„</div><div className="text-xl font-black text-amber-400 mt-1">{analyticsRevenue > 0 ? Math.round((analyticsPaid / analyticsRevenue) * 100) : 0}%</div></div>
                   </div>
                 </div>
               </div>
@@ -1400,7 +1223,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
                 <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 hover:border-amber-500/20 transition-all">
                   <div className="text-sm text-neutral-400">
-                    إجمالي الحجوزات
+                    Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø­Ø¬ÙˆØ²Ø§Øª
                   </div>
                   <div className="text-3xl font-bold text-white mt-3">
                     {safeBookings.length}
@@ -1409,7 +1232,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
                 <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
                   <div className="text-sm text-neutral-400">
-                    الحجوزات المؤكدة
+                    Ø§Ù„Ø­Ø¬ÙˆØ²Ø§Øª Ø§Ù„Ù…Ø¤ÙƒØ¯Ø©
                   </div>
                   <div className="text-3xl font-bold text-amber-400 mt-3">
                     {confirmedBookingsCount}
@@ -1418,7 +1241,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
                 <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
                   <div className="text-sm text-neutral-400">
-                    الطلبات الجديدة
+                    Ø§Ù„Ø·Ù„Ø¨Ø§Øª Ø§Ù„Ø¬Ø¯ÙŠØ¯Ø©
                   </div>
                   <div className="text-3xl font-bold text-white mt-3">
                     {newBookingsCount}
@@ -1431,7 +1254,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
                 <div className="p-5 border-b border-neutral-800">
                   <h3 className="font-bold text-white">
-                    ملخص الحجوزات
+                    Ù…Ù„Ø®Øµ Ø§Ù„Ø­Ø¬ÙˆØ²Ø§Øª
                   </h3>
                 </div>
 
@@ -1440,10 +1263,10 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
                     <thead className="bg-neutral-950 text-neutral-400">
                       <tr>
-                        <th className="p-4">العميل</th>
-                        <th className="p-4">الخدمة</th>
-                        <th className="p-4">التاريخ</th>
-                        <th className="p-4">الحالة</th>
+                        <th className="p-4">Ø§Ù„Ø¹Ù…ÙŠÙ„</th>
+                        <th className="p-4">Ø§Ù„Ø®Ø¯Ù…Ø©</th>
+                        <th className="p-4">Ø§Ù„ØªØ§Ø±ÙŠØ®</th>
+                        <th className="p-4">Ø§Ù„Ø­Ø§Ù„Ø©</th>
                       </tr>
                     </thead>
 
@@ -1455,7 +1278,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                             colSpan={4}
                             className="p-8 text-center text-neutral-500"
                           >
-                            لا توجد بيانات.
+                            Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¨ÙŠØ§Ù†Ø§Øª.
                           </td>
                         </tr>
                       ) : (
@@ -1498,12 +1321,12 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
             <div className="space-y-6">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-white">تقويم المواعيد المتطور</h2>
-                  <p className="text-xs text-neutral-400 mt-2">عرض شهري للمواعيد، تعدد تواريخ الحجز، الحالات والتعارضات.</p>
+                  <h2 className="text-2xl font-bold text-white">ØªÙ‚ÙˆÙŠÙ… Ø§Ù„Ù…ÙˆØ§Ø¹ÙŠØ¯ Ø§Ù„Ù…ØªØ·ÙˆØ±</h2>
+                  <p className="text-xs text-neutral-400 mt-2">Ø¹Ø±Ø¶ Ø´Ù‡Ø±ÙŠ Ù„Ù„Ù…ÙˆØ§Ø¹ÙŠØ¯ØŒ ØªØ¹Ø¯Ø¯ ØªÙˆØ§Ø±ÙŠØ® Ø§Ù„Ø­Ø¬Ø²ØŒ Ø§Ù„Ø­Ø§Ù„Ø§Øª ÙˆØ§Ù„ØªØ¹Ø§Ø±Ø¶Ø§Øª.</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => setCalendarView('month')} className={`px-3 py-2 rounded-xl text-xs font-bold ${calendarView==='month'?'bg-amber-500 text-black':'bg-neutral-900 text-neutral-300'}`}>شهري</button>
-                  <button onClick={() => setCalendarView('list')} className={`px-3 py-2 rounded-xl text-xs font-bold ${calendarView==='list'?'bg-amber-500 text-black':'bg-neutral-900 text-neutral-300'}`}>قائمة</button>
+                  <button onClick={() => setCalendarView('month')} className={`px-3 py-2 rounded-xl text-xs font-bold ${calendarView==='month'?'bg-amber-500 text-black':'bg-neutral-900 text-neutral-300'}`}>Ø´Ù‡Ø±ÙŠ</button>
+                  <button onClick={() => setCalendarView('list')} className={`px-3 py-2 rounded-xl text-xs font-bold ${calendarView==='list'?'bg-amber-500 text-black':'bg-neutral-900 text-neutral-300'}`}>Ù‚Ø§Ø¦Ù…Ø©</button>
                 </div>
               </div>
 
@@ -1519,12 +1342,12 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 return (
                   <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4">
                     <div className="flex items-center justify-between mb-4">
-                      <button onClick={() => setCalendarMonth(new Date(year, month - 1, 1))} className="px-3 py-2 bg-neutral-800 rounded-xl">‹</button>
+                      <button onClick={() => setCalendarMonth(new Date(year, month - 1, 1))} className="px-3 py-2 bg-neutral-800 rounded-xl">â€¹</button>
                       <h3 className="font-bold text-white">{calendarMonth.toLocaleDateString('ar-DZ',{month:'long',year:'numeric'})}</h3>
-                      <button onClick={() => setCalendarMonth(new Date(year, month + 1, 1))} className="px-3 py-2 bg-neutral-800 rounded-xl">›</button>
+                      <button onClick={() => setCalendarMonth(new Date(year, month + 1, 1))} className="px-3 py-2 bg-neutral-800 rounded-xl">â€º</button>
                     </div>
                     <div className="grid grid-cols-7 gap-2 text-center text-xs text-neutral-500 mb-2">
-                      {['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'].map(d=><div key={d}>{d}</div>)}
+                      {['Ø§Ù„Ø£Ø­Ø¯','Ø§Ù„Ø§Ø«Ù†ÙŠÙ†','Ø§Ù„Ø«Ù„Ø§Ø«Ø§Ø¡','Ø§Ù„Ø£Ø±Ø¨Ø¹Ø§Ø¡','Ø§Ù„Ø®Ù…ÙŠØ³','Ø§Ù„Ø¬Ù…Ø¹Ø©','Ø§Ù„Ø³Ø¨Øª'].map(d=><div key={d}>{d}</div>)}
                     </div>
                     <div className="grid grid-cols-7 gap-2">
                       {cells.map((day, i) => {
@@ -1533,8 +1356,8 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                         return <div key={day} className="min-h-28 bg-neutral-950 border border-neutral-800 rounded-xl p-2 text-right">
                           <div className="text-xs font-bold text-neutral-400 mb-2">{day}</div>
                           <div className="space-y-1">
-                            {items.slice(0,3).map((b:any)=><button key={b.id} onClick={()=>setWorkflowBooking(b)} className="w-full text-right truncate px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[10px] text-amber-300">{b.eventTime || '—'} • {b.groomName || 'حجز'}</button>)}
-                            {items.length>3 && <div className="text-[10px] text-neutral-500">+{items.length-3} حجوزات</div>}
+                            {items.slice(0,3).map((b:any)=><button key={b.id} onClick={()=>setWorkflowBooking(b)} className="w-full text-right truncate px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[10px] text-amber-300">{b.eventTime || 'â€”'} â€¢ {b.groomName || 'Ø­Ø¬Ø²'}</button>)}
+                            {items.length>3 && <div className="text-[10px] text-neutral-500">+{items.length-3} Ø­Ø¬ÙˆØ²Ø§Øª</div>}
                           </div>
                         </div>;
                       })}
@@ -1544,8 +1367,8 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               })() : (
                 <div className="space-y-3">
                   {calendarBookings.map((b:any)=><div key={b.id} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
-                    <div><div className="font-bold">{b.groomName || '—'} × {b.brideName || '—'}</div><div className="text-xs text-neutral-500 mt-1">{getBookingDates(b).join(' • ')} • {b.eventTime || '—'} • {b.venue || '—'}</div></div>
-                    <div className="flex items-center gap-2"><span className="text-xs text-amber-400">{b.status || 'new'}</span><button onClick={()=>setWorkflowBooking(b)} className="px-3 py-2 bg-neutral-800 rounded-xl text-xs">سير العمل</button><button onClick={()=>openWhatsAppAutomation(b,'reminder')} className="px-3 py-2 bg-emerald-600/20 text-emerald-300 rounded-xl text-xs">WhatsApp</button></div>
+                    <div><div className="font-bold">{b.groomName || 'â€”'} Ã— {b.brideName || 'â€”'}</div><div className="text-xs text-neutral-500 mt-1">{getBookingDates(b).join(' â€¢ ')} â€¢ {b.eventTime || 'â€”'} â€¢ {b.venue || 'â€”'}</div></div>
+                    <div className="flex items-center gap-2"><span className="text-xs text-amber-400">{b.status || 'new'}</span><button onClick={()=>setWorkflowBooking(b)} className="px-3 py-2 bg-neutral-800 rounded-xl text-xs">Ø³ÙŠØ± Ø§Ù„Ø¹Ù…Ù„</button><button onClick={()=>openWhatsAppAutomation(b,'reminder')} className="px-3 py-2 bg-emerald-600/20 text-emerald-300 rounded-xl text-xs">WhatsApp</button></div>
                   </div>)}
                 </div>
               )}
@@ -1556,18 +1379,18 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
             <div className="space-y-6">
               <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5">
                 <h2 className="text-2xl font-bold">Automation Center</h2>
-                <p className="text-xs text-neutral-400 mt-2">طابور الأتمتة والإجراءات التي تم إنشاؤها للحجوزات.</p>
+                <p className="text-xs text-neutral-400 mt-2">Ø·Ø§Ø¨ÙˆØ± Ø§Ù„Ø£ØªÙ…ØªØ© ÙˆØ§Ù„Ø¥Ø¬Ø±Ø§Ø¡Ø§Øª Ø§Ù„ØªÙŠ ØªÙ… Ø¥Ù†Ø´Ø§Ø¤Ù‡Ø§ Ù„Ù„Ø­Ø¬ÙˆØ²Ø§Øª.</p>
               </div>
               <div className="grid gap-3">
                 {automationNotifications.length === 0 ? (
-                  <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 text-center text-neutral-500">لا توجد عمليات أتمتة بعد.</div>
+                  <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 text-center text-neutral-500">Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¹Ù…Ù„ÙŠØ§Øª Ø£ØªÙ…ØªØ© Ø¨Ø¹Ø¯.</div>
                 ) : automationNotifications.map((item:any) => (
                   <div key={item.id} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <div className="font-bold">{item.type === 'whatsapp_manual' ? 'WhatsApp' : item.type === 'status_change' ? 'تغيير حالة' : item.type}</div>
-                      <div className="text-xs text-neutral-400 mt-1">{item.groomName || '—'} • {item.phone || '—'} • {item.toStatus ? `${item.fromStatus} → ${item.toStatus}` : item.action || ''}</div>
+                      <div className="font-bold">{item.type === 'whatsapp_manual' ? 'WhatsApp' : item.type === 'status_change' ? 'ØªØºÙŠÙŠØ± Ø­Ø§Ù„Ø©' : item.type}</div>
+                      <div className="text-xs text-neutral-400 mt-1">{item.groomName || 'â€”'} â€¢ {item.phone || 'â€”'} â€¢ {item.toStatus ? `${item.fromStatus} â†’ ${item.toStatus}` : item.action || ''}</div>
                     </div>
-                    {item.message && <button onClick={() => { navigator.clipboard?.writeText(item.message); alert('تم نسخ الرسالة.'); }} className="px-3 py-2 bg-neutral-800 rounded-xl text-xs">نسخ الرسالة</button>}
+                    {item.message && <button onClick={() => { navigator.clipboard?.writeText(item.message); alert('ØªÙ… Ù†Ø³Ø® Ø§Ù„Ø±Ø³Ø§Ù„Ø©.'); }} className="px-3 py-2 bg-neutral-800 rounded-xl text-xs">Ù†Ø³Ø® Ø§Ù„Ø±Ø³Ø§Ù„Ø©</button>}
                   </div>
                 ))}
               </div>
@@ -1580,45 +1403,45 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                 <div>
                   <h2 className="text-xl font-bold text-white">Ibra Scan Center</h2>
-                  <p className="text-xs text-neutral-400 mt-1">USB Barcode / QR — امسح ثم Enter.</p>
+                  <p className="text-xs text-neutral-400 mt-1">USB Barcode / QR â€” Ø§Ù…Ø³Ø­ Ø«Ù… Enter.</p>
                 </div>
                 <span className="text-xs px-3 py-2 rounded-xl bg-emerald-500/10 text-emerald-400">{scanMessage}</span>
               </div>
               <input autoFocus value={scanCode} onChange={e=>setScanCode(e.target.value)}
                 onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();void handleScan(scanCode)}}}
-                placeholder="وجّه القارئ للكود..." className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-4 py-4 text-lg text-white outline-none focus:border-amber-500" />
+                placeholder="ÙˆØ¬Ù‘Ù‡ Ø§Ù„Ù‚Ø§Ø±Ø¦ Ù„Ù„ÙƒÙˆØ¯..." className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-4 py-4 text-lg text-white outline-none focus:border-amber-500" />
               <div className="flex flex-wrap gap-2 mt-3">
-                <button onClick={()=>void handleScan(scanCode)} className="px-5 py-3 rounded-xl bg-amber-500 text-neutral-950 font-bold">مسح الكود</button>
-                <button onClick={()=>{setScanCode('');setScanResult(null)}} className="px-5 py-3 rounded-xl bg-neutral-800 text-white">مسح الحقل</button>
+                <button onClick={()=>void handleScan(scanCode)} className="px-5 py-3 rounded-xl bg-amber-500 text-neutral-950 font-bold">Ù…Ø³Ø­ Ø§Ù„ÙƒÙˆØ¯</button>
+                <button onClick={()=>{setScanCode('');setScanResult(null)}} className="px-5 py-3 rounded-xl bg-neutral-800 text-white">Ù…Ø³Ø­ Ø§Ù„Ø­Ù‚Ù„</button>
               </div>
             </div>
 
             {scanResult && (
               <div className="bg-neutral-900 border border-amber-500/30 rounded-2xl p-5">
                 <div className="flex items-center justify-between gap-3 mb-4">
-                  <h3 className="font-bold text-white">نتيجة آخر Scan</h3>
+                  <h3 className="font-bold text-white">Ù†ØªÙŠØ¬Ø© Ø¢Ø®Ø± Scan</h3>
                   <span className="text-xs text-amber-400">{scanResult.scanType}</span>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                  <div className="bg-neutral-950 rounded-xl p-3"><span className="text-neutral-500 block">الكود</span><b className="font-mono text-amber-300 break-all">{scanResult.code}</b></div>
-                  <div className="bg-neutral-950 rounded-xl p-3"><span className="text-neutral-500 block">العميل</span><b>{scanResult.groomName || '—'}</b></div>
-                  <div className="bg-neutral-950 rounded-xl p-3"><span className="text-neutral-500 block">الهاتف</span><b>{scanResult.phone || '—'}</b></div>
-                  <div className="bg-neutral-950 rounded-xl p-3"><span className="text-neutral-500 block">الحالة</span><b>{scanResult.status || '—'}</b></div>
+                  <div className="bg-neutral-950 rounded-xl p-3"><span className="text-neutral-500 block">Ø§Ù„ÙƒÙˆØ¯</span><b className="font-mono text-amber-300 break-all">{scanResult.code}</b></div>
+                  <div className="bg-neutral-950 rounded-xl p-3"><span className="text-neutral-500 block">Ø§Ù„Ø¹Ù…ÙŠÙ„</span><b>{scanResult.groomName || 'â€”'}</b></div>
+                  <div className="bg-neutral-950 rounded-xl p-3"><span className="text-neutral-500 block">Ø§Ù„Ù‡Ø§ØªÙ</span><b>{scanResult.phone || 'â€”'}</b></div>
+                  <div className="bg-neutral-950 rounded-xl p-3"><span className="text-neutral-500 block">Ø§Ù„Ø­Ø§Ù„Ø©</span><b>{scanResult.status || 'â€”'}</b></div>
                 </div>
                 {scanResult.bookingId && (
                   <div className="flex flex-wrap gap-2 mt-4">
-                    <button onClick={()=>setWorkflowBooking(safeBookings.find((b:any)=>b.id===scanResult.bookingId)||null)} className="px-4 py-2.5 bg-amber-500 text-black rounded-xl font-bold">فتح ملف العمل</button>
-                    <button onClick={()=>setActiveTab('bookings')} className="px-4 py-2.5 bg-neutral-800 rounded-xl">فتح الحجز</button>
+                    <button onClick={()=>setWorkflowBooking(safeBookings.find((b:any)=>b.id===scanResult.bookingId)||null)} className="px-4 py-2.5 bg-amber-500 text-black rounded-xl font-bold">ÙØªØ­ Ù…Ù„Ù Ø§Ù„Ø¹Ù…Ù„</button>
+                    <button onClick={()=>setActiveTab('bookings')} className="px-4 py-2.5 bg-neutral-800 rounded-xl">ÙØªØ­ Ø§Ù„Ø­Ø¬Ø²</button>
                   </div>
                 )}
               </div>
             )}
 
             <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
-              <div className="p-5 border-b border-neutral-800 flex items-center justify-between"><h3 className="font-bold text-white">سجل عمليات Scan</h3><span className="text-xs text-neutral-500">آخر 100 عملية</span></div>
-              <div className="overflow-x-auto"><table className="w-full text-sm"><thead className="bg-neutral-950 text-neutral-400"><tr><th className="p-3 text-right">الكود</th><th className="p-3 text-right">النوع</th><th className="p-3 text-right">النتيجة</th><th className="p-3 text-right">العميل</th><th className="p-3 text-right">المشغل</th><th className="p-3 text-right">الوقت</th></tr></thead>
-                <tbody>{scanLogs.map((log:any)=><tr key={log.id} className="border-t border-neutral-800"><td className="p-3 font-mono text-amber-300">{log.code}</td><td className="p-3">{log.scanType}</td><td className="p-3 text-neutral-300">{log.result}</td><td className="p-3">{log.groomName||'—'}</td><td className="p-3 text-neutral-400">{log.operator||'—'}</td><td className="p-3 text-neutral-500">{log.createdAt?.toDate?log.createdAt.toDate().toLocaleString('ar-DZ'):'الآن'}</td></tr>)}
-                {!scanLogs.length&&<tr><td colSpan={6} className="p-8 text-center text-neutral-500">لا توجد عمليات Scan بعد.</td></tr>}</tbody>
+              <div className="p-5 border-b border-neutral-800 flex items-center justify-between"><h3 className="font-bold text-white">Ø³Ø¬Ù„ Ø¹Ù…Ù„ÙŠØ§Øª Scan</h3><span className="text-xs text-neutral-500">Ø¢Ø®Ø± 100 Ø¹Ù…Ù„ÙŠØ©</span></div>
+              <div className="overflow-x-auto"><table className="w-full text-sm"><thead className="bg-neutral-950 text-neutral-400"><tr><th className="p-3 text-right">Ø§Ù„ÙƒÙˆØ¯</th><th className="p-3 text-right">Ø§Ù„Ù†ÙˆØ¹</th><th className="p-3 text-right">Ø§Ù„Ù†ØªÙŠØ¬Ø©</th><th className="p-3 text-right">Ø§Ù„Ø¹Ù…ÙŠÙ„</th><th className="p-3 text-right">Ø§Ù„Ù…Ø´ØºÙ„</th><th className="p-3 text-right">Ø§Ù„ÙˆÙ‚Øª</th></tr></thead>
+                <tbody>{scanLogs.map((log:any)=><tr key={log.id} className="border-t border-neutral-800"><td className="p-3 font-mono text-amber-300">{log.code}</td><td className="p-3">{log.scanType}</td><td className="p-3 text-neutral-300">{log.result}</td><td className="p-3">{log.groomName||'â€”'}</td><td className="p-3 text-neutral-400">{log.operator||'â€”'}</td><td className="p-3 text-neutral-500">{log.createdAt?.toDate?log.createdAt.toDate().toLocaleString('ar-DZ'):'Ø§Ù„Ø¢Ù†'}</td></tr>)}
+                {!scanLogs.length&&<tr><td colSpan={6} className="p-8 text-center text-neutral-500">Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¹Ù…Ù„ÙŠØ§Øª Scan Ø¨Ø¹Ø¯.</td></tr>}</tbody>
               </table></div>
             </div>
           </section>
@@ -1628,23 +1451,23 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
         {activeTab === 'notifications' && (
             <div className="space-y-6">
               <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5">
-                <h2 className="text-2xl font-bold">الإشعارات والأتمتة</h2>
-                <p className="text-xs text-neutral-400 mt-2">تنبيهات لوحة التحكم وقائمة عمليات الأتمتة الأخيرة.</p>
+                <h2 className="text-2xl font-bold">Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª ÙˆØ§Ù„Ø£ØªÙ…ØªØ©</h2>
+                <p className="text-xs text-neutral-400 mt-2">ØªÙ†Ø¨ÙŠÙ‡Ø§Øª Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ… ÙˆÙ‚Ø§Ø¦Ù…Ø© Ø¹Ù…Ù„ÙŠØ§Øª Ø§Ù„Ø£ØªÙ…ØªØ© Ø§Ù„Ø£Ø®ÙŠØ±Ø©.</p>
                 <button
                   onClick={handleEnablePushNotifications}
                   className="mt-4 px-4 py-2.5 bg-amber-500 text-black rounded-xl text-xs font-bold"
                 >
-                  تفعيل إشعارات المتصفح
+                  ØªÙØ¹ÙŠÙ„ Ø¥Ø´Ø¹Ø§Ø±Ø§Øª Ø§Ù„Ù…ØªØµÙØ­
                 </button>
               </div>
               <div className="grid gap-3">
                 {automationNotifications.map((item:any) => (
                   <div key={item.id} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4">
                     <div className="flex items-center justify-between gap-3">
-                      <div className="font-bold">{item.type === 'status_change' ? 'تغيير حالة الحجز' : item.type === 'whatsapp_manual' ? 'WhatsApp' : 'Automation'}</div>
+                      <div className="font-bold">{item.type === 'status_change' ? 'ØªØºÙŠÙŠØ± Ø­Ø§Ù„Ø© Ø§Ù„Ø­Ø¬Ø²' : item.type === 'whatsapp_manual' ? 'WhatsApp' : 'Automation'}</div>
                       <span className="text-[11px] text-neutral-500">{item.status || 'queued'}</span>
                     </div>
-                    <div className="text-sm text-neutral-300 mt-2">{item.groomName || '—'} {item.toStatus ? `• ${item.fromStatus || ''} → ${item.toStatus}` : ''}</div>
+                    <div className="text-sm text-neutral-300 mt-2">{item.groomName || 'â€”'} {item.toStatus ? `â€¢ ${item.fromStatus || ''} â†’ ${item.toStatus}` : ''}</div>
                     {item.message && <div className="text-xs text-neutral-500 mt-2 line-clamp-2">{item.message}</div>}
                   </div>
                 ))}
@@ -1659,10 +1482,10 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
                 <div>
                   <h2 className="text-2xl font-bold text-white">
-                    إدارة الخدمات
+                    Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ø®Ø¯Ù…Ø§Øª
                   </h2>
                   <p className="text-xs text-neutral-400 mt-2">
-                    إضافة وتعديل وحذف الخدمات.
+                    Ø¥Ø¶Ø§ÙØ© ÙˆØªØ¹Ø¯ÙŠÙ„ ÙˆØ­Ø°Ù Ø§Ù„Ø®Ø¯Ù…Ø§Øª.
                   </p>
                 </div>
 
@@ -1684,7 +1507,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                   className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 text-neutral-950 rounded-xl text-xs font-bold"
                 >
                   <Plus className="w-4 h-4" />
-                  إضافة خدمة
+                  Ø¥Ø¶Ø§ÙØ© Ø®Ø¯Ù…Ø©
                 </button>
 
               </div>
@@ -1721,7 +1544,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                           <span className="text-amber-400 font-bold">
                             {service.price
                               ? `${service.price} DA`
-                              : 'حسب الطلب'}
+                              : 'Ø­Ø³Ø¨ Ø§Ù„Ø·Ù„Ø¨'}
                           </span>
 
                           <div className="flex items-center gap-2">
@@ -1739,7 +1562,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                               onClick={() => {
                                 if (
                                   confirm(
-                                    'هل تريد حذف هذه الخدمة؟'
+                                    'Ù‡Ù„ ØªØ±ÙŠØ¯ Ø­Ø°Ù Ù‡Ø°Ù‡ Ø§Ù„Ø®Ø¯Ù…Ø©ØŸ'
                                   )
                                 ) {
                                   deleteService(service.id);
@@ -1760,7 +1583,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                   ))
                 ) : (
                   <div className="col-span-full bg-neutral-900 border border-neutral-800 rounded-2xl p-10 text-center text-neutral-500">
-                    لا توجد خدمات حالياً.
+                    Ù„Ø§ ØªÙˆØ¬Ø¯ Ø®Ø¯Ù…Ø§Øª Ø­Ø§Ù„ÙŠØ§Ù‹.
                   </div>
                 )}
 
@@ -1776,10 +1599,10 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
                 <div>
                   <h2 className="text-2xl font-bold text-white">
-                    الباقات والأسعار
+                    Ø§Ù„Ø¨Ø§Ù‚Ø§Øª ÙˆØ§Ù„Ø£Ø³Ø¹Ø§Ø±
                   </h2>
                   <p className="text-xs text-neutral-400 mt-2">
-                    إدارة الباقات الخاصة بـ Ibra Production.
+                    Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ø¨Ø§Ù‚Ø§Øª Ø§Ù„Ø®Ø§ØµØ© Ø¨Ù€ Ibra Production.
                   </p>
                 </div>
 
@@ -1801,7 +1624,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                   className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 text-neutral-950 rounded-xl text-xs font-bold"
                 >
                   <Plus className="w-4 h-4" />
-                  إضافة باقة
+                  Ø¥Ø¶Ø§ÙØ© Ø¨Ø§Ù‚Ø©
                 </button>
 
               </div>
@@ -1826,7 +1649,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                       <div className="text-2xl font-bold text-amber-400 mt-5">
                         {pkg.price
                           ? `${pkg.price} DA`
-                          : 'حسب الطلب'}
+                          : 'Ø­Ø³Ø¨ Ø§Ù„Ø·Ù„Ø¨'}
                       </div>
 
                       {Array.isArray(pkg.features) &&
@@ -1863,7 +1686,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                           onClick={() => {
                             if (
                               confirm(
-                                'هل تريد حذف هذه الباقة؟'
+                                'Ù‡Ù„ ØªØ±ÙŠØ¯ Ø­Ø°Ù Ù‡Ø°Ù‡ Ø§Ù„Ø¨Ø§Ù‚Ø©ØŸ'
                               )
                             ) {
                               deletePackage(pkg.id);
@@ -1880,7 +1703,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                   ))
                 ) : (
                   <div className="col-span-full bg-neutral-900 border border-neutral-800 rounded-2xl p-10 text-center text-neutral-500">
-                    لا توجد باقات حالياً.
+                    Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¨Ø§Ù‚Ø§Øª Ø­Ø§Ù„ÙŠØ§Ù‹.
                   </div>
                 )}
 
@@ -1895,10 +1718,10 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
                 <div>
                   <h2 className="text-2xl font-bold text-white">
-                    معرض الأعمال
+                    Ù…Ø¹Ø±Ø¶ Ø§Ù„Ø£Ø¹Ù…Ø§Ù„
                   </h2>
                   <p className="text-xs text-neutral-400 mt-2">
-                    إدارة الصور والأعمال المنشورة في الموقع.
+                    Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„ØµÙˆØ± ÙˆØ§Ù„Ø£Ø¹Ù…Ø§Ù„ Ø§Ù„Ù…Ù†Ø´ÙˆØ±Ø© ÙÙŠ Ø§Ù„Ù…ÙˆÙ‚Ø¹.
                   </p>
                 </div>
 
@@ -1926,7 +1749,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                   className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 text-neutral-950 rounded-xl text-xs font-bold"
                 >
                   <Plus className="w-4 h-4" />
-                  إضافة عمل
+                  Ø¥Ø¶Ø§ÙØ© Ø¹Ù…Ù„
                 </button>
 
               </div>
@@ -1959,7 +1782,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                         </div>
 
                         <div className="text-xs text-neutral-400 mt-1">
-                          {item.location || ''} • {item.date || ''}
+                          {item.location || ''} â€¢ {item.date || ''}
                         </div>
 
                         <div className="flex items-center justify-between mt-5">
@@ -1972,8 +1795,8 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                             }`}
                           >
                             {item.visible !== false
-                              ? 'ظاهر'
-                              : 'مخفي'}
+                              ? 'Ø¸Ø§Ù‡Ø±'
+                              : 'Ù…Ø®ÙÙŠ'}
                           </span>
 
                           <div className="flex items-center gap-2">
@@ -1991,7 +1814,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                               onClick={() => {
                                 if (
                                   confirm(
-                                    'هل تريد حذف هذا العمل؟'
+                                    'Ù‡Ù„ ØªØ±ÙŠØ¯ Ø­Ø°Ù Ù‡Ø°Ø§ Ø§Ù„Ø¹Ù…Ù„ØŸ'
                                   )
                                 ) {
                                   deletePortfolioItem(item.id);
@@ -2012,7 +1835,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                   ))
                 ) : (
                   <div className="col-span-full bg-neutral-900 border border-neutral-800 rounded-2xl p-10 text-center text-neutral-500">
-                    لا توجد أعمال في المعرض حالياً.
+                    Ù„Ø§ ØªÙˆØ¬Ø¯ Ø£Ø¹Ù…Ø§Ù„ ÙÙŠ Ø§Ù„Ù…Ø¹Ø±Ø¶ Ø­Ø§Ù„ÙŠØ§Ù‹.
                   </div>
                 )}
 
@@ -2025,7 +1848,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
   <div className="space-y-6">
     <div className="flex items-center justify-between">
       <h2 className="text-2xl font-bold font-cinzel text-white">
-        إدارة الفيديوهات
+        Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„ÙÙŠØ¯ÙŠÙˆÙ‡Ø§Øª
       </h2>
 
       <button
@@ -2042,7 +1865,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
         className="flex items-center gap-2 px-5 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-sm"
       >
         <Plus className="w-4 h-4" />
-        إضافة فيديو
+        Ø¥Ø¶Ø§ÙØ© ÙÙŠØ¯ÙŠÙˆ
       </button>
     </div>
 
@@ -2083,19 +1906,19 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-bold"
             >
               <Edit className="w-4 h-4" />
-              تعديل
+              ØªØ¹Ø¯ÙŠÙ„
             </button>
 
             <button
               onClick={() => {
-                if (confirm('هل أنت متأكد من حذف هذا الفيديو؟')) {
+                if (confirm('Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ø­Ø°Ù Ù‡Ø°Ø§ Ø§Ù„ÙÙŠØ¯ÙŠÙˆØŸ')) {
                   deleteVideoItem(v.id);
                 }
               }}
               className="flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold"
             >
               <Trash2 className="w-4 h-4" />
-              حذف
+              Ø­Ø°Ù
             </button>
           </div>
         </div>
@@ -2108,7 +1931,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-bold text-white">
-              {videoModal.id ? 'تعديل الفيديو' : 'إضافة فيديو جديد'}
+              {videoModal.id ? 'ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„ÙÙŠØ¯ÙŠÙˆ' : 'Ø¥Ø¶Ø§ÙØ© ÙÙŠØ¯ÙŠÙˆ Ø¬Ø¯ÙŠØ¯'}
             </h3>
 
             <button
@@ -2127,7 +1950,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 titleAr: e.target.value
               })
             }
-            placeholder="عنوان الفيديو بالعربية"
+            placeholder="Ø¹Ù†ÙˆØ§Ù† Ø§Ù„ÙÙŠØ¯ÙŠÙˆ Ø¨Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©"
             className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"
           />
 
@@ -2139,7 +1962,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 titleFr: e.target.value
               })
             }
-            placeholder="Titre du vidéo"
+            placeholder="Titre du vidÃ©o"
             className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"
           />
 
@@ -2158,11 +1981,11 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
           <div className="space-y-3">
             <label className="flex items-center gap-3 w-full cursor-pointer bg-neutral-950 border border-dashed border-amber-500/40 rounded-xl px-4 py-4">
               <FileVideo className="w-5 h-5 text-amber-400" />
-              <div className="flex-1"><div className="text-sm text-white font-semibold">رفع فيديو من الحاسوب</div><div className="text-xs text-neutral-500">MP4 / WEBM / MOV — حتى 500MB</div></div>
-              <input type="file" accept="video/mp4,video/webm,video/quicktime,video/x-msvideo,video/x-matroska" className="hidden" disabled={videoUploading} onChange={async e=>{const file=e.target.files?.[0];if(!file)return;try{setVideoUploading(true);const url=await uploadVideoFile(file);setVideoModal((m:any)=>({...m,videoUrl:url}));}catch(error){alert(error instanceof Error?error.message:'فشل رفع الفيديو.');}finally{setVideoUploading(false);e.target.value='';}}}/>
+              <div className="flex-1"><div className="text-sm text-white font-semibold">Ø±ÙØ¹ ÙÙŠØ¯ÙŠÙˆ Ù…Ù† Ø§Ù„Ø­Ø§Ø³ÙˆØ¨</div><div className="text-xs text-neutral-500">MP4 / WEBM / MOV â€” Ø­ØªÙ‰ 500MB</div></div>
+              <input type="file" accept="video/mp4,video/webm,video/quicktime,video/x-msvideo,video/x-matroska" className="hidden" disabled={videoUploading} onChange={async e=>{const file=e.target.files?.[0];if(!file)return;try{setVideoUploading(true);const url=await uploadVideoFile(file);setVideoModal((m:any)=>({...m,videoUrl:url}));}catch(error){alert(error instanceof Error?error.message:'ÙØ´Ù„ Ø±ÙØ¹ Ø§Ù„ÙÙŠØ¯ÙŠÙˆ.');}finally{setVideoUploading(false);e.target.value='';}}}/>
             </label>
-            {videoUploading && <div className="text-xs text-amber-400">جارٍ رفع الفيديو...</div>}
-            <input value={videoModal.videoUrl || ''} onChange={e=>setVideoModal({...videoModal,videoUrl:e.target.value})} placeholder="أو أدخل رابط الفيديو" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+            {videoUploading && <div className="text-xs text-amber-400">Ø¬Ø§Ø±Ù Ø±ÙØ¹ Ø§Ù„ÙÙŠØ¯ÙŠÙˆ...</div>}
+            <input value={videoModal.videoUrl || ''} onChange={e=>setVideoModal({...videoModal,videoUrl:e.target.value})} placeholder="Ø£Ùˆ Ø£Ø¯Ø®Ù„ Ø±Ø§Ø¨Ø· Ø§Ù„ÙÙŠØ¯ÙŠÙˆ" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
           </div>
 
           <input
@@ -2173,7 +1996,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 thumbnail: e.target.value
               })
             }
-            placeholder="رابط الصورة المصغرة"
+            placeholder="Ø±Ø§Ø¨Ø· Ø§Ù„ØµÙˆØ±Ø© Ø§Ù„Ù…ØµØºØ±Ø©"
             className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"
           />
 
@@ -2185,7 +2008,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 duration: e.target.value
               })
             }
-            placeholder="المدة مثال: 01:25"
+            placeholder="Ø§Ù„Ù…Ø¯Ø© Ù…Ø«Ø§Ù„: 01:25"
             className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"
           />
 
@@ -2202,14 +2025,14 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               }}
               className="flex-1 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold"
             >
-              حفظ
+              Ø­ÙØ¸
             </button>
 
             <button
               onClick={() => setVideoModal(null)}
               className="px-6 py-3 rounded-xl bg-neutral-800 text-white font-bold"
             >
-              إلغاء
+              Ø¥Ù„ØºØ§Ø¡
             </button>
           </div>
 
@@ -2224,12 +2047,12 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
               <div>
                 <h2 className="text-2xl font-bold text-white">
-                  آراء العملاء
+                  Ø¢Ø±Ø§Ø¡ Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡
                 </h2>
                 <p className="text-xs text-neutral-400 mt-2">
-                  إدارة شهادات وآراء العملاء وصورهم.
+                  Ø¥Ø¯Ø§Ø±Ø© Ø´Ù‡Ø§Ø¯Ø§Øª ÙˆØ¢Ø±Ø§Ø¡ Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡ ÙˆØµÙˆØ±Ù‡Ù….
                 </p>
-                <button onClick={()=>setTestimonialModal({clientName:'',rating:5,commentAr:'',commentFr:'',commentEn:'',date:new Date().toISOString().slice(0,10),approved:true,image:''})} className="mt-4 px-5 py-2.5 bg-amber-500 text-neutral-950 rounded-xl font-bold">+ إضافة رأي عميل</button>
+                <button onClick={()=>setTestimonialModal({clientName:'',rating:5,commentAr:'',commentFr:'',commentEn:'',date:new Date().toISOString().slice(0,10),approved:true,image:''})} className="mt-4 px-5 py-2.5 bg-amber-500 text-neutral-950 rounded-xl font-bold">+ Ø¥Ø¶Ø§ÙØ© Ø±Ø£ÙŠ Ø¹Ù…ÙŠÙ„</button>
               </div>
 
               <div className="space-y-4">
@@ -2243,12 +2066,12 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                     >
 
                       <div className="flex items-start justify-between gap-4">
-                        <button onClick={()=>setTestimonialModal({...item})} className="px-3 py-2 bg-neutral-800 rounded-xl text-xs font-bold"><Edit className="w-4 h-4 inline ml-1"/>تعديل</button>
+                        <button onClick={()=>setTestimonialModal({...item})} className="px-3 py-2 bg-neutral-800 rounded-xl text-xs font-bold"><Edit className="w-4 h-4 inline ml-1"/>ØªØ¹Ø¯ÙŠÙ„</button>
                         <div>
                           <h3 className="font-bold text-white">
                             {item.name ||
                               item.clientName ||
-                              'عميل'}
+                              'Ø¹Ù…ÙŠÙ„'}
                           </h3>
 
                           <p className="text-sm text-neutral-300 mt-3">
@@ -2261,7 +2084,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
                         {item.rating && (
                           <span className="text-amber-400 text-sm">
-                            ★ {item.rating}
+                            â˜… {item.rating}
                           </span>
                         )}
 
@@ -2271,7 +2094,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                   ))
                 ) : (
                   <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-10 text-center text-neutral-500">
-                    لا توجد آراء حالياً.
+                    Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¢Ø±Ø§Ø¡ Ø­Ø§Ù„ÙŠØ§Ù‹.
                   </div>
                 )}
 
@@ -2285,12 +2108,12 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
               <div>
                 <h2 className="text-2xl font-bold text-white">
-                  العروض الخاصة
+                  Ø§Ù„Ø¹Ø±ÙˆØ¶ Ø§Ù„Ø®Ø§ØµØ©
                 </h2>
                 <p className="text-xs text-neutral-400 mt-2">
-                  إدارة العروض التي تظهر للعملاء.
+                  Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ø¹Ø±ÙˆØ¶ Ø§Ù„ØªÙŠ ØªØ¸Ù‡Ø± Ù„Ù„Ø¹Ù…Ù„Ø§Ø¡.
                 </p>
-                <button onClick={()=>setOfferModal({titleAr:'',titleFr:'',titleEn:'',descAr:'',descFr:'',descEn:'',oldPrice:'',newPrice:'',discountPercentage:'',startDate:'',endDate:'',image:'',active:true})} className="mt-4 px-5 py-2.5 bg-amber-500 text-neutral-950 rounded-xl font-bold">+ إضافة عرض</button>
+                <button onClick={()=>setOfferModal({titleAr:'',titleFr:'',titleEn:'',descAr:'',descFr:'',descEn:'',oldPrice:'',newPrice:'',discountPercentage:'',startDate:'',endDate:'',image:'',active:true})} className="mt-4 px-5 py-2.5 bg-amber-500 text-neutral-950 rounded-xl font-bold">+ Ø¥Ø¶Ø§ÙØ© Ø¹Ø±Ø¶</button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -2303,20 +2126,20 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                     >
 
                       <div className="flex items-center justify-between">
-                        <div className="flex gap-2"><button onClick={()=>setOfferModal({...offer})} className="px-3 py-2 bg-neutral-800 rounded-xl text-xs font-bold"><Edit className="w-4 h-4 inline ml-1"/>تعديل</button></div>
+                        <div className="flex gap-2"><button onClick={()=>setOfferModal({...offer})} className="px-3 py-2 bg-neutral-800 rounded-xl text-xs font-bold"><Edit className="w-4 h-4 inline ml-1"/>ØªØ¹Ø¯ÙŠÙ„</button></div>
                         <Tag className="w-6 h-6 text-amber-400" />
 
                         <span className="text-xs text-neutral-500">
                           {offer.visible !== false
-                            ? 'نشط'
-                            : 'مخفي'}
+                            ? 'Ù†Ø´Ø·'
+                            : 'Ù…Ø®ÙÙŠ'}
                         </span>
                       </div>
 
                       <h3 className="font-bold text-white text-lg mt-5">
                         {offer.titleAr ||
                           offer.nameAr ||
-                          'عرض خاص'}
+                          'Ø¹Ø±Ø¶ Ø®Ø§Øµ'}
                       </h3>
 
                       <p className="text-sm text-neutral-400 mt-2">
@@ -2335,7 +2158,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                   ))
                 ) : (
                   <div className="col-span-full bg-neutral-900 border border-neutral-800 rounded-2xl p-10 text-center text-neutral-500">
-                    لا توجد عروض حالياً.
+                    Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¹Ø±ÙˆØ¶ Ø­Ø§Ù„ÙŠØ§Ù‹.
                   </div>
                 )}
 
@@ -2349,11 +2172,11 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
               <div>
                 <h2 className="text-2xl font-bold text-white">
-                  رسائل التواصل
+                  Ø±Ø³Ø§Ø¦Ù„ Ø§Ù„ØªÙˆØ§ØµÙ„
                 </h2>
 
                 <p className="text-xs text-neutral-400 mt-2">
-                  الرسائل المرسلة من زوار الموقع.
+                  Ø§Ù„Ø±Ø³Ø§Ø¦Ù„ Ø§Ù„Ù…Ø±Ø³Ù„Ø© Ù…Ù† Ø²ÙˆØ§Ø± Ø§Ù„Ù…ÙˆÙ‚Ø¹.
                 </p>
               </div>
 
@@ -2361,7 +2184,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
                 {safeMessages.length === 0 ? (
                   <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-10 text-center text-neutral-500">
-                    لا توجد رسائل.
+                    Ù„Ø§ ØªÙˆØ¬Ø¯ Ø±Ø³Ø§Ø¦Ù„.
                   </div>
                 ) : (
                   safeMessages.map((message: any) => (
@@ -2381,12 +2204,12 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                           <div className="flex items-center gap-3">
 
                             <h3 className="font-bold text-white">
-                              {message.name || 'زائر'}
+                              {message.name || 'Ø²Ø§Ø¦Ø±'}
                             </h3>
 
                             {!message.read && (
                               <span className="text-[10px] bg-amber-500 text-neutral-950 px-2 py-1 rounded-full font-bold">
-                                جديد
+                                Ø¬Ø¯ÙŠØ¯
                               </span>
                             )}
 
@@ -2396,13 +2219,13 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
                             {message.phone && (
                               <span>
-                                الهاتف: {message.phone}
+                                Ø§Ù„Ù‡Ø§ØªÙ: {message.phone}
                               </span>
                             )}
 
                             {message.email && (
                               <span>
-                                البريد: {message.email}
+                                Ø§Ù„Ø¨Ø±ÙŠØ¯: {message.email}
                               </span>
                             )}
 
@@ -2426,7 +2249,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                                 )
                               }
                               className="p-2 bg-green-500/10 text-green-400 rounded-lg"
-                              title="تحديد كمقروء"
+                              title="ØªØ­Ø¯ÙŠØ¯ ÙƒÙ…Ù‚Ø±ÙˆØ¡"
                             >
                               <Check className="w-4 h-4" />
                             </button>
@@ -2436,7 +2259,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                             onClick={() => {
                               if (
                                 confirm(
-                                  'هل تريد حذف هذه الرسالة؟'
+                                  'Ù‡Ù„ ØªØ±ÙŠØ¯ Ø­Ø°Ù Ù‡Ø°Ù‡ Ø§Ù„Ø±Ø³Ø§Ù„Ø©ØŸ'
                                 )
                               ) {
                                 deleteContactMessage(
@@ -2445,7 +2268,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                               }
                             }}
                             className="p-2 bg-red-500/10 text-red-400 rounded-lg"
-                            title="حذف"
+                            title="Ø­Ø°Ù"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -2465,11 +2288,11 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
           {activeTab === 'idcards' && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-2xl font-bold text-white">بطاقات التعريف المسجلة</h2>
-                <p className="text-xs text-neutral-400 mt-2">معاينة وتحميل آمن لبطاقات التعريف المرفوعة مع الحجوزات.</p>
+                <h2 className="text-2xl font-bold text-white">Ø¨Ø·Ø§Ù‚Ø§Øª Ø§Ù„ØªØ¹Ø±ÙŠÙ Ø§Ù„Ù…Ø³Ø¬Ù„Ø©</h2>
+                <p className="text-xs text-neutral-400 mt-2">Ù…Ø¹Ø§ÙŠÙ†Ø© ÙˆØªØ­Ù…ÙŠÙ„ Ø¢Ù…Ù† Ù„Ø¨Ø·Ø§Ù‚Ø§Øª Ø§Ù„ØªØ¹Ø±ÙŠÙ Ø§Ù„Ù…Ø±ÙÙˆØ¹Ø© Ù…Ø¹ Ø§Ù„Ø­Ø¬ÙˆØ²Ø§Øª.</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                {safeBookings.filter((b:any) => { const card = getBookingIdCardValue(b); return !!(card.url || card.key); }).map((b:any) => (
+                {safeBookings.filter((b:any) => b.idCardUrl).map((b:any) => (
                   <div key={b.id} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5">
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -2479,23 +2302,22 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                       <FileImage className="w-6 h-6 text-amber-400" />
                     </div>
                     <div className="text-xs text-neutral-400 mt-4 space-y-1">
-                      <div>الهاتف: {b.phone || '-'}</div>
-                      <div>التاريخ: {Array.isArray(b.eventDates) && b.eventDates.length ? b.eventDates.join('، ') : (b.eventDate || '-')}</div>
-                      <div className="break-all">الملف: {getBookingIdCardValue(b).name || 'بطاقة التعريف'}</div>
-                      <div className="text-[11px] text-green-400 mt-1">✓ الملف مرتبط بالتخزين الآمن</div>
+                      <div>Ø§Ù„Ù‡Ø§ØªÙ: {b.phone || '-'}</div>
+                      <div>Ø§Ù„ØªØ§Ø±ÙŠØ®: {Array.isArray(b.eventDates) && b.eventDates.length ? b.eventDates.join('ØŒ ') : (b.eventDate || '-')}</div>
+                      <div className="break-all">Ø§Ù„Ù…Ù„Ù: {b.idCardName || 'Ø¨Ø·Ø§Ù‚Ø© Ø§Ù„ØªØ¹Ø±ÙŠÙ'}</div>
                     </div>
                     <div className="grid grid-cols-2 gap-2 mt-4">
                       <button type="button" disabled={idCardLoading} onClick={() => previewIdCard(b)} className="flex items-center justify-center gap-2 px-3 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl text-xs font-bold disabled:opacity-50">
-                        <Eye className="w-4 h-4" /> معاينة
+                        <Eye className="w-4 h-4" /> Ù…Ø¹Ø§ÙŠÙ†Ø©
                       </button>
                       <button type="button" disabled={idCardLoading} onClick={() => downloadIdCard(b)} className="flex items-center justify-center gap-2 px-3 py-3 bg-amber-500 hover:bg-amber-400 text-neutral-950 rounded-xl text-xs font-bold disabled:opacity-50">
-                        <Download className="w-4 h-4" /> تحميل
+                        <Download className="w-4 h-4" /> ØªØ­Ù…ÙŠÙ„
                       </button>
                     </div>
                   </div>
                 ))}
-                {safeBookings.filter((b:any) => { const card = getBookingIdCardValue(b); return !!(card.url || card.key); }).length === 0 && (
-                  <div className="col-span-full bg-neutral-900 border border-neutral-800 rounded-2xl p-10 text-center text-neutral-500">لا توجد بطاقات تعريف مسجلة.</div>
+                {safeBookings.filter((b:any) => b.idCardUrl).length === 0 && (
+                  <div className="col-span-full bg-neutral-900 border border-neutral-800 rounded-2xl p-10 text-center text-neutral-500">Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¨Ø·Ø§Ù‚Ø§Øª ØªØ¹Ø±ÙŠÙ Ù…Ø³Ø¬Ù„Ø©.</div>
                 )}
               </div>
 
@@ -2504,11 +2326,11 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                   <div className="w-full max-w-5xl h-[90vh] bg-neutral-900 border border-amber-500/30 rounded-3xl overflow-hidden flex flex-col">
                     <div className="flex items-center justify-between gap-3 p-4 border-b border-neutral-800">
                       <div className="min-w-0">
-                        <div className="text-white font-bold">معاينة بطاقة التعريف</div>
+                        <div className="text-white font-bold">Ù…Ø¹Ø§ÙŠÙ†Ø© Ø¨Ø·Ø§Ù‚Ø© Ø§Ù„ØªØ¹Ø±ÙŠÙ</div>
                         <div className="text-xs text-neutral-500 truncate">{idCardPreview.name}</div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <a href={idCardPreview.url} download={idCardPreview.name} target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-amber-500 text-neutral-950 rounded-xl text-xs font-bold">تحميل</a>
+                        <a href={idCardPreview.url} download={idCardPreview.name} className="px-4 py-2 bg-amber-500 text-neutral-950 rounded-xl text-xs font-bold">ØªØ­Ù…ÙŠÙ„</a>
                         <button type="button" onClick={() => { URL.revokeObjectURL(idCardPreview.url); setIdCardPreview(null); }} className="p-2 bg-neutral-800 text-white rounded-xl">
                           <X className="w-5 h-5" />
                         </button>
@@ -2516,9 +2338,9 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                     </div>
                     <div className="flex-1 bg-neutral-950 p-4 overflow-auto flex items-center justify-center">
                       {idCardPreview.type.includes('pdf') ? (
-                        <iframe src={idCardPreview.url} title="معاينة بطاقة التعريف" className="w-full h-full rounded-xl bg-white" />
+                        <iframe src={idCardPreview.url} title="Ù…Ø¹Ø§ÙŠÙ†Ø© Ø¨Ø·Ø§Ù‚Ø© Ø§Ù„ØªØ¹Ø±ÙŠÙ" className="w-full h-full rounded-xl bg-white" />
                       ) : (
-                        <img src={idCardPreview.url} alt="بطاقة التعريف" className="max-w-full max-h-full object-contain rounded-xl" />
+                        <img src={idCardPreview.url} alt="Ø¨Ø·Ø§Ù‚Ø© Ø§Ù„ØªØ¹Ø±ÙŠÙ" className="max-w-full max-h-full object-contain rounded-xl" />
                       )}
                     </div>
                   </div>
@@ -2535,10 +2357,10 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
               <div>
                 <h2 className="text-2xl font-bold text-white">
-                  إعدادات الموقع
+                  Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ù…ÙˆÙ‚Ø¹
                 </h2>
                 <p className="text-xs text-neutral-400 mt-2">
-                  تعديل معلومات وبيانات Ibra Production.
+                  ØªØ¹Ø¯ÙŠÙ„ Ù…Ø¹Ù„ÙˆÙ…Ø§Øª ÙˆØ¨ÙŠØ§Ù†Ø§Øª Ibra Production.
                 </p>
               </div>
 
@@ -2546,7 +2368,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
                 <div>
                   <label className="block text-xs text-neutral-400 mb-2">
-                    اسم الوكالة
+                    Ø§Ø³Ù… Ø§Ù„ÙˆÙƒØ§Ù„Ø©
                   </label>
                   <input
                     value={settings.agencyName || ''}
@@ -2562,7 +2384,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
                 <div>
                   <label className="block text-xs text-neutral-400 mb-2">
-                    الهاتف
+                    Ø§Ù„Ù‡Ø§ØªÙ
                   </label>
                   <input
                     value={settings.phone || ''}
@@ -2594,7 +2416,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
                 <div>
                   <label className="block text-xs text-neutral-400 mb-2">
-                    البريد الإلكتروني
+                    Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ
                   </label>
                   <input
                     value={settings.email || ''}
@@ -2610,7 +2432,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
                 <div>
                   <label className="block text-xs text-neutral-400 mb-2">
-                    العنوان بالعربية
+                    Ø§Ù„Ø¹Ù†ÙˆØ§Ù† Ø¨Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©
                   </label>
                   <input
                     value={settings.addressAr || ''}
@@ -2632,11 +2454,11 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                         'ibra_settings',
                         JSON.stringify(settings)
                       );
-                      alert('تم حفظ إعدادات الموقع بنجاح.');
+                      alert('ØªÙ… Ø­ÙØ¸ Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ù…ÙˆÙ‚Ø¹ Ø¨Ù†Ø¬Ø§Ø­.');
                     }}
                     className="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-neutral-950 rounded-xl font-bold text-sm"
                   >
-                    حفظ الإعدادات
+                    Ø­ÙØ¸ Ø§Ù„Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª
                   </button>
 
                 </div>
@@ -2646,7 +2468,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
 
                 <h3 className="font-bold text-white mb-4">
-                  النسخ الاحتياطي
+                  Ø§Ù„Ù†Ø³Ø® Ø§Ù„Ø§Ø­ØªÙŠØ§Ø·ÙŠ
                 </h3>
 
                 <div className="flex flex-wrap gap-3">
@@ -2656,14 +2478,14 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                     className="flex items-center gap-2 px-5 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl text-sm font-bold"
                   >
                     <Download className="w-4 h-4" />
-                    تصدير نسخة احتياطية
+                    ØªØµØ¯ÙŠØ± Ù†Ø³Ø®Ø© Ø§Ø­ØªÙŠØ§Ø·ÙŠØ©
                   </button>
 
                   <label className="flex items-center gap-2 px-5 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl text-sm font-bold cursor-pointer">
 
                     <Upload className="w-4 h-4" />
 
-                    استعادة نسخة احتياطية
+                    Ø§Ø³ØªØ¹Ø§Ø¯Ø© Ù†Ø³Ø®Ø© Ø§Ø­ØªÙŠØ§Ø·ÙŠØ©
 
                     <input
                       type="file"
@@ -2686,10 +2508,10 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
               <div>
                 <h2 className="text-2xl font-bold text-white">
-                  سجل العمليات
+                  Ø³Ø¬Ù„ Ø§Ù„Ø¹Ù…Ù„ÙŠØ§Øª
                 </h2>
                 <p className="text-xs text-neutral-400 mt-2">
-                  آخر العمليات التي تمت داخل لوحة التحكم.
+                  Ø¢Ø®Ø± Ø§Ù„Ø¹Ù…Ù„ÙŠØ§Øª Ø§Ù„ØªÙŠ ØªÙ…Øª Ø¯Ø§Ø®Ù„ Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ….
                 </p>
               </div>
 
@@ -2713,7 +2535,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                             {log.action ||
                               log.message ||
                               log.description ||
-                              'عملية'}
+                              'Ø¹Ù…Ù„ÙŠØ©'}
                           </div>
 
                           {log.details && (
@@ -2738,7 +2560,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                   </div>
                 ) : (
                   <div className="p-10 text-center text-neutral-500">
-                    لا توجد عمليات مسجلة.
+                    Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¹Ù…Ù„ÙŠØ§Øª Ù…Ø³Ø¬Ù„Ø©.
                   </div>
                 )}
 
@@ -2759,7 +2581,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
             <div className="flex items-center justify-between mb-5">
 
               <h3 className="text-lg font-bold text-white">
-                إرسال رسالة تأكيد
+                Ø¥Ø±Ø³Ø§Ù„ Ø±Ø³Ø§Ù„Ø© ØªØ£ÙƒÙŠØ¯
               </h3>
 
               <button
@@ -2789,7 +2611,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 onClick={() => setSmsModalData(null)}
                 className="px-5 py-2.5 bg-neutral-800 text-white rounded-xl text-sm"
               >
-                إلغاء
+                Ø¥Ù„ØºØ§Ø¡
               </button>
 
               <button
@@ -2807,7 +2629,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 className="flex items-center gap-2 px-5 py-2.5 bg-amber-500 text-neutral-950 rounded-xl text-sm font-bold"
               >
                 <Send className="w-4 h-4" />
-                فتح تطبيق SMS
+                ÙØªØ­ ØªØ·Ø¨ÙŠÙ‚ SMS
               </button>
 
             </div>
@@ -2845,18 +2667,18 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                   <div className="w-14 h-14 rounded-2xl bg-amber-500 text-neutral-950 flex items-center justify-center font-black text-xl">IP</div>
                   <div>
                     <div className="text-2xl font-black tracking-wide">IBRA PRODUCTION</div>
-                    <div className="text-sm text-neutral-300 mt-1">تفاصيل الحجز الرسمية</div>
+                    <div className="text-sm text-neutral-300 mt-1">ØªÙØ§ØµÙŠÙ„ Ø§Ù„Ø­Ø¬Ø² Ø§Ù„Ø±Ø³Ù…ÙŠØ©</div>
                   </div>
                 </div>
                 <div className="text-left">
-                  <div className="text-[11px] text-neutral-400">رقم الحجز</div>
+                  <div className="text-[11px] text-neutral-400">Ø±Ù‚Ù… Ø§Ù„Ø­Ø¬Ø²</div>
                   <div className="text-xl font-black text-amber-400">#{String(invoiceModalData.id || '').slice(-8) || '-'}</div>
                   <div className="mt-2 inline-flex px-3 py-1 rounded-full bg-white/10 text-xs font-bold">
-                    {invoiceModalData.status === 'new' ? 'جديد' :
-                     invoiceModalData.status === 'confirmed' ? 'مؤكد' :
-                     invoiceModalData.status === 'processing' ? 'قيد المعالجة' :
-                     invoiceModalData.status === 'completed' ? 'مكتمل' :
-                     invoiceModalData.status === 'cancelled' ? 'ملغي' :
+                    {invoiceModalData.status === 'new' ? 'Ø¬Ø¯ÙŠØ¯' :
+                     invoiceModalData.status === 'confirmed' ? 'Ù…Ø¤ÙƒØ¯' :
+                     invoiceModalData.status === 'processing' ? 'Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø¹Ø§Ù„Ø¬Ø©' :
+                     invoiceModalData.status === 'completed' ? 'Ù…ÙƒØªÙ…Ù„' :
+                     invoiceModalData.status === 'cancelled' ? 'Ù…Ù„ØºÙŠ' :
                      invoiceModalData.status || '-'}
                   </div>
                 </div>
@@ -2867,14 +2689,14 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               <section>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-1.5 h-7 bg-amber-500 rounded-full" />
-                  <h3 className="text-lg font-black">بيانات العميل</h3>
+                  <h3 className="text-lg font-black">Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø¹Ù…ÙŠÙ„</h3>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {[
-                    ['اسم العريس', invoiceModalData.groomName],
-                    ['اسم العروس', invoiceModalData.brideName],
-                    ['رقم الهاتف', invoiceModalData.phone],
-                    ['البريد الإلكتروني', invoiceModalData.email],
+                    ['Ø§Ø³Ù… Ø§Ù„Ø¹Ø±ÙŠØ³', invoiceModalData.groomName],
+                    ['Ø§Ø³Ù… Ø§Ù„Ø¹Ø±ÙˆØ³', invoiceModalData.brideName],
+                    ['Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ', invoiceModalData.phone],
+                    ['Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ', invoiceModalData.email],
                   ].map(([label, value]) => (
                     <div key={label} className="rounded-2xl bg-neutral-50 border border-neutral-200 p-4">
                       <div className="text-xs text-neutral-500 mb-1">{label}</div>
@@ -2887,29 +2709,29 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               <section>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-1.5 h-7 bg-amber-500 rounded-full" />
-                  <h3 className="text-lg font-black">تفاصيل المناسبة</h3>
+                  <h3 className="text-lg font-black">ØªÙØ§ØµÙŠÙ„ Ø§Ù„Ù…Ù†Ø§Ø³Ø¨Ø©</h3>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="rounded-2xl bg-neutral-50 border border-neutral-200 p-4">
-                    <div className="text-xs text-neutral-500 mb-1">نوع المناسبة</div>
+                    <div className="text-xs text-neutral-500 mb-1">Ù†ÙˆØ¹ Ø§Ù„Ù…Ù†Ø§Ø³Ø¨Ø©</div>
                     <div className="font-bold">{invoiceModalData.eventType || '-'}</div>
                   </div>
                   <div className="rounded-2xl bg-neutral-50 border border-neutral-200 p-4">
-                    <div className="text-xs text-neutral-500 mb-1">الولاية</div>
+                    <div className="text-xs text-neutral-500 mb-1">Ø§Ù„ÙˆÙ„Ø§ÙŠØ©</div>
                     <div className="font-bold">{invoiceModalData.wilaya || '-'}</div>
                   </div>
                   <div className="rounded-2xl bg-neutral-50 border border-neutral-200 p-4">
-                    <div className="text-xs text-neutral-500 mb-1">المكان / القاعة</div>
+                    <div className="text-xs text-neutral-500 mb-1">Ø§Ù„Ù…ÙƒØ§Ù† / Ø§Ù„Ù‚Ø§Ø¹Ø©</div>
                     <div className="font-bold">{invoiceModalData.venue || '-'}</div>
                   </div>
                   <div className="rounded-2xl bg-neutral-50 border border-neutral-200 p-4">
-                    <div className="text-xs text-neutral-500 mb-1">الوقت</div>
+                    <div className="text-xs text-neutral-500 mb-1">Ø§Ù„ÙˆÙ‚Øª</div>
                     <div className="font-bold">{invoiceModalData.eventTime || '-'}</div>
                   </div>
                 </div>
 
                 <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                  <div className="text-xs text-amber-700 mb-2 font-bold">تواريخ المناسبة</div>
+                  <div className="text-xs text-amber-700 mb-2 font-bold">ØªÙˆØ§Ø±ÙŠØ® Ø§Ù„Ù…Ù†Ø§Ø³Ø¨Ø©</div>
                   {Array.isArray(invoiceModalData.eventDates) && invoiceModalData.eventDates.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                       {invoiceModalData.eventDates.map((date: string, index: number) => (
@@ -2927,18 +2749,18 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               <section>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-1.5 h-7 bg-amber-500 rounded-full" />
-                  <h3 className="text-lg font-black">الخدمة والباقات</h3>
+                  <h3 className="text-lg font-black">Ø§Ù„Ø®Ø¯Ù…Ø© ÙˆØ§Ù„Ø¨Ø§Ù‚Ø§Øª</h3>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="rounded-2xl bg-neutral-50 border border-neutral-200 p-4">
-                    <div className="text-xs text-neutral-500 mb-1">الخدمة</div>
+                    <div className="text-xs text-neutral-500 mb-1">Ø§Ù„Ø®Ø¯Ù…Ø©</div>
                     <div className="font-bold">
                       {services.find((s: any) => s.id === invoiceModalData.serviceId)?.titleAr || invoiceModalData.serviceId || '-'}
                     </div>
                     <div className="text-[11px] text-neutral-400 mt-1">ID: {invoiceModalData.serviceId || '-'}</div>
                   </div>
                   <div className="rounded-2xl bg-neutral-50 border border-neutral-200 p-4">
-                    <div className="text-xs text-neutral-500 mb-1">الباقة</div>
+                    <div className="text-xs text-neutral-500 mb-1">Ø§Ù„Ø¨Ø§Ù‚Ø©</div>
                     <div className="font-bold">
                       {packages.find((p: any) => p.id === invoiceModalData.packageId)?.nameAr || invoiceModalData.packageId || '-'}
                     </div>
@@ -2946,7 +2768,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                       <div className="text-[11px] text-neutral-400 mt-1">
                         ID: {invoiceModalData.packageId}
                         {packages.find((p: any) => p.id === invoiceModalData.packageId)?.price != null
-                          ? ` • ${packages.find((p: any) => p.id === invoiceModalData.packageId)?.price} DA`
+                          ? ` â€¢ ${packages.find((p: any) => p.id === invoiceModalData.packageId)?.price} DA`
                           : ''}
                       </div>
                     )}
@@ -2957,13 +2779,13 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               <section>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-1.5 h-7 bg-amber-500 rounded-full" />
-                  <h3 className="text-lg font-black">الجانب المالي والمتابعة</h3>
+                  <h3 className="text-lg font-black">Ø§Ù„Ø¬Ø§Ù†Ø¨ Ø§Ù„Ù…Ø§Ù„ÙŠ ÙˆØ§Ù„Ù…ØªØ§Ø¨Ø¹Ø©</h3>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {[
-                    ['السعر الإجمالي', invoiceModalData.totalPrice ?? invoiceModalData.total ?? invoiceModalData.price],
-                    ['المبلغ المدفوع', invoiceModalData.totalPaid ?? invoiceModalData.paidAmount ?? invoiceModalData.paid],
-                    ['المبلغ المتبقي', invoiceModalData.remainingBalance ?? invoiceModalData.remaining ?? invoiceModalData.balance],
+                    ['Ø§Ù„Ø³Ø¹Ø± Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ', invoiceModalData.totalPrice ?? invoiceModalData.total ?? invoiceModalData.price],
+                    ['Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ù…Ø¯ÙÙˆØ¹', invoiceModalData.totalPaid ?? invoiceModalData.paidAmount ?? invoiceModalData.paid],
+                    ['Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ù…ØªØ¨Ù‚ÙŠ', invoiceModalData.remainingBalance ?? invoiceModalData.remaining ?? invoiceModalData.balance],
                   ].map(([label, value]) => (
                     <div key={label} className="rounded-2xl bg-neutral-50 border border-neutral-200 p-4">
                       <div className="text-xs text-neutral-500 mb-1">{label}</div>
@@ -2976,27 +2798,27 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               <section>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-1.5 h-7 bg-amber-500 rounded-full" />
-                  <h3 className="text-lg font-black">ملاحظات وملفات</h3>
+                  <h3 className="text-lg font-black">Ù…Ù„Ø§Ø­Ø¸Ø§Øª ÙˆÙ…Ù„ÙØ§Øª</h3>
                 </div>
                 <div className="space-y-3">
                   <div className="rounded-2xl bg-neutral-50 border border-neutral-200 p-4">
-                    <div className="text-xs text-neutral-500 mb-1">ملاحظات العميل</div>
-                    <div className="font-medium whitespace-pre-wrap break-words">{invoiceModalData.notes || 'لا توجد ملاحظات.'}</div>
+                    <div className="text-xs text-neutral-500 mb-1">Ù…Ù„Ø§Ø­Ø¸Ø§Øª Ø§Ù„Ø¹Ù…ÙŠÙ„</div>
+                    <div className="font-medium whitespace-pre-wrap break-words">{invoiceModalData.notes || 'Ù„Ø§ ØªÙˆØ¬Ø¯ Ù…Ù„Ø§Ø­Ø¸Ø§Øª.'}</div>
                   </div>
                   <div className="rounded-2xl bg-neutral-50 border border-neutral-200 p-4">
-                    <div className="text-xs text-neutral-500 mb-1">بطاقة التعريف الوطنية</div>
-                    <div className="font-bold break-all">{invoiceModalData.idCardName || 'ملف بطاقة التعريف'}</div>
+                    <div className="text-xs text-neutral-500 mb-1">Ø¨Ø·Ø§Ù‚Ø© Ø§Ù„ØªØ¹Ø±ÙŠÙ Ø§Ù„ÙˆØ·Ù†ÙŠØ©</div>
+                    <div className="font-bold break-all">{invoiceModalData.idCardName || 'Ù…Ù„Ù Ø¨Ø·Ø§Ù‚Ø© Ø§Ù„ØªØ¹Ø±ÙŠÙ'}</div>
                     {invoiceModalData.idCardUrl ? (
                       <div className="flex flex-wrap gap-2 mt-3">
                         <button type="button" onClick={() => previewIdCard(invoiceModalData)} disabled={idCardLoading} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 text-neutral-950 text-sm font-bold disabled:opacity-50">
-                          <Eye className="w-4 h-4" /> {idCardLoading ? 'جاري التحميل...' : 'معاينة'}
+                          <Eye className="w-4 h-4" /> {idCardLoading ? 'Ø¬Ø§Ø±ÙŠ Ø§Ù„ØªØ­Ù…ÙŠÙ„...' : 'Ù…Ø¹Ø§ÙŠÙ†Ø©'}
                         </button>
                         <button type="button" onClick={() => downloadIdCard(invoiceModalData)} disabled={idCardLoading} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-neutral-900 text-white text-sm font-bold border border-neutral-700 disabled:opacity-50">
-                          <Download className="w-4 h-4" /> تحميل
+                          <Download className="w-4 h-4" /> ØªØ­Ù…ÙŠÙ„
                         </button>
                       </div>
                     ) : (
-                      <div className="text-sm text-red-500 mt-1">لا يوجد ملف مرفق</div>
+                      <div className="text-sm text-red-500 mt-1">Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ù…Ù„Ù Ù…Ø±ÙÙ‚</div>
                     )}
                   </div>
                 </div>
@@ -3005,11 +2827,11 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               <section>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-1.5 h-7 bg-amber-500 rounded-full" />
-                  <h3 className="text-lg font-black">معلومات النظام</h3>
+                  <h3 className="text-lg font-black">Ù…Ø¹Ù„ÙˆÙ…Ø§Øª Ø§Ù„Ù†Ø¸Ø§Ù…</h3>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="rounded-2xl bg-neutral-50 border border-neutral-200 p-4">
-                    <div className="text-xs text-neutral-500 mb-1">تاريخ إنشاء الحجز</div>
+                    <div className="text-xs text-neutral-500 mb-1">ØªØ§Ø±ÙŠØ® Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ø­Ø¬Ø²</div>
                     <div className="font-bold break-all">
                       {typeof invoiceModalData.createdAt === 'string'
                         ? invoiceModalData.createdAt
@@ -3021,7 +2843,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                     </div>
                   </div>
                   <div className="rounded-2xl bg-neutral-50 border border-neutral-200 p-4">
-                    <div className="text-xs text-neutral-500 mb-1">معرّف الحجز الكامل</div>
+                    <div className="text-xs text-neutral-500 mb-1">Ù…Ø¹Ø±Ù‘Ù Ø§Ù„Ø­Ø¬Ø² Ø§Ù„ÙƒØ§Ù…Ù„</div>
                     <div className="font-mono text-xs font-bold break-all">{invoiceModalData.id || '-'}</div>
                   </div>
                 </div>
@@ -3033,7 +2855,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 <section>
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-1.5 h-7 bg-amber-500 rounded-full" />
-                    <h3 className="text-lg font-black">بيانات إضافية</h3>
+                    <h3 className="text-lg font-black">Ø¨ÙŠØ§Ù†Ø§Øª Ø¥Ø¶Ø§ÙÙŠØ©</h3>
                   </div>
                   <div className="space-y-2">
                     {Object.entries(invoiceModalData).filter(([key]) =>
@@ -3051,12 +2873,12 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               )}
 
               <div className="ibra-print-actions flex flex-wrap gap-2 p-3 rounded-2xl bg-neutral-50 border border-neutral-200">
-                <span className="text-xs text-neutral-500 self-center">تغيير الحالة:</span>
+                <span className="text-xs text-neutral-500 self-center">ØªØºÙŠÙŠØ± Ø§Ù„Ø­Ø§Ù„Ø©:</span>
                 {[
-                  ['confirmed','تأكيد الحجز'],
-                  ['processing','قيد المعالجة'],
-                  ['completed','مكتمل'],
-                  ['cancelled','إلغاء الحجز']
+                  ['confirmed','ØªØ£ÙƒÙŠØ¯ Ø§Ù„Ø­Ø¬Ø²'],
+                  ['processing','Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø¹Ø§Ù„Ø¬Ø©'],
+                  ['completed','Ù…ÙƒØªÙ…Ù„'],
+                  ['cancelled','Ø¥Ù„ØºØ§Ø¡ Ø§Ù„Ø­Ø¬Ø²']
                 ].map(([status,label]) => (
                   <button key={status} type="button" onClick={() => handleStatusChange(invoiceModalData, status)} className="px-3 py-2 rounded-xl bg-white border border-neutral-200 hover:border-amber-400 text-xs font-bold transition-all">
                     {label}
@@ -3069,17 +2891,17 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                   onClick={() => setInvoiceModalData(null)}
                   className="px-5 py-3 bg-neutral-100 text-neutral-900 rounded-xl font-bold"
                 >
-                  إغلاق
+                  Ø¥ØºÙ„Ø§Ù‚
                 </button>
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => {
                       navigator.clipboard?.writeText(String(invoiceModalData.id || ''));
-                      alert('تم نسخ رقم الحجز.');
+                      alert('ØªÙ… Ù†Ø³Ø® Ø±Ù‚Ù… Ø§Ù„Ø­Ø¬Ø².');
                     }}
                     className="px-4 py-3 bg-neutral-100 text-neutral-900 rounded-xl font-bold text-sm"
                   >
-                    نسخ رقم الحجز
+                    Ù†Ø³Ø® Ø±Ù‚Ù… Ø§Ù„Ø­Ø¬Ø²
                   </button>
                   {invoiceModalData.phone && (
                     <a
@@ -3104,14 +2926,14 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                     }}
                     className="px-4 py-3 bg-neutral-100 text-neutral-900 rounded-xl font-bold text-sm"
                   >
-                    تصدير البيانات
+                    ØªØµØ¯ÙŠØ± Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª
                   </button>
                   <button
                     onClick={() => window.print()}
                     className="flex items-center gap-2 px-6 py-3 bg-neutral-950 text-white rounded-xl font-bold"
                   >
                     <Download className="w-4 h-4" />
-                    طباعة A4
+                    Ø·Ø¨Ø§Ø¹Ø© A4
                   </button>
                 </div>
               </div>
@@ -3121,7 +2943,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 <span>{settings.phone || ''}</span>
                 <span>{settings.email || ''}</span>
                 <span>{settings.addressAr || ''}</span>
-                <span>طُبع في: {new Date().toLocaleString('ar-DZ')}</span>
+                <span>Ø·ÙØ¨Ø¹ ÙÙŠ: {new Date().toLocaleString('ar-DZ')}</span>
               </div>
             </div>
           </div>
@@ -3133,46 +2955,46 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
           <div className="w-full max-w-4xl bg-neutral-900 border border-neutral-800 rounded-3xl p-6 my-6 shadow-2xl">
             <div className="flex items-center justify-between gap-4 mb-6">
               <div>
-                <h3 className="text-xl font-black text-white">تعديل الحجز بالكامل</h3>
-                <p className="text-xs text-neutral-500 mt-1">رقم الحجز: #{String(bookingEditModal.id || '').slice(-8)}</p>
+                <h3 className="text-xl font-black text-white">ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ø­Ø¬Ø² Ø¨Ø§Ù„ÙƒØ§Ù…Ù„</h3>
+                <p className="text-xs text-neutral-500 mt-1">Ø±Ù‚Ù… Ø§Ù„Ø­Ø¬Ø²: #{String(bookingEditModal.id || '').slice(-8)}</p>
               </div>
               <button onClick={() => setBookingEditModal(null)} className="p-2 bg-neutral-800 rounded-full text-neutral-400 hover:text-white"><X className="w-5 h-5" /></button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[70vh] overflow-y-auto pr-1">
-              <input value={bookingEditModal.groomName || ''} onChange={e => setBookingEditModal({...bookingEditModal, groomName:e.target.value})} placeholder="اسم العريس" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
-              <input value={bookingEditModal.brideName || ''} onChange={e => setBookingEditModal({...bookingEditModal, brideName:e.target.value})} placeholder="اسم العروس" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
-              <input value={bookingEditModal.phone || ''} onChange={e => setBookingEditModal({...bookingEditModal, phone:e.target.value})} placeholder="رقم الهاتف" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
-              <input type="email" value={bookingEditModal.email || ''} onChange={e => setBookingEditModal({...bookingEditModal, email:e.target.value})} placeholder="البريد الإلكتروني" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
-              <input value={bookingEditModal.eventType || ''} onChange={e => setBookingEditModal({...bookingEditModal, eventType:e.target.value})} placeholder="نوع المناسبة" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
-              <input value={bookingEditModal.wilaya || ''} onChange={e => setBookingEditModal({...bookingEditModal, wilaya:e.target.value})} placeholder="الولاية" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
-              <input value={bookingEditModal.venue || ''} onChange={e => setBookingEditModal({...bookingEditModal, venue:e.target.value})} placeholder="القاعة / المكان" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
-              <input value={bookingEditModal.eventTime || ''} onChange={e => setBookingEditModal({...bookingEditModal, eventTime:e.target.value})} placeholder="وقت المناسبة" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
-              <input value={bookingEditModal.serviceId || ''} onChange={e => setBookingEditModal({...bookingEditModal, serviceId:e.target.value})} placeholder="الخدمة" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
-              <input value={bookingEditModal.packageId || ''} onChange={e => setBookingEditModal({...bookingEditModal, packageId:e.target.value})} placeholder="الباقة" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
-              <input type="number" value={bookingEditModal.totalPrice ?? ''} onChange={e => setBookingEditModal({...bookingEditModal, totalPrice:e.target.value === '' ? '' : Number(e.target.value)})} placeholder="المبلغ الإجمالي (DA)" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
-              <input type="number" value={bookingEditModal.totalPaid ?? ''} onChange={e => setBookingEditModal({...bookingEditModal, totalPaid:e.target.value === '' ? '' : Number(e.target.value)})} placeholder="المبلغ المدفوع (DA)" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+              <input value={bookingEditModal.groomName || ''} onChange={e => setBookingEditModal({...bookingEditModal, groomName:e.target.value})} placeholder="Ø§Ø³Ù… Ø§Ù„Ø¹Ø±ÙŠØ³" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+              <input value={bookingEditModal.brideName || ''} onChange={e => setBookingEditModal({...bookingEditModal, brideName:e.target.value})} placeholder="Ø§Ø³Ù… Ø§Ù„Ø¹Ø±ÙˆØ³" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+              <input value={bookingEditModal.phone || ''} onChange={e => setBookingEditModal({...bookingEditModal, phone:e.target.value})} placeholder="Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+              <input type="email" value={bookingEditModal.email || ''} onChange={e => setBookingEditModal({...bookingEditModal, email:e.target.value})} placeholder="Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+              <input value={bookingEditModal.eventType || ''} onChange={e => setBookingEditModal({...bookingEditModal, eventType:e.target.value})} placeholder="Ù†ÙˆØ¹ Ø§Ù„Ù…Ù†Ø§Ø³Ø¨Ø©" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+              <input value={bookingEditModal.wilaya || ''} onChange={e => setBookingEditModal({...bookingEditModal, wilaya:e.target.value})} placeholder="Ø§Ù„ÙˆÙ„Ø§ÙŠØ©" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+              <input value={bookingEditModal.venue || ''} onChange={e => setBookingEditModal({...bookingEditModal, venue:e.target.value})} placeholder="Ø§Ù„Ù‚Ø§Ø¹Ø© / Ø§Ù„Ù…ÙƒØ§Ù†" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+              <input value={bookingEditModal.eventTime || ''} onChange={e => setBookingEditModal({...bookingEditModal, eventTime:e.target.value})} placeholder="ÙˆÙ‚Øª Ø§Ù„Ù…Ù†Ø§Ø³Ø¨Ø©" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+              <input value={bookingEditModal.serviceId || ''} onChange={e => setBookingEditModal({...bookingEditModal, serviceId:e.target.value})} placeholder="Ø§Ù„Ø®Ø¯Ù…Ø©" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+              <input value={bookingEditModal.packageId || ''} onChange={e => setBookingEditModal({...bookingEditModal, packageId:e.target.value})} placeholder="Ø§Ù„Ø¨Ø§Ù‚Ø©" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+              <input type="number" value={bookingEditModal.totalPrice ?? ''} onChange={e => setBookingEditModal({...bookingEditModal, totalPrice:e.target.value === '' ? '' : Number(e.target.value)})} placeholder="Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ (DA)" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+              <input type="number" value={bookingEditModal.totalPaid ?? ''} onChange={e => setBookingEditModal({...bookingEditModal, totalPaid:e.target.value === '' ? '' : Number(e.target.value)})} placeholder="Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ù…Ø¯ÙÙˆØ¹ (DA)" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
               <div className="md:col-span-2">
-                <label className="block text-xs text-neutral-400 mb-2">تواريخ المناسبة — تاريخ في كل سطر</label>
+                <label className="block text-xs text-neutral-400 mb-2">ØªÙˆØ§Ø±ÙŠØ® Ø§Ù„Ù…Ù†Ø§Ø³Ø¨Ø© â€” ØªØ§Ø±ÙŠØ® ÙÙŠ ÙƒÙ„ Ø³Ø·Ø±</label>
                 <textarea rows={4} value={bookingEditModal.eventDates || ''} onChange={e => setBookingEditModal({...bookingEditModal, eventDates:e.target.value})} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" placeholder="2026-09-25&#10;2026-09-26" />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-xs text-neutral-400 mb-2">ملاحظات</label>
+                <label className="block text-xs text-neutral-400 mb-2">Ù…Ù„Ø§Ø­Ø¸Ø§Øª</label>
                 <textarea rows={4} value={bookingEditModal.notes || ''} onChange={e => setBookingEditModal({...bookingEditModal, notes:e.target.value})} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
               </div>
               <select value={bookingEditModal.status || 'new'} onChange={e => setBookingEditModal({...bookingEditModal, status:e.target.value})} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white">
-                <option value="new">جديد</option><option value="confirmed">مؤكد</option><option value="processing">قيد المعالجة</option><option value="completed">مكتمل</option><option value="cancelled">ملغي</option>
+                <option value="new">Ø¬Ø¯ÙŠØ¯</option><option value="confirmed">Ù…Ø¤ÙƒØ¯</option><option value="processing">Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø¹Ø§Ù„Ø¬Ø©</option><option value="completed">Ù…ÙƒØªÙ…Ù„</option><option value="cancelled">Ù…Ù„ØºÙŠ</option>
               </select>
               <div className="flex items-center gap-3 rounded-xl bg-neutral-950 border border-neutral-800 px-4 py-3 text-xs text-neutral-400">
-                <FileText className="w-4 h-4 text-amber-400" /><span>بطاقة التعريف: {bookingEditModal.idCardName || (bookingEditModal.idCardUrl ? 'مرفوعة' : 'غير مرفوعة')} — ملف البطاقة لا يتغير من هذا النموذج.</span>
+                <FileText className="w-4 h-4 text-amber-400" /><span>Ø¨Ø·Ø§Ù‚Ø© Ø§Ù„ØªØ¹Ø±ÙŠÙ: {bookingEditModal.idCardName || (bookingEditModal.idCardUrl ? 'Ù…Ø±ÙÙˆØ¹Ø©' : 'ØºÙŠØ± Ù…Ø±ÙÙˆØ¹Ø©')} â€” Ù…Ù„Ù Ø§Ù„Ø¨Ø·Ø§Ù‚Ø© Ù„Ø§ ÙŠØªØºÙŠØ± Ù…Ù† Ù‡Ø°Ø§ Ø§Ù„Ù†Ù…ÙˆØ°Ø¬.</span>
               </div>
             </div>
             <div className="flex flex-wrap justify-end gap-3 mt-6 pt-5 border-t border-neutral-800">
-              <button onClick={() => setBookingEditModal(null)} className="px-5 py-3 bg-neutral-800 text-white rounded-xl font-bold">إلغاء</button>
+              <button onClick={() => setBookingEditModal(null)} className="px-5 py-3 bg-neutral-800 text-white rounded-xl font-bold">Ø¥Ù„ØºØ§Ø¡</button>
               <button disabled={bookingEditSaving} onClick={async () => {
-                if (!bookingEditModal.groomName?.trim()) { alert('اسم العريس مطلوب.'); return; }
-                if (!bookingEditModal.phone?.trim()) { alert('رقم الهاتف مطلوب.'); return; }
+                if (!bookingEditModal.groomName?.trim()) { alert('Ø§Ø³Ù… Ø§Ù„Ø¹Ø±ÙŠØ³ Ù…Ø·Ù„ÙˆØ¨.'); return; }
+                if (!bookingEditModal.phone?.trim()) { alert('Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ Ù…Ø·Ù„ÙˆØ¨.'); return; }
                 const dates = String(bookingEditModal.eventDates || '').split(/[,\n]+/).map((x:string) => x.trim()).filter(Boolean);
-                if (new Set(dates).size !== dates.length) { alert('يوجد تاريخ مكرر في الحجز.'); return; }
+                if (new Set(dates).size !== dates.length) { alert('ÙŠÙˆØ¬Ø¯ ØªØ§Ø±ÙŠØ® Ù…ÙƒØ±Ø± ÙÙŠ Ø§Ù„Ø­Ø¬Ø².'); return; }
                 try {
                   setBookingEditSaving(true);
                   const { eventDates, ...rest } = bookingEditModal;
@@ -3181,14 +3003,14 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                   delete payload.createdAt;
                   await updateBooking(bookingEditModal.id, payload);
                   setBookingEditModal(null);
-                  alert('تم حفظ تعديل الحجز بنجاح.');
+                  alert('ØªÙ… Ø­ÙØ¸ ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ø­Ø¬Ø² Ø¨Ù†Ø¬Ø§Ø­.');
                 } catch (error) {
-                  alert(error instanceof Error ? error.message : 'تعذر حفظ تعديل الحجز.');
+                  alert(error instanceof Error ? error.message : 'ØªØ¹Ø°Ø± Ø­ÙØ¸ ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ø­Ø¬Ø².');
                 } finally {
                   setBookingEditSaving(false);
                 }
               }} className="px-6 py-3 bg-amber-500 text-neutral-950 rounded-xl font-black disabled:opacity-50">
-                {bookingEditSaving ? 'جارٍ الحفظ...' : 'حفظ جميع التعديلات'}
+                {bookingEditSaving ? 'Ø¬Ø§Ø±Ù Ø§Ù„Ø­ÙØ¸...' : 'Ø­ÙØ¸ Ø¬Ù…ÙŠØ¹ Ø§Ù„ØªØ¹Ø¯ÙŠÙ„Ø§Øª'}
               </button>
             </div>
           </div>
@@ -3204,8 +3026,8 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
               <h3 className="text-xl font-bold text-white">
                 {serviceModal.id
-                  ? 'تعديل الخدمة'
-                  : 'إضافة خدمة'}
+                  ? 'ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ø®Ø¯Ù…Ø©'
+                  : 'Ø¥Ø¶Ø§ÙØ© Ø®Ø¯Ù…Ø©'}
               </h3>
 
               <button
@@ -3220,7 +3042,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
             <div className="space-y-4">
 
               <input
-                placeholder="اسم الخدمة بالعربية"
+                placeholder="Ø§Ø³Ù… Ø§Ù„Ø®Ø¯Ù…Ø© Ø¨Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©"
                 value={serviceModal.titleAr || ''}
                 onChange={e =>
                   setServiceModal({
@@ -3232,7 +3054,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               />
 
               <input
-                placeholder="اسم الخدمة بالفرنسية"
+                placeholder="Ø§Ø³Ù… Ø§Ù„Ø®Ø¯Ù…Ø© Ø¨Ø§Ù„ÙØ±Ù†Ø³ÙŠØ©"
                 value={serviceModal.titleFr || ''}
                 onChange={e =>
                   setServiceModal({
@@ -3244,7 +3066,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               />
 
               <input
-                placeholder="اسم الخدمة بالإنجليزية"
+                placeholder="Ø§Ø³Ù… Ø§Ù„Ø®Ø¯Ù…Ø© Ø¨Ø§Ù„Ø¥Ù†Ø¬Ù„ÙŠØ²ÙŠØ©"
                 value={serviceModal.titleEn || ''}
                 onChange={e =>
                   setServiceModal({
@@ -3256,7 +3078,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               />
 
               <textarea
-                placeholder="وصف الخدمة"
+                placeholder="ÙˆØµÙ Ø§Ù„Ø®Ø¯Ù…Ø©"
                 value={serviceModal.descriptionAr || ''}
                 onChange={e =>
                   setServiceModal({
@@ -3270,7 +3092,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
               <input
                 type="number"
-                placeholder="السعر"
+                placeholder="Ø§Ù„Ø³Ø¹Ø±"
                 value={serviceModal.price ?? ''}
                 onChange={e =>
                   setServiceModal({
@@ -3284,12 +3106,12 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               <div className="rounded-2xl border border-neutral-800 bg-neutral-950 p-4 space-y-3">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <div className="text-sm font-bold text-white">صورة الخدمة</div>
-                    <div className="text-xs text-neutral-500 mt-1">ارفع الصورة مباشرة من الحاسوب — JPG / PNG / WEBP، حتى 10 MB.</div>
+                    <div className="text-sm font-bold text-white">ØµÙˆØ±Ø© Ø§Ù„Ø®Ø¯Ù…Ø©</div>
+                    <div className="text-xs text-neutral-500 mt-1">Ø§Ø±ÙØ¹ Ø§Ù„ØµÙˆØ±Ø© Ù…Ø¨Ø§Ø´Ø±Ø© Ù…Ù† Ø§Ù„Ø­Ø§Ø³ÙˆØ¨ â€” JPG / PNG / WEBPØŒ Ø­ØªÙ‰ 10 MB.</div>
                   </div>
                   <label className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer ${serviceUploading ? 'bg-neutral-700 text-neutral-400 pointer-events-none' : 'bg-amber-500 text-neutral-950'}`}>
                     <Upload className="w-4 h-4" />
-                    {serviceUploading ? 'جاري الرفع...' : 'اختيار صورة'}
+                    {serviceUploading ? 'Ø¬Ø§Ø±ÙŠ Ø§Ù„Ø±ÙØ¹...' : 'Ø§Ø®ØªÙŠØ§Ø± ØµÙˆØ±Ø©'}
                     <input
                       type="file"
                       accept="image/jpeg,image/png,image/webp"
@@ -3306,20 +3128,20 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
                 {serviceModal.image && (
                   <div className="relative overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900">
-                    <img src={serviceModal.image} alt={serviceModal.titleAr || 'صورة الخدمة'} className="w-full h-48 object-cover" />
+                    <img src={serviceModal.image} alt={serviceModal.titleAr || 'ØµÙˆØ±Ø© Ø§Ù„Ø®Ø¯Ù…Ø©'} className="w-full h-48 object-cover" />
                     <button
                       type="button"
                       onClick={() => setServiceModal({ ...serviceModal, image: '', imagePath: '', imageName: '' })}
                       className="absolute top-3 right-3 px-3 py-2 rounded-lg bg-red-500/90 text-white text-xs font-bold"
                     >
-                      حذف الصورة
+                      Ø­Ø°Ù Ø§Ù„ØµÙˆØ±Ø©
                     </button>
                   </div>
                 )}
 
                 {!serviceModal.image && (
                   <div className="rounded-xl border border-dashed border-neutral-700 py-8 text-center text-neutral-500 text-sm">
-                    لم يتم اختيار صورة بعد.
+                    Ù„Ù… ÙŠØªÙ… Ø§Ø®ØªÙŠØ§Ø± ØµÙˆØ±Ø© Ø¨Ø¹Ø¯.
                   </div>
                 )}
               </div>
@@ -3332,13 +3154,13 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 onClick={() => setServiceModal(null)}
                 className="px-5 py-2.5 bg-neutral-800 text-white rounded-xl text-sm"
               >
-                إلغاء
+                Ø¥Ù„ØºØ§Ø¡
               </button>
 
               <button
                 onClick={async () => {
                   if (!serviceModal.titleAr) {
-                    alert('يرجى إدخال اسم الخدمة.');
+                    alert('ÙŠØ±Ø¬Ù‰ Ø¥Ø¯Ø®Ø§Ù„ Ø§Ø³Ù… Ø§Ù„Ø®Ø¯Ù…Ø©.');
                     return;
                   }
                   if (serviceUploading) return;
@@ -3352,13 +3174,13 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                     setServiceModal(null);
                   } catch (error) {
                     console.error('Service save error:', error);
-                    alert('تعذر حفظ الخدمة. تحقق من اتصال Firebase ثم أعد المحاولة.');
+                    alert('ØªØ¹Ø°Ø± Ø­ÙØ¸ Ø§Ù„Ø®Ø¯Ù…Ø©. ØªØ­Ù‚Ù‚ Ù…Ù† Ø§ØªØµØ§Ù„ Firebase Ø«Ù… Ø£Ø¹Ø¯ Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø©.');
                   }
                 }}
                 disabled={serviceUploading}
                 className="px-6 py-2.5 bg-amber-500 text-neutral-950 rounded-xl text-sm font-bold disabled:opacity-50"
               >
-                حفظ الخدمة
+                Ø­ÙØ¸ Ø§Ù„Ø®Ø¯Ù…Ø©
               </button>
 
             </div>
@@ -3376,8 +3198,8 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
               <h3 className="text-xl font-bold text-white">
                 {packageModal.id
-                  ? 'تعديل الباقة'
-                  : 'إضافة باقة'}
+                  ? 'ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ø¨Ø§Ù‚Ø©'
+                  : 'Ø¥Ø¶Ø§ÙØ© Ø¨Ø§Ù‚Ø©'}
               </h3>
 
               <button
@@ -3392,7 +3214,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
             <div className="space-y-4">
 
               <input
-                placeholder="اسم الباقة بالعربية"
+                placeholder="Ø§Ø³Ù… Ø§Ù„Ø¨Ø§Ù‚Ø© Ø¨Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©"
                 value={packageModal.nameAr || ''}
                 onChange={e =>
                   setPackageModal({
@@ -3404,7 +3226,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               />
 
               <input
-                placeholder="اسم الباقة بالفرنسية"
+                placeholder="Ø§Ø³Ù… Ø§Ù„Ø¨Ø§Ù‚Ø© Ø¨Ø§Ù„ÙØ±Ù†Ø³ÙŠØ©"
                 value={packageModal.nameFr || ''}
                 onChange={e =>
                   setPackageModal({
@@ -3416,7 +3238,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               />
 
               <input
-                placeholder="اسم الباقة بالإنجليزية"
+                placeholder="Ø§Ø³Ù… Ø§Ù„Ø¨Ø§Ù‚Ø© Ø¨Ø§Ù„Ø¥Ù†Ø¬Ù„ÙŠØ²ÙŠØ©"
                 value={packageModal.nameEn || ''}
                 onChange={e =>
                   setPackageModal({
@@ -3428,7 +3250,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               />
 
               <textarea
-                placeholder="وصف الباقة"
+                placeholder="ÙˆØµÙ Ø§Ù„Ø¨Ø§Ù‚Ø©"
                 value={packageModal.descriptionAr || ''}
                 onChange={e =>
                   setPackageModal({
@@ -3442,7 +3264,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
               <input
                 type="number"
-                placeholder="السعر"
+                placeholder="Ø§Ù„Ø³Ø¹Ø±"
                 value={packageModal.price ?? ''}
                 onChange={e =>
                   setPackageModal({
@@ -3454,7 +3276,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               />
 
               <textarea
-                placeholder="مميزات الباقة - كل ميزة في سطر"
+                placeholder="Ù…Ù…ÙŠØ²Ø§Øª Ø§Ù„Ø¨Ø§Ù‚Ø© - ÙƒÙ„ Ù…ÙŠØ²Ø© ÙÙŠ Ø³Ø·Ø±"
                 value={
                   Array.isArray(packageModal.features)
                     ? packageModal.features.join('\n')
@@ -3481,14 +3303,14 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 onClick={() => setPackageModal(null)}
                 className="px-5 py-2.5 bg-neutral-800 text-white rounded-xl text-sm"
               >
-                إلغاء
+                Ø¥Ù„ØºØ§Ø¡
               </button>
 
               <button
                 onClick={() => {
 
                   if (!packageModal.nameAr) {
-                    alert('يرجى إدخال اسم الباقة.');
+                    alert('ÙŠØ±Ø¬Ù‰ Ø¥Ø¯Ø®Ø§Ù„ Ø§Ø³Ù… Ø§Ù„Ø¨Ø§Ù‚Ø©.');
                     return;
                   }
 
@@ -3506,7 +3328,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 }}
                 className="px-6 py-2.5 bg-amber-500 text-neutral-950 rounded-xl text-sm font-bold"
               >
-                حفظ الباقة
+                Ø­ÙØ¸ Ø§Ù„Ø¨Ø§Ù‚Ø©
               </button>
 
             </div>
@@ -3519,17 +3341,17 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
       {testimonialModal && (
         <div className="fixed inset-0 z-[90] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <div className="w-full max-w-2xl bg-neutral-900 border border-neutral-800 rounded-3xl p-6 my-8">
-            <div className="flex justify-between items-center mb-5"><h3 className="text-xl font-black text-white">{testimonialModal.id?'تعديل رأي العميل':'إضافة رأي عميل'}</h3><button onClick={()=>setTestimonialModal(null)} className="p-2 bg-neutral-800 rounded-full"><X className="w-5 h-5"/></button></div>
+            <div className="flex justify-between items-center mb-5"><h3 className="text-xl font-black text-white">{testimonialModal.id?'ØªØ¹Ø¯ÙŠÙ„ Ø±Ø£ÙŠ Ø§Ù„Ø¹Ù…ÙŠÙ„':'Ø¥Ø¶Ø§ÙØ© Ø±Ø£ÙŠ Ø¹Ù…ÙŠÙ„'}</h3><button onClick={()=>setTestimonialModal(null)} className="p-2 bg-neutral-800 rounded-full"><X className="w-5 h-5"/></button></div>
             <div className="space-y-3">
-              <input value={testimonialModal.clientName||''} onChange={e=>setTestimonialModal({...testimonialModal,clientName:e.target.value})} placeholder="اسم العميل" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"/>
-              <input type="number" min="1" max="5" value={testimonialModal.rating??5} onChange={e=>setTestimonialModal({...testimonialModal,rating:Number(e.target.value)})} placeholder="التقييم من 5" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"/>
-              <textarea value={testimonialModal.commentAr||''} onChange={e=>setTestimonialModal({...testimonialModal,commentAr:e.target.value})} placeholder="رأي العميل بالعربية" rows={4} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"/>
+              <input value={testimonialModal.clientName||''} onChange={e=>setTestimonialModal({...testimonialModal,clientName:e.target.value})} placeholder="Ø§Ø³Ù… Ø§Ù„Ø¹Ù…ÙŠÙ„" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"/>
+              <input type="number" min="1" max="5" value={testimonialModal.rating??5} onChange={e=>setTestimonialModal({...testimonialModal,rating:Number(e.target.value)})} placeholder="Ø§Ù„ØªÙ‚ÙŠÙŠÙ… Ù…Ù† 5" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"/>
+              <textarea value={testimonialModal.commentAr||''} onChange={e=>setTestimonialModal({...testimonialModal,commentAr:e.target.value})} placeholder="Ø±Ø£ÙŠ Ø§Ù„Ø¹Ù…ÙŠÙ„ Ø¨Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©" rows={4} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"/>
               <div className="rounded-2xl border border-neutral-800 bg-neutral-950 p-4">
-                <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 text-neutral-950 text-xs font-bold cursor-pointer"><Upload className="w-4 h-4"/>{testimonialUploading?'جاري الرفع...':'رفع صورة العميل'}<input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={testimonialUploading} onChange={e=>{const f=e.target.files?.[0];if(f)void uploadTestimonialImage(f);e.currentTarget.value='';}}/></label>
-                {testimonialModal.image&&<div className="relative mt-3 rounded-xl overflow-hidden"><img src={testimonialModal.image} className="w-full h-48 object-cover" alt="صورة العميل"/><button type="button" onClick={()=>setTestimonialModal({...testimonialModal,image:'',imagePath:'',imageName:''})} className="absolute top-2 right-2 bg-red-500 text-white rounded-lg px-3 py-2 text-xs">حذف</button></div>}
+                <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 text-neutral-950 text-xs font-bold cursor-pointer"><Upload className="w-4 h-4"/>{testimonialUploading?'Ø¬Ø§Ø±ÙŠ Ø§Ù„Ø±ÙØ¹...':'Ø±ÙØ¹ ØµÙˆØ±Ø© Ø§Ù„Ø¹Ù…ÙŠÙ„'}<input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={testimonialUploading} onChange={e=>{const f=e.target.files?.[0];if(f)void uploadTestimonialImage(f);e.currentTarget.value='';}}/></label>
+                {testimonialModal.image&&<div className="relative mt-3 rounded-xl overflow-hidden"><img src={testimonialModal.image} className="w-full h-48 object-cover" alt="ØµÙˆØ±Ø© Ø§Ù„Ø¹Ù…ÙŠÙ„"/><button type="button" onClick={()=>setTestimonialModal({...testimonialModal,image:'',imagePath:'',imageName:''})} className="absolute top-2 right-2 bg-red-500 text-white rounded-lg px-3 py-2 text-xs">Ø­Ø°Ù</button></div>}
               </div>
-              <label className="flex items-center gap-2 text-sm text-white"><input type="checkbox" checked={testimonialModal.approved!==false} onChange={e=>setTestimonialModal({...testimonialModal,approved:e.target.checked})}/> اعتماد الرأي وعرضه</label>
-              <div className="flex gap-2 pt-2"><button disabled={testimonialUploading} onClick={async()=>{if(!testimonialModal.clientName||!testimonialModal.commentAr)return alert('أدخل اسم العميل والرأي.');try{if(testimonialModal.id) await updateTestimonial(testimonialModal.id,testimonialModal);else await addTestimonial(testimonialModal);setTestimonialModal(null);}catch(e){alert('تعذر حفظ رأي العميل.');}}} className="flex-1 py-3 bg-amber-500 text-neutral-950 rounded-xl font-black">حفظ</button><button onClick={()=>setTestimonialModal(null)} className="px-5 bg-neutral-800 rounded-xl">إلغاء</button></div>
+              <label className="flex items-center gap-2 text-sm text-white"><input type="checkbox" checked={testimonialModal.approved!==false} onChange={e=>setTestimonialModal({...testimonialModal,approved:e.target.checked})}/> Ø§Ø¹ØªÙ…Ø§Ø¯ Ø§Ù„Ø±Ø£ÙŠ ÙˆØ¹Ø±Ø¶Ù‡</label>
+              <div className="flex gap-2 pt-2"><button disabled={testimonialUploading} onClick={async()=>{if(!testimonialModal.clientName||!testimonialModal.commentAr)return alert('Ø£Ø¯Ø®Ù„ Ø§Ø³Ù… Ø§Ù„Ø¹Ù…ÙŠÙ„ ÙˆØ§Ù„Ø±Ø£ÙŠ.');try{if(testimonialModal.id) await updateTestimonial(testimonialModal.id,testimonialModal);else await addTestimonial(testimonialModal);setTestimonialModal(null);}catch(e){alert('ØªØ¹Ø°Ø± Ø­ÙØ¸ Ø±Ø£ÙŠ Ø§Ù„Ø¹Ù…ÙŠÙ„.');}}} className="flex-1 py-3 bg-amber-500 text-neutral-950 rounded-xl font-black">Ø­ÙØ¸</button><button onClick={()=>setTestimonialModal(null)} className="px-5 bg-neutral-800 rounded-xl">Ø¥Ù„ØºØ§Ø¡</button></div>
             </div>
           </div>
         </div>
@@ -3538,16 +3360,16 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
       {offerModal && (
         <div className="fixed inset-0 z-[90] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <div className="w-full max-w-2xl bg-neutral-900 border border-neutral-800 rounded-3xl p-6 my-8">
-            <div className="flex justify-between items-center mb-5"><h3 className="text-xl font-black text-white">{offerModal.id?'تعديل العرض':'إضافة عرض'}</h3><button onClick={()=>setOfferModal(null)} className="p-2 bg-neutral-800 rounded-full"><X className="w-5 h-5"/></button></div>
+            <div className="flex justify-between items-center mb-5"><h3 className="text-xl font-black text-white">{offerModal.id?'ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ø¹Ø±Ø¶':'Ø¥Ø¶Ø§ÙØ© Ø¹Ø±Ø¶'}</h3><button onClick={()=>setOfferModal(null)} className="p-2 bg-neutral-800 rounded-full"><X className="w-5 h-5"/></button></div>
             <div className="space-y-3">
-              <input value={offerModal.titleAr||''} onChange={e=>setOfferModal({...offerModal,titleAr:e.target.value})} placeholder="عنوان العرض بالعربية" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"/>
-              <input value={offerModal.titleFr||''} onChange={e=>setOfferModal({...offerModal,titleFr:e.target.value})} placeholder="عنوان العرض بالفرنسية" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"/>
-              <input value={offerModal.titleEn||''} onChange={e=>setOfferModal({...offerModal,titleEn:e.target.value})} placeholder="عنوان العرض بالإنجليزية" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"/>
-              <textarea value={offerModal.descAr||''} onChange={e=>setOfferModal({...offerModal,descAr:e.target.value})} placeholder="وصف العرض" rows={3} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"/>
-              <div className="grid grid-cols-2 gap-3"><input value={offerModal.oldPrice||''} onChange={e=>setOfferModal({...offerModal,oldPrice:e.target.value})} placeholder="السعر القديم" className="bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"/><input value={offerModal.newPrice||''} onChange={e=>setOfferModal({...offerModal,newPrice:e.target.value})} placeholder="السعر الجديد" className="bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"/></div>
-              <div className="rounded-2xl border border-neutral-800 bg-neutral-950 p-4"><label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 text-neutral-950 text-xs font-bold cursor-pointer"><Upload className="w-4 h-4"/>{offerUploading?'جاري الرفع...':'رفع صورة العرض'}<input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={offerUploading} onChange={e=>{const f=e.target.files?.[0];if(f)void uploadOfferImage(f);e.currentTarget.value='';}}/></label>{offerModal.image&&<div className="relative mt-3 rounded-xl overflow-hidden"><img src={offerModal.image} className="w-full h-48 object-cover" alt="صورة العرض"/><button type="button" onClick={()=>setOfferModal({...offerModal,image:'',imagePath:'',imageName:''})} className="absolute top-2 right-2 bg-red-500 text-white rounded-lg px-3 py-2 text-xs">حذف</button></div>}</div>
-              <label className="flex items-center gap-2 text-sm text-white"><input type="checkbox" checked={offerModal.active!==false} onChange={e=>setOfferModal({...offerModal,active:e.target.checked})}/> العرض نشط</label>
-              <div className="flex gap-2 pt-2"><button disabled={offerUploading} onClick={async()=>{if(!offerModal.titleAr)return alert('أدخل عنوان العرض.');try{if(offerModal.id) await updateOffer(offerModal.id,offerModal);else await addOffer(offerModal);setOfferModal(null);}catch(e){alert('تعذر حفظ العرض.');}}} className="flex-1 py-3 bg-amber-500 text-neutral-950 rounded-xl font-black">حفظ</button><button onClick={()=>setOfferModal(null)} className="px-5 bg-neutral-800 rounded-xl">إلغاء</button></div>
+              <input value={offerModal.titleAr||''} onChange={e=>setOfferModal({...offerModal,titleAr:e.target.value})} placeholder="Ø¹Ù†ÙˆØ§Ù† Ø§Ù„Ø¹Ø±Ø¶ Ø¨Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"/>
+              <input value={offerModal.titleFr||''} onChange={e=>setOfferModal({...offerModal,titleFr:e.target.value})} placeholder="Ø¹Ù†ÙˆØ§Ù† Ø§Ù„Ø¹Ø±Ø¶ Ø¨Ø§Ù„ÙØ±Ù†Ø³ÙŠØ©" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"/>
+              <input value={offerModal.titleEn||''} onChange={e=>setOfferModal({...offerModal,titleEn:e.target.value})} placeholder="Ø¹Ù†ÙˆØ§Ù† Ø§Ù„Ø¹Ø±Ø¶ Ø¨Ø§Ù„Ø¥Ù†Ø¬Ù„ÙŠØ²ÙŠØ©" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"/>
+              <textarea value={offerModal.descAr||''} onChange={e=>setOfferModal({...offerModal,descAr:e.target.value})} placeholder="ÙˆØµÙ Ø§Ù„Ø¹Ø±Ø¶" rows={3} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"/>
+              <div className="grid grid-cols-2 gap-3"><input value={offerModal.oldPrice||''} onChange={e=>setOfferModal({...offerModal,oldPrice:e.target.value})} placeholder="Ø§Ù„Ø³Ø¹Ø± Ø§Ù„Ù‚Ø¯ÙŠÙ…" className="bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"/><input value={offerModal.newPrice||''} onChange={e=>setOfferModal({...offerModal,newPrice:e.target.value})} placeholder="Ø§Ù„Ø³Ø¹Ø± Ø§Ù„Ø¬Ø¯ÙŠØ¯" className="bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"/></div>
+              <div className="rounded-2xl border border-neutral-800 bg-neutral-950 p-4"><label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 text-neutral-950 text-xs font-bold cursor-pointer"><Upload className="w-4 h-4"/>{offerUploading?'Ø¬Ø§Ø±ÙŠ Ø§Ù„Ø±ÙØ¹...':'Ø±ÙØ¹ ØµÙˆØ±Ø© Ø§Ù„Ø¹Ø±Ø¶'}<input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={offerUploading} onChange={e=>{const f=e.target.files?.[0];if(f)void uploadOfferImage(f);e.currentTarget.value='';}}/></label>{offerModal.image&&<div className="relative mt-3 rounded-xl overflow-hidden"><img src={offerModal.image} className="w-full h-48 object-cover" alt="ØµÙˆØ±Ø© Ø§Ù„Ø¹Ø±Ø¶"/><button type="button" onClick={()=>setOfferModal({...offerModal,image:'',imagePath:'',imageName:''})} className="absolute top-2 right-2 bg-red-500 text-white rounded-lg px-3 py-2 text-xs">Ø­Ø°Ù</button></div>}</div>
+              <label className="flex items-center gap-2 text-sm text-white"><input type="checkbox" checked={offerModal.active!==false} onChange={e=>setOfferModal({...offerModal,active:e.target.checked})}/> Ø§Ù„Ø¹Ø±Ø¶ Ù†Ø´Ø·</label>
+              <div className="flex gap-2 pt-2"><button disabled={offerUploading} onClick={async()=>{if(!offerModal.titleAr)return alert('Ø£Ø¯Ø®Ù„ Ø¹Ù†ÙˆØ§Ù† Ø§Ù„Ø¹Ø±Ø¶.');try{if(offerModal.id) await updateOffer(offerModal.id,offerModal);else await addOffer(offerModal);setOfferModal(null);}catch(e){alert('ØªØ¹Ø°Ø± Ø­ÙØ¸ Ø§Ù„Ø¹Ø±Ø¶.');}}} className="flex-1 py-3 bg-amber-500 text-neutral-950 rounded-xl font-black">Ø­ÙØ¸</button><button onClick={()=>setOfferModal(null)} className="px-5 bg-neutral-800 rounded-xl">Ø¥Ù„ØºØ§Ø¡</button></div>
             </div>
           </div>
         </div>
@@ -3564,8 +3386,8 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
               <h3 className="text-xl font-bold text-white">
                 {portfolioModal.id
-                  ? 'تعديل العمل'
-                  : 'إضافة عمل'}
+                  ? 'ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ø¹Ù…Ù„'
+                  : 'Ø¥Ø¶Ø§ÙØ© Ø¹Ù…Ù„'}
               </h3>
 
               <button
@@ -3580,7 +3402,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
               <input
-                placeholder="عنوان العمل بالعربية"
+                placeholder="Ø¹Ù†ÙˆØ§Ù† Ø§Ù„Ø¹Ù…Ù„ Ø¨Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©"
                 value={portfolioModal.titleAr || ''}
                 onChange={e =>
                   setPortfolioModal({
@@ -3592,7 +3414,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               />
 
               <input
-                placeholder="عنوان العمل بالفرنسية"
+                placeholder="Ø¹Ù†ÙˆØ§Ù† Ø§Ù„Ø¹Ù…Ù„ Ø¨Ø§Ù„ÙØ±Ù†Ø³ÙŠØ©"
                 value={portfolioModal.titleFr || ''}
                 onChange={e =>
                   setPortfolioModal({
@@ -3604,7 +3426,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               />
 
               <input
-                placeholder="عنوان العمل بالإنجليزية"
+                placeholder="Ø¹Ù†ÙˆØ§Ù† Ø§Ù„Ø¹Ù…Ù„ Ø¨Ø§Ù„Ø¥Ù†Ø¬Ù„ÙŠØ²ÙŠØ©"
                 value={portfolioModal.titleEn || ''}
                 onChange={e =>
                   setPortfolioModal({
@@ -3616,7 +3438,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               />
 
               <input
-                placeholder="أسماء العروسين"
+                placeholder="Ø£Ø³Ù…Ø§Ø¡ Ø§Ù„Ø¹Ø±ÙˆØ³ÙŠÙ†"
                 value={portfolioModal.coupleNames || ''}
                 onChange={e =>
                   setPortfolioModal({
@@ -3628,7 +3450,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               />
 
               <input
-                placeholder="التاريخ"
+                placeholder="Ø§Ù„ØªØ§Ø±ÙŠØ®"
                 value={portfolioModal.date || ''}
                 onChange={e =>
                   setPortfolioModal({
@@ -3640,7 +3462,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               />
 
               <input
-                placeholder="المكان"
+                placeholder="Ø§Ù„Ù…ÙƒØ§Ù†"
                 value={portfolioModal.location || ''}
                 onChange={e =>
                   setPortfolioModal({
@@ -3661,31 +3483,31 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 }
                 className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"
               >
-                <option value="weddings">أعراس</option>
-                <option value="graduations">تخرج</option>
-                <option value="events">مناسبات</option>
-                <option value="fashion">أزياء</option>
-                <option value="other">أخرى</option>
+                <option value="weddings">Ø£Ø¹Ø±Ø§Ø³</option>
+                <option value="graduations">ØªØ®Ø±Ø¬</option>
+                <option value="events">Ù…Ù†Ø§Ø³Ø¨Ø§Øª</option>
+                <option value="fashion">Ø£Ø²ÙŠØ§Ø¡</option>
+                <option value="other">Ø£Ø®Ø±Ù‰</option>
               </select>
 
               <div className="md:col-span-2 space-y-3">
                 <label className="flex items-center gap-3 w-full cursor-pointer bg-neutral-950 border border-dashed border-amber-500/40 rounded-xl px-4 py-4">
                   <FileImage className="w-5 h-5 text-amber-400" />
-                  <div className="flex-1"><div className="text-sm text-white font-semibold">رفع صور من الحاسوب</div><div className="text-xs text-neutral-500">JPG / PNG / WEBP — عدة صور مسموحة</div></div>
+                  <div className="flex-1"><div className="text-sm text-white font-semibold">Ø±ÙØ¹ ØµÙˆØ± Ù…Ù† Ø§Ù„Ø­Ø§Ø³ÙˆØ¨</div><div className="text-xs text-neutral-500">JPG / PNG / WEBP â€” Ø¹Ø¯Ø© ØµÙˆØ± Ù…Ø³Ù…ÙˆØ­Ø©</div></div>
                   <input type="file" multiple accept="image/jpeg,image/png,image/webp" className="hidden" disabled={portfolioUploading} onChange={async e => {
                     const files = Array.from(e.target.files || []); if (!files.length) return;
                     try { setPortfolioUploading(true); const urls = await uploadPortfolioImages(files); setPortfolioModal((m:any) => ({...m, image: m?.image || urls[0] || '', images: [...(Array.isArray(m?.images) ? m.images : []), ...urls]})); }
-                    catch(error){ alert(error instanceof Error ? error.message : 'فشل رفع الصور.'); }
+                    catch(error){ alert(error instanceof Error ? error.message : 'ÙØ´Ù„ Ø±ÙØ¹ Ø§Ù„ØµÙˆØ±.'); }
                     finally { setPortfolioUploading(false); e.target.value=''; }
                   }} />
                 </label>
-                {portfolioUploading && <div className="text-xs text-amber-400">جارٍ رفع الصور...</div>}
+                {portfolioUploading && <div className="text-xs text-amber-400">Ø¬Ø§Ø±Ù Ø±ÙØ¹ Ø§Ù„ØµÙˆØ±...</div>}
                 {Array.isArray(portfolioModal.images) && portfolioModal.images.length > 0 && <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">{portfolioModal.images.map((url:string,i:number)=><div key={url+i} className="relative aspect-square rounded-xl overflow-hidden"><img src={url} className="w-full h-full object-cover" /><button type="button" onClick={()=>{const images=portfolioModal.images.filter((_:string,n:number)=>n!==i);setPortfolioModal({...portfolioModal,images,image:images[0]||''})}} className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full"><X className="w-3 h-3"/></button></div>)}</div>}
-                <input placeholder="أو أدخل رابط الصورة يدويًا" value={portfolioModal.image || ''} onChange={e=>setPortfolioModal({...portfolioModal,image:e.target.value})} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+                <input placeholder="Ø£Ùˆ Ø£Ø¯Ø®Ù„ Ø±Ø§Ø¨Ø· Ø§Ù„ØµÙˆØ±Ø© ÙŠØ¯ÙˆÙŠÙ‹Ø§" value={portfolioModal.image || ''} onChange={e=>setPortfolioModal({...portfolioModal,image:e.target.value})} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
               </div>
 
               <textarea
-                placeholder="وصف العمل"
+                placeholder="ÙˆØµÙ Ø§Ù„Ø¹Ù…Ù„"
                 value={portfolioModal.descriptionAr || ''}
                 onChange={e =>
                   setPortfolioModal({
@@ -3716,7 +3538,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                   htmlFor="portfolioVisibleModal"
                   className="text-sm text-neutral-200"
                 >
-                  عرض العمل في المعرض العام
+                  Ø¹Ø±Ø¶ Ø§Ù„Ø¹Ù…Ù„ ÙÙŠ Ø§Ù„Ù…Ø¹Ø±Ø¶ Ø§Ù„Ø¹Ø§Ù…
                 </label>
 
               </div>
@@ -3729,7 +3551,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 onClick={() => setPortfolioModal(null)}
                 className="px-5 py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white text-sm"
               >
-                إلغاء
+                Ø¥Ù„ØºØ§Ø¡
               </button>
 
               <button
@@ -3746,7 +3568,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                     )
                   ) {
                     alert(
-                      'يرجى إدخال عنوان العمل وصورة واحدة على الأقل.'
+                      'ÙŠØ±Ø¬Ù‰ Ø¥Ø¯Ø®Ø§Ù„ Ø¹Ù†ÙˆØ§Ù† Ø§Ù„Ø¹Ù…Ù„ ÙˆØµÙˆØ±Ø© ÙˆØ§Ø­Ø¯Ø© Ø¹Ù„Ù‰ Ø§Ù„Ø£Ù‚Ù„.'
                     );
                     return;
                   }
@@ -3791,7 +3613,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 }}
                 className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 text-sm font-bold"
               >
-                حفظ العمل
+                Ø­ÙØ¸ Ø§Ù„Ø¹Ù…Ù„
               </button>
 
             </div>
@@ -3806,3 +3628,5 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 };
 
 export default AdminDashboard;
+
+

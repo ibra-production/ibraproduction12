@@ -9,11 +9,7 @@ service cloud.firestore {
 
     function isAdmin() {
       return signedIn()
-        && request.auth.token.phone_number in [
-          "+213556967093",
-          "+213779000833",
-          "+213558948485"
-        ];
+        && request.auth.token.email == "admin@ibraprod.online";
     }
 
     // Public website content: anyone can read, only the owner can modify.

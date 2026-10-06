@@ -21,6 +21,7 @@ import {
 } from "firebase/firestore";
 
 import {
+  signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
 } from "firebase/auth";
@@ -78,6 +79,11 @@ interface AppContextType {
   deleteTeamMember: (id: string) => Promise<void>;
 
   currentUser: AdminUser | null;
+
+  login: (
+    email: string,
+    pass: string
+  ) => Promise<boolean>;
 
   logout: () => Promise<void>;
 
@@ -515,50 +521,90 @@ export const AppProvider: React.FC<{
   };
 
   // =========================================================
-  // Firebase Authentication — Ibra Access / Phone + PIN
+  // Firebase Authentication
   // =========================================================
+
+  const login = async (
+    email: string,
+    pass: string
+  ): Promise<boolean> => {
+    try {
+      const credential = await signInWithEmailAndPassword(
+        auth,
+        email.trim(),
+        pass
+      );
+
+      const signedInEmail = (credential.user.email || "").trim().toLowerCase();
+      if (signedInEmail !== "admin@ibraprod.online") {
+        await signOut(auth);
+        alert("هذا الحساب غير مخول للوصول إلى لوحة الإدارة.");
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error(
+        "Firebase login error:",
+        error
+      );
+
+      alert(
+        "فشل تسجيل الدخول: " +
+          String(
+            error instanceof Error
+              ? error.message
+              : error
+          )
+      );
+
+      return false;
+    }
+  };
 
   const logout = async (): Promise<void> => {
     try {
       await signOut(auth);
     } catch (error) {
-      console.error("Firebase logout error:", error);
-      alert("حدث خطأ أثناء تسجيل الخروج");
+      console.error(
+        "Firebase logout error:",
+        error
+      );
+
+      alert(
+        "حدث خطأ أثناء تسجيل الخروج"
+      );
     }
   };
 
   // =========================================================
   // Firebase Auth State
-  // The phone number is mapped to a private Firebase email identity.
-  // The actual sign-in credential remains hidden from the UI.
-  // Firestore rules enforce the same owner boundary server-side.
   // =========================================================
 
   useEffect(() => {
-    const ownerEmails = new Set([
-      "owner556967093@ibraprod.online",
-      "owner779000833@ibraprod.online",
-      "owner558948485@ibraprod.online",
-    ]);
+    const unsubscribe =
+      onAuthStateChanged(
+        auth,
+        (firebaseUser) => {
+          if (firebaseUser) {
+            const signedInEmail = (firebaseUser.email || "").trim().toLowerCase();
+            if (signedInEmail !== "admin@ibraprod.online") {
+              signOut(auth).catch(() => undefined);
+              setCurrentUser(null);
+              return;
+            }
 
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (!firebaseUser) {
-        setCurrentUser(null);
-        return;
-      }
+            const adminUser = users[0];
+            setCurrentUser(adminUser);
+          } else {
+            setCurrentUser(null);
+          }
+        }
+      );
 
-      const email = (firebaseUser.email || "").toLowerCase();
-      if (!ownerEmails.has(email)) {
-        signOut(auth).catch(() => undefined);
-        setCurrentUser(null);
-        return;
-      }
-
-      const adminUser = users[0];
-      setCurrentUser(adminUser);
-    });
-
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+    };
   }, [users]);
 
   // =========================================================
@@ -613,11 +659,6 @@ export const AppProvider: React.FC<{
   // =========================================================
 
   useEffect(() => {
-    if (!currentUser) {
-      setTeamMembers([]);
-      return;
-    }
-
     const unsubscribe = onSnapshot(
       collection(db, "teamMembers"),
       (snapshot) => {
@@ -635,7 +676,7 @@ export const AppProvider: React.FC<{
     );
 
     return () => unsubscribe();
-  }, [currentUser]);
+  }, []);
 
   // =========================================================
   // TEAM - CRUD
@@ -912,51 +953,6 @@ export const AppProvider: React.FC<{
       unsubscribe();
     };
   }, []);
-
-  // =========================================================
-  // FIRESTORE REALTIME - BOOKINGS (ADMIN ONLY)
-  // =========================================================
-
-  useEffect(() => {
-    if (!currentUser) {
-      setBookings([]);
-      return;
-    }
-
-    const unsubscribe = onSnapshot(
-      collection(db, "bookings"),
-      (snapshot) => {
-        const items = snapshot.docs.map((bookingDoc) => {
-          const data = bookingDoc.data() as any;
-          const createdAtValue = data.createdAt;
-          const createdAt =
-            typeof createdAtValue === "string"
-              ? createdAtValue
-              : createdAtValue?.toDate
-                ? createdAtValue.toDate().toISOString()
-                : new Date().toISOString();
-
-          return {
-            ...data,
-            id: bookingDoc.id,
-            createdAt,
-          } as BookingItem;
-        });
-
-        items.sort((a: any, b: any) =>
-          String(b.createdAt || "").localeCompare(String(a.createdAt || ""))
-        );
-        setBookings(items);
-        console.log("🔥 Bookings loaded:", items.length);
-      },
-      (error) => {
-        console.error("❌ Firestore bookings listener error:", error);
-        setBookings([]);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [currentUser]);
 
   // =========================================================
   // SERVICES - CRUD
@@ -1917,11 +1913,6 @@ export const AppProvider: React.FC<{
   // =========================================================
 
   useEffect(() => {
-    if (!currentUser) {
-      setBookings([]);
-      return;
-    }
-
     const unsubscribe =
       onSnapshot(
         collection(
@@ -1999,10 +1990,6 @@ export const AppProvider: React.FC<{
                     data.idCardUrl ||
                     "",
 
-                  idCardKey:
-                    data.idCardKey ||
-                    "",
-
                   idCardName:
                     data.idCardName ||
                     "",
@@ -2051,7 +2038,7 @@ export const AppProvider: React.FC<{
     return () => {
       unsubscribe();
     };
-  }, [currentUser]);
+  }, []);
 
 
   const syncClientPortal = async (bookingId: string, patch: Record<string, unknown>) => {
@@ -2560,6 +2547,7 @@ export const AppProvider: React.FC<{
         deleteTeamMember,
 
         currentUser,
+        login,
         logout,
 
         addService,

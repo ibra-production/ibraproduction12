@@ -1,0 +1,62 @@
+{
+  "name": "منصة إبرا للحجوزات | Ibra Production",
+  "short_name": "Ibra Production",
+  "description": "منصة إبرا للحجوزات والتسيير — Ibra Production",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#110b0f",
+  "theme_color": "#110b0f",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "/logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "حجز جديد",
+      "short_name": "حجز",
+      "url": "/?booking=1",
+      "icons": [
+        {
+          "src": "/logo.jpg",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "متابعة الطلب",
+      "short_name": "متابعة",
+      "url": "/?tracking=1",
+      "icons": [
+        {
+          "src": "/logo.jpg",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "وضع التلفاز",
+      "short_name": "TV",
+      "url": "/?tv=1",
+      "icons": [
+        {
+          "src": "/logo.jpg",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
