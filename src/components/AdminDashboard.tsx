@@ -488,7 +488,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
     const raw = String(value || legacy.url || '').trim();
 
     if (explicitKey) {
-      return ID_CARD_WORKER_URL + '/?key=' + encodeURIComponent(explicitKey);
+      return '/api/id-card?key=' + encodeURIComponent(explicitKey);
     }
 
     if (!raw) throw new Error('رابط بطاقة التعريف غير موجود.');
@@ -497,7 +497,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
       const parsed = new URL(raw);
       const queryKey = parsed.searchParams.get('key');
       if (queryKey) {
-        return ID_CARD_WORKER_URL + '/?key=' + encodeURIComponent(queryKey);
+        return '/api/id-card?key=' + encodeURIComponent(queryKey);
       }
     } catch {
       // Not a full URL; treat it as a storage key below.
@@ -510,7 +510,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
     const key = raw.replace(/^\/?(?:id-cards?\/)?/, '').replace(/^\/+/, '');
     if (!key) throw new Error('مفتاح بطاقة التعريف غير صالح.');
 
-    return ID_CARD_WORKER_URL + '/?key=' + encodeURIComponent(key);
+    return '/api/id-card?key=' + encodeURIComponent(key);
   };
 
   const getIdCardBlob = async (value: string, booking?: any) => {
