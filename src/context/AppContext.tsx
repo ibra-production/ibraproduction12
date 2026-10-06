@@ -1988,10 +1988,23 @@ export const AppProvider: React.FC<{
 
                   idCardUrl:
                     data.idCardUrl ||
+                    data.idCardFileUrl ||
+                    data.idCard?.url ||
+                    "",
+
+                  idCardKey:
+                    data.idCardKey ||
+                    data.idCard?.key ||
                     "",
 
                   idCardName:
                     data.idCardName ||
+                    data.idCard?.name ||
+                    "",
+
+                  idCardMimeType:
+                    data.idCardMimeType ||
+                    data.idCard?.mimeType ||
                     "",
 
                   status:
