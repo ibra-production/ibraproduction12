@@ -487,8 +487,16 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
     const explicitKey = String(legacy.key || '').trim();
     const raw = String(value || legacy.url || '').trim();
 
+    // ID cards are stored in Cloudflare R2 and served by the Worker.
+    // There is intentionally no /api/id-card endpoint in this Vite/Pages app.
+    const buildWorkerUrl = (key: string) => {
+      const cleanKey = String(key || '').trim().replace(/^\\/+/, '');
+      if (!cleanKey) throw new Error('مفتاح بطاقة التعريف غير صالح.');
+      return ID_CARD_WORKER_URL + '/?key=' + encodeURIComponent(cleanKey);
+    };
+
     if (explicitKey) {
-      return '/api/id-card?key=' + encodeURIComponent(explicitKey);
+      return buildWorkerUrl(explicitKey);
     }
 
     if (!raw) throw new Error('رابط بطاقة التعريف غير موجود.');
@@ -497,20 +505,28 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
       const parsed = new URL(raw);
       const queryKey = parsed.searchParams.get('key');
       if (queryKey) {
-        return '/api/id-card?key=' + encodeURIComponent(queryKey);
+        return buildWorkerUrl(queryKey);
+      }
+
+      // Keep only the supported private Worker URL, never silently trust
+      // an unrelated external URL for an identity document.
+      if (parsed.origin === new URL(ID_CARD_WORKER_URL).origin) {
+        return parsed.toString();
       }
     } catch {
       // Not a full URL; treat it as a storage key below.
     }
 
-    if (raw.startsWith('http://') || raw.startsWith('https://')) {
+    if (raw.startsWith('data:')) {
       return raw;
     }
 
-    const key = raw.replace(/^\/?(?:id-cards?\/)?/, '').replace(/^\/+/, '');
-    if (!key) throw new Error('مفتاح بطاقة التعريف غير صالح.');
+    if (raw.startsWith('http://') || raw.startsWith('https://')) {
+      throw new Error('رابط بطاقة التعريف غير صالح أو لا ينتمي إلى تخزين Ibra.');
+    }
 
-    return '/api/id-card?key=' + encodeURIComponent(key);
+    const key = raw.replace(/^\\/?(?:id-cards?\\/)?/, '').replace(/^\\/+/, '');
+    return buildWorkerUrl(key);
   };
 
   const getIdCardBlob = async (value: string, booking?: any) => {
