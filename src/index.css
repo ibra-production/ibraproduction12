@@ -1321,3 +1321,23 @@ button, input, textarea, select, a {
     font-size: 1.18rem !important;
   }
 }
+
+
+/* =========================================================
+   IBRA SECURE ID CARDS — MOTION GRAPHICS
+   ========================================================= */
+.ibra-idcards-hero{isolation:isolate;box-shadow:0 24px 80px rgba(0,0,0,.25)}
+.ibra-idcards-orb{position:absolute;border-radius:999px;filter:blur(50px);pointer-events:none;opacity:.5;animation:ibraIdOrb 8s ease-in-out infinite alternate}
+.ibra-idcards-orb-one{width:220px;height:220px;right:-60px;top:-80px;background:rgba(245,158,11,.16)}
+.ibra-idcards-orb-two{width:180px;height:180px;left:12%;bottom:-110px;background:rgba(217,119,6,.12);animation-delay:-3s}
+@keyframes ibraIdOrb{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(24px,-16px,0) scale(1.12)}}
+.ibra-idcard-card{transform:translateZ(0);will-change:transform,box-shadow}
+.ibra-idcard-card::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;background:linear-gradient(120deg,rgba(245,158,11,.0),rgba(245,158,11,.28),rgba(255,255,255,.04),rgba(245,158,11,.0));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.7;animation:ibraIdBorder 5s linear infinite;pointer-events:none}
+@keyframes ibraIdBorder{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.ibra-idcard-shine{position:absolute;inset:-70% -30%;background:linear-gradient(110deg,transparent 42%,rgba(255,255,255,.08) 50%,transparent 58%);transform:translateX(-65%) rotate(8deg);transition:transform .9s ease;pointer-events:none}
+.ibra-idcard-card:hover .ibra-idcard-shine{transform:translateX(65%) rotate(8deg)}
+.ibra-idcard-icon{animation:ibraIdFloat 3.8s ease-in-out infinite}
+@keyframes ibraIdFloat{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-4px) rotate(2deg)}}
+.ibra-idcard-modal{animation:ibraIdModal .28s cubic-bezier(.22,1,.36,1)}
+@keyframes ibraIdModal{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(prefers-reduced-motion:reduce){.ibra-idcards-orb,.ibra-idcard-card::before,.ibra-idcard-icon{animation:none!important}.ibra-idcard-shine{display:none}.ibra-idcard-modal{animation:none}}
