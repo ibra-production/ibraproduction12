@@ -149,8 +149,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
 const [videoModal, setVideoModal] = useState<any | null>(null);
   const [portfolioUploading, setPortfolioUploading] = useState(false);
   const [videoUploading, setVideoUploading] = useState(false);
-  const [idCardPreview, setIdCardPreview] = useState(null);
+  const [idCardPreview, setIdCardPreview] = useState<any | null>(null);
   const [idCardLoading, setIdCardLoading] = useState(false);
+  const [idCardSearch, setIdCardSearch] = useState('');
+  const [idCardFilter, setIdCardFilter] = useState<'all' | 'image' | 'pdf'>('all');
   const [automationNotifications, setAutomationNotifications] = useState<any[]>([]);
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const now = new Date();
@@ -489,11 +491,12 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
     if (!currentUser) throw new Error('يجب تسجيل الدخول كمسؤول.');
 
     const token = await currentUser.getIdToken(true);
+    const workerBase = 'https://yellow-bar-9020ibra-id-card-upload.bahibarhouma15.workers.dev/';
     const requestUrl = raw
       ? (raw.startsWith('http://') || raw.startsWith('https://')
           ? raw
           : new URL(raw, window.location.origin).toString())
-      : `https://yellow-bar-9020ibra-id-card-upload.bahibarhouma15.workers.dev/?key=${encodeURIComponent(normalizedKey)}`;
+      : `${workerBase}?key=${encodeURIComponent(normalizedKey)}`;
 
     const response = await fetch(requestUrl, {
       method: 'GET',
@@ -517,13 +520,24 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
     return blob;
   };
 
+  const getBookingIdCardRef = (booking: any) => ({
+    url: String(booking?.idCardUrl || booking?.idCardFileUrl || booking?.idCard?.url || '').trim(),
+    key: String(booking?.idCardKey || booking?.idCard?.key || '').trim(),
+    name: String(booking?.idCardName || booking?.idCard?.name || 'بطاقة-التعريف').trim(),
+    mime: String(booking?.idCardMimeType || booking?.idCard?.mimeType || '').trim().toLowerCase()
+  });
+
   const previewIdCard = async (booking: any) => {
-    if (!booking?.idCardUrl) return;
+    const ref = getBookingIdCardRef(booking);
+    if (!ref.url && !ref.key) {
+      alert('لا توجد بطاقة تعريف مرتبطة بهذا الحجز.');
+      return;
+    }
     try {
       setIdCardLoading(true);
-      const blob = await getIdCardBlob(String(booking.idCardUrl || ''), String(booking.idCardKey || ''));
+      const blob = await getIdCardBlob(ref.url, ref.key);
       const objectUrl = URL.createObjectURL(blob);
-      setIdCardPreview({ url: objectUrl, name: booking.idCardName || 'id-card', type: blob.type || 'application/octet-stream' });
+      setIdCardPreview({ url: objectUrl, name: ref.name, type: blob.type || ref.mime || 'application/octet-stream', bookingId: booking.id });
     } catch (error) {
       alert(error instanceof Error ? error.message : 'ØªØ¹Ø°Ø± Ù�Ø¹Ø§Ù�Ù�Ø© Ø¨Ø·Ø§Ù�Ø© Ø§Ù�ØªØ¹Ø±Ù�Ù.');
     } finally {
@@ -532,17 +546,18 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
   };
 
   const downloadIdCard = async (booking: any) => {
-    if (!booking?.idCardUrl) {
+    const ref = getBookingIdCardRef(booking);
+    if (!ref.url && !ref.key) {
       alert('لا توجد بطاقة تعريف مرتبطة بهذا الحجز.');
       return;
     }
 
     try {
       setIdCardLoading(true);
-      const blob = await getIdCardBlob(String(booking.idCardUrl || ''), String(booking.idCardKey || ''));
+      const blob = await getIdCardBlob(ref.url, ref.key);
       const objectUrl = URL.createObjectURL(blob);
 
-      const originalName = String(booking.idCardName || 'id-card').trim();
+      const originalName = ref.name;
       const hasExtension = /\.[a-z0-9]{2,5}$/i.test(originalName);
       const extension = blob.type.includes('pdf') ? '.pdf' : blob.type.includes('png') ? '.png' : '.jpg';
       const fileName = hasExtension ? originalName : originalName + extension;
@@ -2036,69 +2051,147 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
 
             </div>
           )}
-          {activeTab === 'idcards' && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold text-white">Ø¨Ø·Ø§Ù�Ø§Øª Ø§Ù�ØªØ¹Ø±Ù�Ù Ø§Ù�Ù�Ø³Ø¬Ù�Ø©</h2>
-                <p className="text-xs text-neutral-400 mt-2">Ù�Ø¹Ø§Ù�Ù�Ø© Ù�ØªØ­Ù�Ù�Ù� Ø¢Ù�Ù� Ù�Ø¨Ø·Ø§Ù�Ø§Øª Ø§Ù�ØªØ¹Ø±Ù�Ù Ø§Ù�Ù�Ø±ÙÙ�Ø¹Ø© Ù�Ø¹ Ø§Ù�Ø­Ø¬Ù�Ø²Ø§Øª.</p>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                {safeBookings.filter((b:any) => b.idCardUrl || b.idCardKey || b.idCardFileUrl || b.idCard?.url || b.idCard?.key).map((b:any) => (
-                  <div key={b.id} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="font-bold text-white">{b.groomName || '-'}{b.brideName ? ' & ' + b.brideName : ''}</h3>
-                        <p className="text-xs text-neutral-500 mt-1">#{String(b.id || '').slice(-6)}</p>
+          {activeTab === 'idcards' && (() => {
+            const idCardBookings = safeBookings.filter((b: any) => {
+              const ref = getBookingIdCardRef(b);
+              const q = idCardSearch.trim().toLowerCase();
+              const searchable = [b.groomName, b.brideName, b.phone, b.id, ref.name].join(' ').toLowerCase();
+              const type = ref.mime.includes('pdf') || ref.name.toLowerCase().endsWith('.pdf') ? 'pdf' : 'image';
+              return (ref.url || ref.key) && (!q || searchable.includes(q)) && (idCardFilter === 'all' || idCardFilter === type);
+            });
+
+            const totalCards = safeBookings.filter((b: any) => {
+              const ref = getBookingIdCardRef(b);
+              return ref.url || ref.key;
+            }).length;
+            const pdfCards = safeBookings.filter((b: any) => {
+              const ref = getBookingIdCardRef(b);
+              return (ref.url || ref.key) && (ref.mime.includes('pdf') || ref.name.toLowerCase().endsWith('.pdf'));
+            }).length;
+
+            return (
+              <div className="space-y-6">
+                <section className="relative overflow-hidden rounded-[28px] border border-amber-500/20 bg-gradient-to-br from-amber-500/10 via-neutral-900 to-neutral-950 p-5 md:p-7 ibra-idcards-hero">
+                  <div className="ibra-idcards-orb ibra-idcards-orb-one" />
+                  <div className="ibra-idcards-orb ibra-idcards-orb-two" />
+                  <div className="relative z-10 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
+                    <div>
+                      <div className="text-[10px] tracking-[0.28em] text-amber-400 font-black uppercase">IBRA SECURE ARCHIVE</div>
+                      <h2 className="text-2xl md:text-4xl font-black text-white mt-2">بطاقات التعريف المؤمّنة</h2>
+                      <p className="text-sm text-neutral-400 mt-2 max-w-2xl">عرض آمن، تحميل مباشر، معاينة PDF والصور، وبحث سريع داخل بطاقات الحجوزات.</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 min-w-[260px]">
+                      <div className="rounded-2xl border border-white/10 bg-black/20 backdrop-blur-xl p-4">
+                        <div className="text-xs text-neutral-500">إجمالي البطاقات</div>
+                        <div className="text-2xl font-black text-white mt-1">{totalCards}</div>
                       </div>
-                      <FileImage className="w-6 h-6 text-amber-400" />
-                    </div>
-                    <div className="text-xs text-neutral-400 mt-4 space-y-1">
-                      <div>Ø§Ù�Ù�Ø§ØªÙ: {b.phone || '-'}</div>
-                      <div>Ø§Ù�ØªØ§Ø±Ù�Ø®: {Array.isArray(b.eventDates) && b.eventDates.length ? b.eventDates.join('Ø� ') : (b.eventDate || '-')}</div>
-                      <div className="break-all">Ø§Ù�Ù�Ù�Ù: {b.idCardName || b.idCard?.name || 'بطاقة التعريف'}</div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 mt-4">
-                      <button type="button" disabled={idCardLoading} onClick={() => previewIdCard(b)} className="flex items-center justify-center gap-2 px-3 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl text-xs font-bold disabled:opacity-50">
-                        <Eye className="w-4 h-4" /> Ù�Ø¹Ø§Ù�Ù�Ø©
-                      </button>
-                      <button type="button" disabled={idCardLoading} onClick={() => downloadIdCard(b)} className="flex items-center justify-center gap-2 px-3 py-3 bg-amber-500 hover:bg-amber-400 text-neutral-950 rounded-xl text-xs font-bold disabled:opacity-50">
-                        <Download className="w-4 h-4" /> ØªØ­Ù�Ù�Ù�
-                      </button>
+                      <div className="rounded-2xl border border-white/10 bg-black/20 backdrop-blur-xl p-4">
+                        <div className="text-xs text-neutral-500">PDF</div>
+                        <div className="text-2xl font-black text-amber-300 mt-1">{pdfCards}</div>
+                      </div>
                     </div>
                   </div>
-                ))}
-                {safeBookings.filter((b:any) => b.idCardUrl || b.idCardKey || b.idCardFileUrl || b.idCard?.url || b.idCard?.key).length === 0 && (
-                  <div className="col-span-full bg-neutral-900 border border-neutral-800 rounded-2xl p-10 text-center text-neutral-500">Ù�Ø§ ØªÙ�Ø¬Ø¯ Ø¨Ø·Ø§Ù�Ø§Øª ØªØ¹Ø±Ù�Ù Ù�Ø³Ø¬Ù�Ø©.</div>
-                )}
-              </div>
+                </section>
 
-              {idCardPreview && (
-                <div className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
-                  <div className="w-full max-w-5xl h-[90vh] bg-neutral-900 border border-amber-500/30 rounded-3xl overflow-hidden flex flex-col">
-                    <div className="flex items-center justify-between gap-3 p-4 border-b border-neutral-800">
-                      <div className="min-w-0">
-                        <div className="text-white font-bold">Ù�Ø¹Ø§Ù�Ù�Ø© Ø¨Ø·Ø§Ù�Ø© Ø§Ù�ØªØ¹Ø±Ù�Ù</div>
-                        <div className="text-xs text-neutral-500 truncate">{idCardPreview.name}</div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <a href={idCardPreview.url} download={idCardPreview.name} className="px-4 py-2 bg-amber-500 text-neutral-950 rounded-xl text-xs font-bold">ØªØ­Ù�Ù�Ù�</a>
-                        <button type="button" onClick={() => { URL.revokeObjectURL(idCardPreview.url); setIdCardPreview(null); }} className="p-2 bg-neutral-800 text-white rounded-xl">
-                          <X className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </div>
-                    <div className="flex-1 bg-neutral-950 p-4 overflow-auto flex items-center justify-center">
-                      {idCardPreview.type.includes('pdf') ? (
-                        <iframe src={idCardPreview.url} title="Ù�Ø¹Ø§Ù�Ù�Ø© Ø¨Ø·Ø§Ù�Ø© Ø§Ù�ØªØ¹Ø±Ù�Ù" className="w-full h-full rounded-xl bg-white" />
-                      ) : (
-                        <img src={idCardPreview.url} alt="Ø¨Ø·Ø§Ù�Ø© Ø§Ù�ØªØ¹Ø±Ù�Ù" className="max-w-full max-h-full object-contain rounded-xl" />
-                      )}
-                    </div>
+                <div className="flex flex-col md:flex-row gap-3">
+                  <div className="relative flex-1">
+                    <input
+                      value={idCardSearch}
+                      onChange={e => setIdCardSearch(e.target.value)}
+                      placeholder="ابحث باسم العريس، العروس، الهاتف أو رقم الحجز..."
+                      className="w-full bg-neutral-900 border border-neutral-800 rounded-2xl px-4 py-3.5 text-white outline-none focus:border-amber-500/60"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    {(['all', 'image', 'pdf'] as const).map(filter => (
+                      <button
+                        key={filter}
+                        type="button"
+                        onClick={() => setIdCardFilter(filter)}
+                        className={`px-4 py-3 rounded-2xl text-xs font-black transition-all ${idCardFilter === filter ? 'bg-amber-500 text-neutral-950 shadow-lg shadow-amber-500/20' : 'bg-neutral-900 border border-neutral-800 text-neutral-300 hover:border-amber-500/30'}`}
+                      >
+                        {filter === 'all' ? 'الكل' : filter === 'pdf' ? 'PDF' : 'صور'}
+                      </button>
+                    ))}
                   </div>
                 </div>
-              )}
-            </div>
-          )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                  {idCardBookings.map((b: any) => {
+                    const ref = getBookingIdCardRef(b);
+                    const isPdf = ref.mime.includes('pdf') || ref.name.toLowerCase().endsWith('.pdf');
+                    return (
+                      <article key={b.id} className="group relative overflow-hidden rounded-[26px] border border-neutral-800 bg-neutral-900/90 p-5 transition-all duration-500 hover:-translate-y-1 hover:border-amber-500/50 hover:shadow-2xl hover:shadow-amber-500/10 ibra-idcard-card">
+                        <div className="ibra-idcard-shine" />
+                        <div className="absolute -top-20 -right-20 h-40 w-40 rounded-full bg-amber-500/10 blur-3xl group-hover:bg-amber-500/20 transition-all duration-700" />
+                        <div className="relative z-10">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <div className="text-[10px] font-black tracking-[0.2em] text-amber-400">SECURE FILE</div>
+                              <h3 className="font-black text-white mt-1 truncate">{b.groomName || 'عميل'}{b.brideName ? ' & ' + b.brideName : ''}</h3>
+                              <p className="text-xs text-neutral-500 mt-1">#{String(b.id || '').slice(-8)}</p>
+                            </div>
+                            <div className="h-12 w-12 shrink-0 rounded-2xl border border-amber-500/20 bg-amber-500/10 flex items-center justify-center ibra-idcard-icon">
+                              {isPdf ? <FileText className="w-6 h-6 text-amber-300" /> : <FileImage className="w-6 h-6 text-amber-300" />}
+                            </div>
+                          </div>
+                          <div className="mt-5 rounded-2xl border border-white/5 bg-black/20 p-4 space-y-2">
+                            <div className="flex justify-between gap-3 text-xs"><span className="text-neutral-500">الهاتف</span><span className="text-neutral-200">{b.phone || '—'}</span></div>
+                            <div className="flex justify-between gap-3 text-xs"><span className="text-neutral-500">التاريخ</span><span className="text-neutral-200 text-left">{getBookingDates(b).join(' • ') || '—'}</span></div>
+                            <div className="flex justify-between gap-3 text-xs"><span className="text-neutral-500">الملف</span><span className="text-neutral-300 truncate max-w-[60%]">{ref.name}</span></div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 mt-4">
+                            <button type="button" disabled={idCardLoading} onClick={() => previewIdCard(b)} className="flex items-center justify-center gap-2 px-3 py-3.5 bg-neutral-800 hover:bg-neutral-700 text-white rounded-2xl text-xs font-black transition-all disabled:opacity-50">
+                              <Eye className="w-4 h-4" /> معاينة
+                            </button>
+                            <button type="button" disabled={idCardLoading} onClick={() => downloadIdCard(b)} className="flex items-center justify-center gap-2 px-3 py-3.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 rounded-2xl text-xs font-black transition-all disabled:opacity-50">
+                              <Download className="w-4 h-4" /> تحميل
+                            </button>
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                  {idCardBookings.length === 0 && (
+                    <div className="col-span-full rounded-[26px] border border-dashed border-neutral-800 bg-neutral-900/60 p-12 text-center">
+                      <FileImage className="w-12 h-12 mx-auto text-neutral-700" />
+                      <div className="text-white font-bold mt-4">لا توجد بطاقات مطابقة</div>
+                      <div className="text-xs text-neutral-500 mt-2">تأكد من رفع بطاقة التعريف أو غيّر كلمة البحث.</div>
+                    </div>
+                  )}
+                </div>
+
+                {idCardPreview && (
+                  <div className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 md:p-6">
+                    <div className="w-full max-w-6xl h-[92vh] bg-neutral-900 border border-amber-500/30 rounded-[28px] overflow-hidden flex flex-col shadow-2xl shadow-black/60 ibra-idcard-modal">
+                      <div className="flex items-center justify-between gap-3 p-4 md:p-5 border-b border-neutral-800">
+                        <div className="min-w-0">
+                          <div className="text-[10px] tracking-[0.2em] text-amber-400 font-black">SECURE PREVIEW</div>
+                          <div className="text-white font-black mt-1">معاينة بطاقة التعريف</div>
+                          <div className="text-xs text-neutral-500 truncate">{idCardPreview.name}</div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <a href={idCardPreview.url} download={idCardPreview.name} className="px-4 py-2.5 bg-amber-500 text-neutral-950 rounded-xl text-xs font-black hover:bg-amber-400 transition-all">
+                            <Download className="inline w-4 h-4 mr-1" /> تحميل
+                          </a>
+                          <button type="button" onClick={() => { URL.revokeObjectURL(idCardPreview.url); setIdCardPreview(null); }} className="p-2.5 bg-neutral-800 text-white rounded-xl hover:bg-neutral-700">
+                            <X className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex-1 bg-neutral-950 p-3 md:p-5 overflow-auto flex items-center justify-center">
+                        {idCardPreview.type.includes('pdf') ? (
+                          <iframe src={idCardPreview.url} title="معاينة بطاقة التعريف" className="w-full h-full rounded-2xl bg-white" />
+                        ) : (
+                          <img src={idCardPreview.url} alt="بطاقة التعريف" className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl" />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {activeTab === 'team' && (
             <TeamManagement />
