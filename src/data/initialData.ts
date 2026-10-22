@@ -1,4 +1,4 @@
-import { SiteSettings, StatItem, ServiceItem, PackageItem, PortfolioItem, VideoItem, TestimonialItem, OfferItem, AdminUser } from '../types';
+import { SiteSettings, StatItem, ServiceItem, PackageItem, PortfolioItem, VideoItem, TestimonialItem, OfferItem, AdminUser, IbraEvent, TeamMemberItem } from '../types';
 
 export const initialSiteSettings: SiteSettings = {
   agencyName: "IBRA PRODUCTION",
@@ -22,7 +22,10 @@ export const initialSiteSettings: SiteSettings = {
   seoTitle: "IBRA PRODUCTION | Wedding Photography & Media Production",
   seoDescription: "IBRA PRODUCTION - Professional Wedding Photography, Videography & Media Production Agency in Algeria. نحوّل أجمل لحظاتكم إلى ذكريات لا تُنسى.",
   seoKeywords: "Ibra Production, Wedding Photography Algeria, Wedding Photographer Algeria, Wedding Videography Algeria, Photographe mariage Algérie, تصوير أعراس, تصوير حفلات, إبرا برودكشن",
-  maintenanceMode: false
+  maintenanceMode: false,
+  heroVideoUrl: "https://assets.mixkit.co/videos/preview/mixkit-wedding-couple-walking-in-a-forest-41121-large.mp4",
+  enableHeroVideo: true,
+  heroVideoPoster: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=2000&q=90"
 };
 
 export const initialStats: StatItem[] = [
@@ -346,5 +349,332 @@ export const initialUsers: AdminUser[] = [
     name: 'Ibrahim (Owner)',
     role: 'Owner',
     active: true
+  }
+];
+
+export const initialTeamMembers: TeamMemberItem[] = [
+  {
+    id: 'tm1',
+    name: 'إبراهيم بن سالم',
+    phone: '0696967093',
+    role: 'Photographer',
+    gender: 'male',
+    active: true,
+    assignedEventIds: ['IBRA-2026-1048']
+  },
+  {
+    id: 'tm2',
+    name: 'كريم رحماني (مشغل در درون)',
+    phone: '0551234567',
+    role: 'Videographer',
+    gender: 'male',
+    active: true,
+    assignedEventIds: ['IBRA-2026-1048']
+  },
+  {
+    id: 'tm3',
+    name: 'دي جي سمير (DJ Samir)',
+    phone: '0772345678',
+    role: 'DJ',
+    gender: 'male',
+    active: true,
+    assignedEventIds: ['IBRA-2026-1048']
+  },
+  {
+    id: 'tm4',
+    name: 'يوسف بلقاسم (مونتير)',
+    phone: '0663456789',
+    role: 'Editor',
+    gender: 'male',
+    active: true,
+    assignedEventIds: ['IBRA-2026-1048']
+  }
+];
+
+export const initialEvents: IbraEvent[] = [
+  {
+    eventId: 'IBRA-2026-1048',
+    barcode: '87261048001',
+    clientId: 'c_1048',
+    groomName: 'محمد',
+    brideName: 'سارة',
+    phone: '0770123456',
+    email: 'mohamed.sara@example.com',
+    wilaya: 'تبسة',
+    location: 'قاعة ريم للأفراح - تبسة',
+    eventDate: '2026-12-15',
+    eventTime: '17:00',
+    status: 'CONFIRMED',
+    packageId: 'p2',
+    packageName: 'الباقة الذهبية (Gold Package)',
+    totalPrice: 120000,
+    totalPaid: 60000,
+    notes: 'طلب خاص: تصوير جوي بالدرون أثناء موكب السيارات + تجهيز ريلز سريع ليلة العرس.',
+    smartUsbId: 'USB-IBRA-2026-1048',
+    createdAt: '2026-10-01',
+    updatedAt: '2026-10-20',
+    services: [
+      { serviceId: 's1', serviceTitle: 'تصوير الأعراس الفاخر (Wedding Photography)', status: 'CONFIRMED' },
+      { serviceId: 's2', serviceTitle: 'تصوير الفيديو السينمائي 4K (Cinematic Video)', status: 'CONFIRMED' },
+      { serviceId: 's_drone', serviceTitle: 'تغطية جوية احترافية (Drone 4K)', status: 'CONFIRMED' },
+      { serviceId: 's_dj', serviceTitle: 'هندسة صوت و دي جي احترافي (DJ Samir)', status: 'CONFIRMED' },
+      { serviceId: 's_decor', serviceTitle: 'إضاءة وديكور سينمائي (Cinematic Lighting)', status: 'CONFIRMED' }
+    ],
+    timeline: [
+      {
+        id: 'tl_1',
+        eventId: 'IBRA-2026-1048',
+        time: '08:00',
+        title: 'وصول فريق التصوير وتجهيز المعدات',
+        description: 'وصول الطاقم لكاميرات 4K والمعدات المحمولة وفحص الإضاءة.',
+        order: 1,
+        status: 'done'
+      },
+      {
+        id: 'tl_2',
+        eventId: 'IBRA-2026-1048',
+        time: '09:00',
+        title: 'تجهيز وتوثيق العروس',
+        description: 'توثيق التفاصيل (الفستان، الخاتم، المكياج وباقة الورد).',
+        order: 2,
+        status: 'done'
+      },
+      {
+        id: 'tl_3',
+        eventId: 'IBRA-2026-1048',
+        time: '12:30',
+        title: 'جلسة تصوير العروسين (Outdoor Session)',
+        description: 'جلسة خارجية سينمائية في الحديقة الملكية وإطلالات ساحرة.',
+        order: 3,
+        status: 'done'
+      },
+      {
+        id: 'tl_4',
+        eventId: 'IBRA-2026-1048',
+        time: '15:00',
+        title: 'وصول العريس وموكب السيارات الفاخرة',
+        description: 'تصوير موكب السيارات واستخدام طائرة الدرون.',
+        order: 4,
+        status: 'current'
+      },
+      {
+        id: 'tl_5',
+        eventId: 'IBRA-2026-1048',
+        time: '17:00',
+        title: 'استقبال الضيوف في القاعة',
+        description: 'بدء استقبال المدعوين في قاعة ريم وتوثيق الحضور.',
+        order: 5,
+        status: 'upcoming'
+      },
+      {
+        id: 'tl_6',
+        eventId: 'IBRA-2026-1048',
+        time: '19:00',
+        title: 'بداية الحفل والزفة السينمائية',
+        description: 'دخول العرسان مع إضاءة خاصة وأصوات مؤثرة ودي جي.',
+        order: 6,
+        status: 'upcoming'
+      },
+      {
+        id: 'tl_7',
+        eventId: 'IBRA-2026-1048',
+        time: '21:30',
+        title: 'تقطيع الكعكة والصور العائلية التذكارية',
+        description: 'التقاط الصور الرسمية مع العائلة والأصدقاء.',
+        order: 7,
+        status: 'upcoming'
+      }
+    ],
+    gallery: [
+      {
+        id: 'gal_1',
+        eventId: 'IBRA-2026-1048',
+        url: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80',
+        caption: 'نظرة أولى سينمائية للعروسين',
+        uploadedAt: '2026-10-15 13:45',
+        isFavorite: true,
+        downloadsCount: 12
+      },
+      {
+        id: 'gal_2',
+        eventId: 'IBRA-2026-1048',
+        url: 'https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=1200&q=80',
+        caption: 'تفاصيل الخاتم وفستان الزفاف الملكي',
+        uploadedAt: '2026-10-15 14:10',
+        isFavorite: true,
+        downloadsCount: 8
+      },
+      {
+        id: 'gal_3',
+        eventId: 'IBRA-2026-1048',
+        url: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=80',
+        caption: 'لحظة وصول موكب العريس الفخم',
+        uploadedAt: '2026-10-15 15:30',
+        isFavorite: false,
+        downloadsCount: 5
+      },
+      {
+        id: 'gal_4',
+        eventId: 'IBRA-2026-1048',
+        url: 'https://images.unsplash.com/photo-1537633552985-df8429e8048b?auto=format&fit=crop&w=1200&q=80',
+        caption: 'لقطة مقربة رومانسية مع إضاءة الغروب الذهبية',
+        uploadedAt: '2026-10-15 16:40',
+        isFavorite: true,
+        downloadsCount: 15
+      }
+    ],
+    guestUploads: [
+      {
+        id: 'gu_1',
+        eventId: 'IBRA-2026-1048',
+        guestName: 'أحمد شقيق العريس',
+        fileUrl: 'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&w=800&q=80',
+        fileType: 'image',
+        fileSize: '3.4 MB',
+        notes: 'ألف مبروك لأخي الحبيب محمد وسارة، بارك الله لكما!',
+        createdAt: '2026-10-15 17:35'
+      },
+      {
+        id: 'gu_2',
+        eventId: 'IBRA-2026-1048',
+        guestName: 'منال قريبة العروس',
+        fileUrl: 'https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=800&q=80',
+        fileType: 'image',
+        fileSize: '2.8 MB',
+        notes: 'أجمل عروس في الكون ماشاء الله تبارك الرحمن',
+        createdAt: '2026-10-15 18:15'
+      }
+    ],
+    payments: [
+      {
+        id: 'pay_1',
+        eventId: 'IBRA-2026-1048',
+        amount: 60000,
+        date: '2026-10-02',
+        method: 'CASH',
+        note: 'عربون تأكيد الحجز المبدئي واستلام الإيصال الرسمي',
+        receiptNumber: 'REC-1048-01',
+        createdAt: '2026-10-02'
+      }
+    ],
+    documents: [
+      {
+        id: 'doc_1',
+        eventId: 'IBRA-2026-1048',
+        title: 'عقد اتفاق وتوثيق حفل زفاف رسمي',
+        type: 'contract',
+        date: '2026-10-02',
+        status: 'signed'
+      },
+      {
+        id: 'doc_2',
+        eventId: 'IBRA-2026-1048',
+        title: 'فاتورة أولية (Proforma Invoice #INV-1048)',
+        type: 'invoice',
+        date: '2026-10-02',
+        status: 'official'
+      },
+      {
+        id: 'doc_3',
+        eventId: 'IBRA-2026-1048',
+        title: 'إيصال استلام دفعة عربون 60,000 دج',
+        type: 'receipt',
+        date: '2026-10-02',
+        status: 'signed'
+      }
+    ],
+    assignedTeam: ['tm1', 'tm2', 'tm3', 'tm4']
+  },
+  {
+    eventId: 'IBRA-2026-1049',
+    barcode: '87261049002',
+    bookingId: 'b1',
+    clientId: 'c_1049',
+    groomName: 'أمين بلحاج',
+    brideName: 'سارة بن عمارة',
+    phone: '0661234567',
+    email: 'amine.belhadj@example.com',
+    wilaya: 'الجزائر العاصمة',
+    location: 'فندق الأوراسي (El Aurassi) - الجزائر',
+    eventDate: '2026-08-28',
+    eventTime: '16:00',
+    status: 'CONFIRMED',
+    packageId: 'p3',
+    packageName: 'الباقة الملكية (Royal VIP Package)',
+    totalPrice: 150000,
+    totalPaid: 90000,
+    notes: 'تغطية VIP شاملة مع طائرتي درون، كرين، وألبوم صور إيطالي فاخر.',
+    smartUsbId: 'USB-IBRA-2026-1049',
+    createdAt: '2026-09-10',
+    updatedAt: '2026-10-18',
+    services: [
+      { serviceId: 's1', serviceTitle: 'تصوير الأعراس الفاخر VIP', status: 'CONFIRMED' },
+      { serviceId: 's2', serviceTitle: 'تصوير فيديو سينمائي 4K متعدد الكاميرات', status: 'CONFIRMED' },
+      { serviceId: 's_drone', serviceTitle: 'تغطية جوية Drone 4K', status: 'CONFIRMED' }
+    ],
+    timeline: [
+      {
+        id: 'tl_49_1',
+        eventId: 'IBRA-2026-1049',
+        time: '14:00',
+        title: 'تجهيز معدات التصوير في قاعة الحفل',
+        description: 'فحص الإضاءة السينمائية والكرين والكاميرات المحمولة.',
+        order: 1,
+        status: 'done'
+      },
+      {
+        id: 'tl_49_2',
+        eventId: 'IBRA-2026-1049',
+        time: '16:00',
+        title: 'استقبال العروسين وموكب السيارات الفاخرة',
+        description: 'تصوير الموكب ودخول العرسان مع الألعاب النارية.',
+        order: 2,
+        status: 'current'
+      }
+    ],
+    gallery: [
+      {
+        id: 'med_49_1',
+        eventId: 'IBRA-2026-1049',
+        url: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=80',
+        caption: 'لقطة سينمائية من فندق الأوراسي',
+        uploadedAt: '2026-10-19 14:20',
+        isFavorite: true,
+        downloadsCount: 15
+      }
+    ],
+    payments: [
+      {
+        id: 'pay_49_1',
+        eventId: 'IBRA-2026-1049',
+        amount: 50000,
+        date: '2026-09-10',
+        method: 'CASH',
+        note: 'عربون تأكيد الحجز المبدئي',
+        receiptNumber: 'REC-1049-01',
+        createdAt: '2026-09-10'
+      },
+      {
+        id: 'pay_49_2',
+        eventId: 'IBRA-2026-1049',
+        amount: 40000,
+        date: '2026-10-05',
+        method: 'BANK',
+        note: 'الدفعة الثانية لحساب الوكالة عبر بريدي موب',
+        receiptNumber: 'REC-1049-02',
+        createdAt: '2026-10-05'
+      }
+    ],
+    documents: [
+      {
+        id: 'doc_49_1',
+        eventId: 'IBRA-2026-1049',
+        title: 'عقد التوثيق الفاخر الرسمي #AGR-1049',
+        type: 'contract',
+        date: '2026-09-10',
+        status: 'signed'
+      }
+    ],
+    assignedTeam: ['tm1', 'tm2']
   }
 ];

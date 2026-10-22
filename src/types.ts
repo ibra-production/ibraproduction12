@@ -23,6 +23,9 @@ export interface SiteSettings {
   seoDescription: string;
   seoKeywords: string;
   maintenanceMode: boolean;
+  heroVideoUrl?: string; // Direct MP4 or embed link for hero background video
+  enableHeroVideo?: boolean; // Toggle hero video on/off
+  heroVideoPoster?: string; // Fallback image for hero video
 }
 
 export interface StatItem {
@@ -148,6 +151,8 @@ export interface BookingItem {
 
   status: 'new' | 'confirmed' | 'processing' | 'completed' | 'cancelled';
   createdAt: string;
+  eventId?: string;
+  barcode?: string;
 }
 
 export interface OfferItem {
@@ -217,4 +222,127 @@ export interface ContactMessage {
   message: string;
   createdAt: string;
   read: boolean;
+}
+
+// ================= IBRA EVENT MODELS =================
+
+export type EventStatus = 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+
+export interface EventServiceItem {
+  serviceId: string;
+  serviceTitle: string;
+  price?: number;
+  status: EventStatus;
+}
+
+export interface EventTimelineItem {
+  id: string;
+  eventId: string;
+  time: string;
+  title: string;
+  description: string;
+  order: number;
+  status: 'upcoming' | 'current' | 'done';
+}
+
+export interface EventMediaItem {
+  id: string;
+  eventId: string;
+  url: string;
+  caption?: string;
+  uploadedAt: string;
+  isFavorite: boolean;
+  downloadsCount: number;
+}
+
+export interface GuestUploadItem {
+  id: string;
+  eventId: string;
+  guestName: string;
+  fileUrl: string;
+  fileType: 'image' | 'video';
+  fileSize?: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface EventPaymentItem {
+  id: string;
+  eventId: string;
+  amount: number;
+  date: string;
+  method: 'CASH' | 'BANK' | 'OTHER';
+  note?: string;
+  receiptNumber?: string;
+  createdAt: string;
+}
+
+export interface EventDocumentItem {
+  id: string;
+  eventId: string;
+  title: string;
+  type: 'contract' | 'invoice' | 'receipt' | 'other';
+  fileUrl?: string;
+  date: string;
+  status: 'signed' | 'official' | 'draft';
+}
+
+export interface TeamMemberItem {
+  id: string;
+  name: string;
+  phone: string;
+  role: 'Photographer' | 'Videographer' | 'DJ' | 'Decorator' | 'Driver' | 'Assistant' | 'Editor' | 'Other';
+  gender: 'male' | 'female';
+  active: boolean;
+  assignedEventIds: string[];
+}
+
+export interface EventReviewItem {
+  id: string;
+  eventId: string;
+  clientName: string;
+  rating: number;
+  comment: string;
+  date: string;
+}
+
+export interface IbraEvent {
+  eventId: string; // e.g. "IBRA-2026-1048"
+  barcode?: string; // e.g. "87261048001" or numerical barcode
+  bookingId?: string; // Reference to existing BookingItem.id for seamless backward compatibility
+  clientId: string;
+  groomName: string;
+  brideName: string;
+  phone: string;
+  email: string;
+  wilaya: string;
+  location: string;
+  eventDate: string; // YYYY-MM-DD
+  eventTime: string;
+  status: EventStatus;
+  services: EventServiceItem[];
+  packageId?: string;
+  packageName?: string;
+  totalPrice: number;
+  totalPaid: number;
+  notes?: string;
+  smartUsbId?: string;
+  createdAt: string;
+  updatedAt: string;
+
+  // Associated sub-collections
+  timeline?: EventTimelineItem[];
+  gallery?: EventMediaItem[];
+  guestUploads?: GuestUploadItem[];
+  payments?: EventPaymentItem[];
+  documents?: EventDocumentItem[];
+  assignedTeam?: string[]; // team member IDs
+  review?: EventReviewItem;
+}
+
+export interface ClientUserSession {
+  phone: string;
+  name: string;
+  eventId: string;
+  loggedAt: string;
 }
