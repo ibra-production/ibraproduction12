@@ -24,31 +24,52 @@ export const PackagesSection: React.FC<PackagesProps> = ({
         ? pkg?.featuresEn
         : pkg?.featuresAr;
 
-    // الشكل الصحيح الجديد
+    // Check language-specific features array, filtering out bogus placeholders
     if (Array.isArray(languageFeatures)) {
-      return languageFeatures.filter(
+      const valid = languageFeatures.filter(
         (feature) =>
-          typeof feature === 'string' && feature.trim().length > 0
+          typeof feature === 'string' &&
+          feature.trim().length > 0 &&
+          feature.trim() !== 'featuresFr' &&
+          feature.trim() !== 'featuresAr' &&
+          !feature.startsWith('["')
       );
+      if (valid.length > 0) return valid;
     }
 
-    // دعم البيانات القديمة إذا كانت features موجودة
+    // Support generic features array
     if (Array.isArray(pkg?.features)) {
-      return pkg.features.filter(
+      const valid = pkg.features.filter(
         (feature: unknown): feature is string =>
-          typeof feature === 'string' && feature.trim().length > 0
+          typeof feature === 'string' &&
+          feature.trim().length > 0 &&
+          feature.trim() !== 'featuresFr' &&
+          !feature.startsWith('["')
       );
+      if (valid.length > 0) return valid;
     }
 
-    // إذا كانت features القديمة محفوظة كنص String
-    if (
-      typeof pkg?.features === 'string' &&
-      pkg.features.trim().length > 0
-    ) {
+    // Support string with newlines in features
+    if (typeof pkg?.features === 'string' && pkg.features.trim().length > 0) {
       return pkg.features
         .split('\n')
         .map((feature: string) => feature.trim())
         .filter(Boolean);
+    }
+
+    // Support descriptionAr / descriptionFr / descriptionEn multiline bullets (e.g. from Firestore)
+    const desc =
+      language === 'fr'
+        ? (pkg?.descriptionFr || pkg?.descriptionAr)
+        : language === 'en'
+        ? (pkg?.descriptionEn || pkg?.descriptionAr)
+        : pkg?.descriptionAr;
+
+    if (typeof desc === 'string' && desc.trim().length > 0) {
+      return desc
+        .split('\n')
+        .map((line: string) => line.trim())
+        .filter((line: string) => line.length > 0);
     }
 
     return [];

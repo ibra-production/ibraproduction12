@@ -59,7 +59,7 @@ export const TeamManagement: React.FC = () => {
 
     {filtered.length === 0 ? <div className="rounded-2xl border border-dashed border-neutral-800 p-12 text-center text-neutral-500"><UserRound className="w-10 h-10 mx-auto mb-3"/>{teamMembers.length ? 'لا توجد نتائج.' : 'لا يوجد أعضاء بعد. أضف أول عضو للفريق.'}</div> :
     <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">{filtered.map(member => <article key={member.id} className="rounded-3xl bg-neutral-900/80 border border-neutral-800 overflow-hidden hover:border-amber-500/40 transition-all">
-      <div className="h-48 bg-neutral-950 relative">{member.photoUrl ? <img src={member.photoUrl} alt={member.fullName} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center"><UserRound className="w-16 h-16 text-neutral-700"/></div>}
+      <div className="h-48 bg-neutral-950 relative">{member.photoUrl && member.photoUrl.trim() !== '' ? <img src={member.photoUrl.trim()} alt={member.fullName} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center"><UserRound className="w-16 h-16 text-neutral-700"/></div>}
         <span className={'absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-bold '+(member.active?'bg-emerald-500/15 text-emerald-300 border border-emerald-500/20':'bg-red-500/15 text-red-300 border border-red-500/20')}>{member.active?'نشط':'غير نشط'}</span>
       </div>
       <div className="p-5"><div className="flex justify-between gap-3"><div><h3 className="text-lg font-bold text-white">{member.fullName}</h3><p className="text-amber-400 text-sm mt-1">{member.role}</p></div><span className="text-xs text-neutral-500">#{member.order}</span></div>

@@ -44,7 +44,7 @@ export const VideosSection: React.FC = () => {
                 className="group relative rounded-2xl overflow-hidden aspect-[16/10] bg-neutral-900 border border-neutral-800 hover:border-amber-500/50 cursor-pointer shadow-xl transition-all duration-500"
               >
                 <img
-                  src={video.thumbnail}
+                  src={(video.thumbnail && video.thumbnail.trim() !== '') ? video.thumbnail.trim() : '/img2.jpg'}
                   alt={title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-80 group-hover:opacity-100"
                 />

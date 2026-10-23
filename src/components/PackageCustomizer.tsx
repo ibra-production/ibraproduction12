@@ -14,11 +14,11 @@ export const PackageCustomizer: React.FC<PackageCustomizerProps> = ({ onOpenBook
   const [addLuxuryAlbum, setAddLuxuryAlbum] = useState(true);
   const [addExtraCinematographer, setAddExtraCinematographer] = useState(false);
 
-  // Calculate price in DZD
+  // Calculate price in DZD (Restored original prices)
   const basePrices = {
-    classic: 45000,
-    royal: 85000,
-    vip: 150000
+    classic: 25000,
+    royal: 30000,
+    vip: 58000
   };
 
   let total = basePrices[baseTier];
@@ -41,7 +41,7 @@ export const PackageCustomizer: React.FC<PackageCustomizerProps> = ({ onOpenBook
           </h2>
           <p className="text-sm sm:text-base text-neutral-400 leading-relaxed">
             {language === 'ar'
-              ? 'اختر الباقة الأساسية وأضف اللمسات السينمائية التي تتناسب مع رغبتك وميزانيتك.'
+              ? 'اختر الباقة الأساسية وأضف اللمسات السينمائية التي تتناسب مع رغبتك وميزانيتك بالأسعار الأصلية.'
               : 'Choisissez votre base et ajoutez les options de votre choix.'}
           </p>
         </div>
@@ -58,9 +58,9 @@ export const PackageCustomizer: React.FC<PackageCustomizerProps> = ({ onOpenBook
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {[
-                  { id: 'classic', nameAr: 'باقة الأسر', nameFr: 'Classique', price: '45,000 دج' },
-                  { id: 'royal', nameAr: 'الباقة الملكية', nameFr: 'Royal', price: '85,000 دج' },
-                  { id: 'vip', nameAr: 'باقة VIP الفاخرة', nameFr: 'VIP Prestige', price: '150,000 دج' }
+                  { id: 'classic', nameAr: 'باك الزوالي', nameFr: 'Pack Zawali', price: '25,000 دج' },
+                  { id: 'royal', nameAr: 'الباك العادي', nameFr: 'Pack Normal', price: '30,000 دج' },
+                  { id: 'vip', nameAr: 'الباك الخاص VIP', nameFr: 'Pack VIP Prestige', price: '58,000 دج' }
                 ].map(tier => (
                   <button
                     key={tier.id}
@@ -132,7 +132,7 @@ export const PackageCustomizer: React.FC<PackageCustomizerProps> = ({ onOpenBook
               <div className="flex justify-between text-neutral-300">
                 <span>{language === 'ar' ? 'الباقة الأساسية:' : 'Base:'}</span>
                 <span className="font-mono font-bold text-white">
-                  {baseTier === 'classic' ? '45,000 دج' : baseTier === 'royal' ? '85,000 دج' : '150,000 دج'}
+                  {baseTier === 'classic' ? '25,000 دج' : baseTier === 'royal' ? '30,000 دج' : '58,000 دج'}
                 </span>
               </div>
               {addMavicDrone && <div className="flex justify-between text-neutral-400 text-xs"><span>+ تصوير جوي 4K</span><span className="font-mono">15,000 دج</span></div>}

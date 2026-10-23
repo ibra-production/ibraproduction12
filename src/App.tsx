@@ -31,7 +31,9 @@ import { PwaInstallPrompt } from './components/PwaInstallPrompt';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { AgencyExperience } from './components/AgencyExperience';
 import { QuickActions, ContactShortcut } from './components/QuickActions';
-import { ServiceItem, PackageItem } from './types';
+import { BarcodeScannerModal } from './components/BarcodeScannerModal';
+import { GroomDossierModal } from './components/GroomDossierModal';
+import { ServiceItem, PackageItem, IbraEvent } from './types';
 
 function MainContent() {
   const { currentUser, settings, language } = useApp();
@@ -81,6 +83,8 @@ function MainContent() {
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [adminLoginOpen, setAdminLoginOpen] = useState(false);
   const [adminDashboardOpen, setAdminDashboardOpen] = useState(false);
+  const [barcodeScannerOpen, setBarcodeScannerOpen] = useState(false);
+  const [selectedGroomEvent, setSelectedGroomEvent] = useState<IbraEvent | null>(null);
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
   const [selectedPackage, setSelectedPackage] = useState<PackageItem | null>(null);
 
@@ -114,6 +118,7 @@ function MainContent() {
             setAdminLoginOpen(true);
           }
         }}
+        onOpenBarcodeScanner={() => setBarcodeScannerOpen(true)}
       />
 
       {maintenance ? (
@@ -177,6 +182,19 @@ function MainContent() {
 
       {adminDashboardOpen && (
         <AdminDashboard onClose={() => setAdminDashboardOpen(false)} />
+      )}
+
+      <BarcodeScannerModal
+        isOpen={barcodeScannerOpen}
+        onClose={() => setBarcodeScannerOpen(false)}
+        onSelectEvent={(ev) => setSelectedGroomEvent(ev)}
+      />
+
+      {selectedGroomEvent && (
+        <GroomDossierModal
+          event={selectedGroomEvent}
+          onClose={() => setSelectedGroomEvent(null)}
+        />
       )}
     </div>
   );

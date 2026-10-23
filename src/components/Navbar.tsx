@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { Menu, X, Globe, Lock, Calendar, ChevronDown } from 'lucide-react';
+import { Menu, X, Globe, Lock, Calendar, ChevronDown, Barcode } from 'lucide-react';
 
 interface NavbarProps {
   onOpenBooking: () => void;
   onOpenAdmin: () => void;
+  onOpenBarcodeScanner?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onOpenAdmin }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onOpenAdmin, onOpenBarcodeScanner }) => {
   const { language, setLanguage, settings } = useApp();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -104,6 +105,19 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onOpenAdmin }) =>
               </button>
             </div>
 
+            {/* Barcode Scanner Button */}
+            {onOpenBarcodeScanner && (
+              <button
+                type="button"
+                onClick={onOpenBarcodeScanner}
+                title="مسح كود بار العريس (الملف الشامل)"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/40 text-amber-300 hover:bg-amber-500/20 hover:text-white transition-all text-xs font-bold shadow-md shadow-amber-500/10 hover:border-amber-400 transform hover:-translate-y-0.5"
+              >
+                <Barcode className="w-4 h-4 text-amber-400" />
+                <span>{language === 'ar' ? 'مسح كود بار العريس' : language === 'fr' ? 'Scanner Code Marié' : 'Scan Groom Barcode'}</span>
+              </button>
+            )}
+
             {/* Admin Login Icon */}
             <button
               onClick={onOpenAdmin}
@@ -124,7 +138,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onOpenAdmin }) =>
           </div>
 
           {/* Mobile Hamburger */}
-          <div className="flex lg:hidden items-center gap-3">
+          <div className="flex lg:hidden items-center gap-2">
+            {onOpenBarcodeScanner && (
+              <button
+                onClick={onOpenBarcodeScanner}
+                title="مسح كود بار العريس"
+                className="p-2 text-amber-400 bg-neutral-900 border border-amber-500/40 rounded-lg hover:bg-neutral-800 transition-colors"
+              >
+                <Barcode className="w-5 h-5" />
+              </button>
+            )}
+
             <button
               onClick={() => setLanguage(language === 'ar' ? 'fr' : language === 'fr' ? 'en' : 'ar')}
               className="flex items-center gap-1 px-3 py-1.5 bg-neutral-900 border border-neutral-800 rounded-full text-xs text-amber-400 font-semibold"
@@ -161,6 +185,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onOpenAdmin }) =>
             ))}
 
             <div className="pt-4 flex flex-col gap-3">
+              {onOpenBarcodeScanner && (
+                <button
+                  onClick={() => { setMobileMenuOpen(false); onOpenBarcodeScanner(); }}
+                  className="w-full py-3 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-300 font-bold text-center flex items-center justify-center gap-2 hover:bg-amber-500/20"
+                >
+                  <Barcode className="w-5 h-5 text-amber-400" />
+                  <span>{language === 'ar' ? 'مسح كود بار العريس (ملف شامل)' : language === 'fr' ? 'Scanner Code-Barres Marié' : 'Scan Groom Barcode'}</span>
+                </button>
+              )}
+
               <button
                 onClick={() => { setMobileMenuOpen(false); onOpenBooking(); }}
                 className="w-full py-3 rounded-xl bg-amber-500 text-neutral-950 font-bold text-center flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20"

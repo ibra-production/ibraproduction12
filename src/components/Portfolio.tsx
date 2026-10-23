@@ -100,10 +100,12 @@ export const Portfolio: React.FC = () => {
               >
                 <img
                   src={
-  Array.isArray(item.images) && item.images.length > 0
-    ? item.images[0]
-    : item.image
-}
+                    (Array.isArray(item.images) && item.images.length > 0 && item.images[0] && item.images[0].trim() !== '')
+                      ? item.images[0].trim()
+                      : (item.image && item.image.trim() !== '')
+                      ? item.image.trim()
+                      : '/img1.jpg'
+                  }
                   alt={title}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
@@ -152,11 +154,15 @@ export const Portfolio: React.FC = () => {
               <button type="button" onClick={() => setLightboxIndex((i) => (i - 1 + filteredItems.length) % filteredItems.length)} className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full bg-neutral-950/80 border border-neutral-700 text-white hover:text-amber-400 hover:border-amber-500 transition-all"><ChevronLeft className="w-5 h-5 mx-auto" /></button>
               <img
                 src={
-  Array.isArray(currentLightboxItem.images) &&
-  currentLightboxItem.images.length > 0
-    ? currentLightboxItem.images[0]
-    : currentLightboxItem.image
-}
+                  (Array.isArray(currentLightboxItem.images) &&
+                  currentLightboxItem.images.length > 0 &&
+                  currentLightboxItem.images[0] &&
+                  currentLightboxItem.images[0].trim() !== '')
+                    ? currentLightboxItem.images[0].trim()
+                    : (currentLightboxItem.image && currentLightboxItem.image.trim() !== '')
+                    ? currentLightboxItem.image.trim()
+                    : '/img1.jpg'
+                }
                 alt=""
                 className="w-full h-full object-contain transition-opacity duration-300"
               />

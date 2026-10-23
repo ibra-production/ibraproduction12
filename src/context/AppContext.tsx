@@ -42,12 +42,24 @@ import {
   Language,
   ActivityLog,
   ContactMessage,
+  IbraEvent,
+  EventPaymentItem,
+  EventReviewItem,
+  GuestUploadItem,
+  ClientUserSession,
 } from "../types";
 
 import {
   initialSiteSettings,
   initialStats,
   initialUsers,
+  initialServices,
+  initialPackages,
+  initialPortfolio,
+  initialVideos,
+  initialTestimonials,
+  initialOffers,
+  initialEvents,
 } from "../data/initialData";
 
 import { db, auth } from "../firebase";
@@ -77,6 +89,18 @@ interface AppContextType {
   addTeamMember: (member: Omit<TeamMember, 'id'>) => Promise<void>;
   updateTeamMember: (id: string, member: Partial<TeamMember>) => Promise<void>;
   deleteTeamMember: (id: string) => Promise<void>;
+
+  // Events & Groom Management
+  events: IbraEvent[];
+  addEvent: (event: IbraEvent) => void;
+  updateEvent: (eventId: string, data: Partial<IbraEvent>) => void;
+  addPaymentToEvent: (eventId: string, payment: EventPaymentItem) => void;
+  clientUser: ClientUserSession | null;
+  clientLogin: (phone: string, eventId: string) => Promise<boolean>;
+  clientLogout: () => void;
+  togglePhotoFavorite: (eventId: string, photoId: string) => void;
+  addGuestUpload: (eventId: string, upload: Omit<GuestUploadItem, 'id' | 'createdAt'>) => void;
+  addEventReview: (eventId: string, review: Omit<EventReviewItem, 'id' | 'date'>) => void;
 
   currentUser: AdminUser | null;
 
@@ -298,34 +322,55 @@ export const AppProvider: React.FC<{
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
 
   // =========================================================
-  // Firestore Data
-  //
-  // IMPORTANT:
-  // No localStorage fallback is used for these collections.
+  // Restored Original Studio Data (with Firestore Realtime Sync)
   // =========================================================
 
   const [services, setServices] =
-    useState<ServiceItem[]>([]);
+    useState<ServiceItem[]>(initialServices);
 
   const [packages, setPackages] =
-    useState<PackageItem[]>([]);
+    useState<PackageItem[]>(initialPackages);
 
   const [portfolio, setPortfolio] =
-    useState<PortfolioItem[]>([]);
+    useState<PortfolioItem[]>(initialPortfolio);
 
   const [videos, setVideos] =
-    useState<VideoItem[]>([]);
+    useState<VideoItem[]>(initialVideos);
 
   const [
     testimonials,
     setTestimonials,
-  ] = useState<TestimonialItem[]>([]);
+  ] = useState<TestimonialItem[]>(initialTestimonials);
 
   const [bookings, setBookings] =
     useState<BookingItem[]>([]);
 
   const [offers, setOffers] =
-    useState<OfferItem[]>([]);
+    useState<OfferItem[]>(initialOffers);
+
+  // Events & Groom Dossiers
+  const [events, setEvents] = useState<IbraEvent[]>(() => {
+    try {
+      const saved = localStorage.getItem("ibra_events");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.warn("Could not load cached events:", e);
+    }
+    return initialEvents;
+  });
+
+  const [clientUser, setClientUser] = useState<ClientUserSession | null>(() => {
+    try {
+      const saved = localStorage.getItem("ibra_client_session");
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.warn("Could not load cached client session:", e);
+    }
+    return null;
+  });
 
   // =========================================================
   // Local-only UI data
@@ -635,6 +680,12 @@ export const AppProvider: React.FC<{
           setSettings((prev) => ({
             ...prev,
             ...data,
+            heroVideoUrl: (data.heroVideoUrl && typeof data.heroVideoUrl === 'string' && data.heroVideoUrl.trim() !== '')
+              ? data.heroVideoUrl.trim()
+              : prev.heroVideoUrl,
+            heroVideoPoster: (data.heroVideoPoster && typeof data.heroVideoPoster === 'string' && data.heroVideoPoster.trim() !== '')
+              ? data.heroVideoPoster.trim()
+              : prev.heroVideoPoster,
           }));
 
           console.log(
@@ -642,9 +693,9 @@ export const AppProvider: React.FC<{
           );
         },
         (error) => {
-          console.error(
-            "❌ Firestore settings listener error:",
-            error
+          console.warn(
+            "Firestore settings listener notice:",
+            error?.message || error
           );
         }
       );
@@ -659,6 +710,11 @@ export const AppProvider: React.FC<{
   // =========================================================
 
   useEffect(() => {
+    // Only subscribe to teamMembers in Firestore if admin is authenticated
+    if (!currentUser && !auth.currentUser) {
+      return;
+    }
+
     const unsubscribe = onSnapshot(
       collection(db, "teamMembers"),
       (snapshot) => {
@@ -670,13 +726,17 @@ export const AppProvider: React.FC<{
         items.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
         setTeamMembers(items);
       },
-      (error) => {
-        console.error("❌ Firestore team listener error:", error);
+      (error: any) => {
+        if (error?.code === "permission-denied") {
+          console.warn("Firestore teamMembers access requires admin permission");
+        } else {
+          console.warn("Firestore team listener notice:", error?.message || error);
+        }
       }
     );
 
     return () => unsubscribe();
-  }, []);
+  }, [currentUser]);
 
   // =========================================================
   // TEAM - CRUD
@@ -713,31 +773,39 @@ export const AppProvider: React.FC<{
         (snapshot) => {
           const items =
             snapshot.docs.map(
-              (itemDoc) =>
-                ({
+              (itemDoc) => {
+                const data = itemDoc.data() as any;
+                const img = (data.image && typeof data.image === 'string' && data.image.trim() !== '') ? data.image.trim() : '/img1.jpg';
+                return {
                   id: itemDoc.id,
-                  ...itemDoc.data(),
-                }) as ServiceItem
+                  ...data,
+                  image: img,
+                } as ServiceItem;
+              }
             );
 
-          items.sort(
-            (a, b) =>
-              (a.order ?? 0) -
-              (b.order ?? 0)
-          );
-
-          setServices(items);
+          if (items.length > 0) {
+            items.sort(
+              (a, b) =>
+                (a.order ?? 0) -
+                (b.order ?? 0)
+            );
+            setServices(items);
+          } else {
+            setServices(initialServices);
+          }
 
           console.log(
-            "🔥 Services:",
+            "🔥 Services loaded:",
             items.length
           );
         },
         (error) => {
-          console.error(
-            "❌ Firestore services listener error:",
-            error
+          console.warn(
+            "Firestore services listener notice:",
+            error?.message || error
           );
+          setServices(initialServices);
         }
       );
 
@@ -764,24 +832,28 @@ export const AppProvider: React.FC<{
                 }) as PackageItem
             );
 
-          items.sort(
-            (a, b) =>
-              (a.order ?? 0) -
-              (b.order ?? 0)
-          );
-
-          setPackages(items);
+          if (items.length > 0) {
+            items.sort(
+              (a, b) =>
+                (a.order ?? 0) -
+                (b.order ?? 0)
+            );
+            setPackages(items);
+          } else {
+            setPackages(initialPackages);
+          }
 
           console.log(
-            "🔥 Packages:",
+            "🔥 Packages loaded:",
             items.length
           );
         },
         (error) => {
-          console.error(
-            "❌ Firestore packages listener error:",
-            error
+          console.warn(
+            "Firestore packages listener notice:",
+            error?.message || error
           );
+          setPackages(initialPackages);
         }
       );
 
@@ -801,31 +873,49 @@ export const AppProvider: React.FC<{
         (snapshot) => {
           const items =
             snapshot.docs.map(
-              (itemDoc) =>
-                ({
+              (itemDoc) => {
+                const data = itemDoc.data() as any;
+                const img = (data.image && typeof data.image === 'string' && data.image.trim() !== '')
+                  ? data.image.trim()
+                  : (Array.isArray(data.images) && data.images[0] && typeof data.images[0] === 'string' && data.images[0].trim() !== '')
+                    ? data.images[0].trim()
+                    : '/img1.jpg';
+                return {
                   id: itemDoc.id,
-                  ...itemDoc.data(),
-                }) as PortfolioItem
+                  ...data,
+                  image: img,
+                  images: Array.isArray(data.images) && data.images.length > 0 ? data.images.filter((x: any) => typeof x === 'string' && x.trim() !== '') : [img],
+                } as PortfolioItem;
+              }
             );
 
-          items.sort(
+          // Combine Firestore user uploads with authentic studio portfolio photos
+          const combined = [...items];
+          for (const orig of initialPortfolio) {
+            if (!combined.some(p => p.id === orig.id)) {
+              combined.push(orig);
+            }
+          }
+
+          combined.sort(
             (a, b) =>
               (a.order ?? 0) -
               (b.order ?? 0)
           );
 
-          setPortfolio(items);
+          setPortfolio(combined);
 
           console.log(
-            "🔥 Portfolio:",
-            items.length
+            "🔥 Portfolio loaded:",
+            combined.length
           );
         },
         (error) => {
-          console.error(
-            "❌ Firestore portfolio listener error:",
-            error
+          console.warn(
+            "Firestore portfolio listener notice:",
+            error?.message || error
           );
+          setPortfolio(initialPortfolio);
         }
       );
 
@@ -845,11 +935,15 @@ export const AppProvider: React.FC<{
         (snapshot) => {
           const items =
             snapshot.docs.map(
-              (itemDoc) =>
-                ({
+              (itemDoc) => {
+                const data = itemDoc.data() as any;
+                const thumb = (data.thumbnail && typeof data.thumbnail === 'string' && data.thumbnail.trim() !== '') ? data.thumbnail.trim() : '/img2.jpg';
+                return {
                   id: itemDoc.id,
-                  ...itemDoc.data(),
-                }) as VideoItem
+                  ...data,
+                  thumbnail: thumb,
+                } as VideoItem;
+              }
             );
 
           items.sort(
@@ -866,9 +960,9 @@ export const AppProvider: React.FC<{
           );
         },
         (error) => {
-          console.error(
-            "❌ Firestore videos listener error:",
-            error
+          console.warn(
+            "Firestore videos listener notice:",
+            error?.message || error
           );
         }
       );
@@ -889,11 +983,15 @@ export const AppProvider: React.FC<{
         (snapshot) => {
           const items =
             snapshot.docs.map(
-              (itemDoc) =>
-                ({
+              (itemDoc) => {
+                const data = itemDoc.data() as any;
+                const img = (data.image && typeof data.image === 'string' && data.image.trim() !== '') ? data.image.trim() : undefined;
+                return {
                   id: itemDoc.id,
-                  ...itemDoc.data(),
-                }) as TestimonialItem
+                  ...data,
+                  image: img,
+                } as TestimonialItem;
+              }
             );
 
           setTestimonials(items);
@@ -904,9 +1002,9 @@ export const AppProvider: React.FC<{
           );
         },
         (error) => {
-          console.error(
-            "❌ Firestore testimonials listener error:",
-            error
+          console.warn(
+            "Firestore testimonials listener notice:",
+            error?.message || error
           );
         }
       );
@@ -927,11 +1025,15 @@ export const AppProvider: React.FC<{
         (snapshot) => {
           const items =
             snapshot.docs.map(
-              (itemDoc) =>
-                ({
+              (itemDoc) => {
+                const data = itemDoc.data() as any;
+                const img = (data.image && typeof data.image === 'string' && data.image.trim() !== '') ? data.image.trim() : '/img1.jpg';
+                return {
                   id: itemDoc.id,
-                  ...itemDoc.data(),
-                }) as OfferItem
+                  ...data,
+                  image: img,
+                } as OfferItem;
+              }
             );
 
           setOffers(items);
@@ -942,9 +1044,9 @@ export const AppProvider: React.FC<{
           );
         },
         (error) => {
-          console.error(
-            "❌ Firestore offers listener error:",
-            error
+          console.warn(
+            "Firestore offers listener notice:",
+            error?.message || error
           );
         }
       );
@@ -1902,7 +2004,7 @@ export const AppProvider: React.FC<{
           }
         }
       },
-      (error) => console.error("❌ Automation engine error:", error)
+      (error) => console.warn("Automation engine notice:", (error as any)?.message || error)
     );
 
     return () => unsubscribe();
@@ -1913,6 +2015,11 @@ export const AppProvider: React.FC<{
   // =========================================================
 
   useEffect(() => {
+    // Only subscribe to bookings in Firestore if admin is authenticated
+    if (!currentUser && !auth.currentUser) {
+      return;
+    }
+
     const unsubscribe =
       onSnapshot(
         collection(
@@ -2040,18 +2147,19 @@ export const AppProvider: React.FC<{
             firestoreBookings.length
           );
         },
-        (error) => {
-          console.error(
-            "❌ Firestore bookings listener error:",
-            error
-          );
+        (error: any) => {
+          if (error?.code === "permission-denied") {
+            console.warn("Firestore bookings access requires admin permission");
+          } else {
+            console.warn("Firestore bookings listener notice:", error?.message || error);
+          }
         }
       );
 
     return () => {
       unsubscribe();
     };
-  }, []);
+  }, [currentUser]);
 
 
   const syncClientPortal = async (bookingId: string, patch: Record<string, unknown>) => {
@@ -2531,6 +2639,151 @@ export const AppProvider: React.FC<{
   };
 
   // =========================================================
+  // EVENTS & GROOM DOSSIERS
+  // =========================================================
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("ibra_events", JSON.stringify(events));
+    } catch (e) {
+      console.warn("Could not persist events to localStorage:", e);
+    }
+  }, [events]);
+
+  useEffect(() => {
+    try {
+      if (clientUser) {
+        localStorage.setItem("ibra_client_session", JSON.stringify(clientUser));
+      } else {
+        localStorage.removeItem("ibra_client_session");
+      }
+    } catch (e) {
+      console.warn("Could not persist client session:", e);
+    }
+  }, [clientUser]);
+
+  const addEvent = (event: IbraEvent) => {
+    setEvents((prev) => [event, ...prev]);
+    logActivity(`تم إنشاء ملف مناسبة جديد للعريس ${event.groomName}`, "create");
+  };
+
+  const updateEvent = (eventId: string, data: Partial<IbraEvent>) => {
+    setEvents((prev) =>
+      prev.map((e) =>
+        e.eventId === eventId
+          ? { ...e, ...data, updatedAt: new Date().toISOString() }
+          : e
+      )
+    );
+    logActivity(`تم تحديث ملف المناسبة ${eventId}`, "update");
+  };
+
+  const addPaymentToEvent = (eventId: string, payment: EventPaymentItem) => {
+    setEvents((prev) =>
+      prev.map((e) => {
+        if (e.eventId === eventId) {
+          const payments = [payment, ...(e.payments || [])];
+          const totalPaid = (e.totalPaid || 0) + Number(payment.amount);
+          return {
+            ...e,
+            payments,
+            totalPaid,
+            updatedAt: new Date().toISOString(),
+          };
+        }
+        return e;
+      })
+    );
+    logActivity(`تم تسجيل دفعة بقيمة ${payment.amount} دج للمناسبة ${eventId}`, "update");
+  };
+
+  const clientLogin = async (phone: string, eventId: string): Promise<boolean> => {
+    const cleanPhone = phone.trim().replace(/[^0-9]/g, "");
+    const cleanId = eventId.trim().toUpperCase();
+
+    const ev = events.find(
+      (e) =>
+        e.eventId.toUpperCase() === cleanId &&
+        e.phone.replace(/[^0-9]/g, "") === cleanPhone
+    );
+
+    if (ev) {
+      const session: ClientUserSession = {
+        phone: ev.phone,
+        name: ev.groomName,
+        eventId: ev.eventId,
+        loggedAt: new Date().toISOString(),
+      };
+      setClientUser(session);
+      return true;
+    }
+    return false;
+  };
+
+  const clientLogout = () => {
+    setClientUser(null);
+  };
+
+  const togglePhotoFavorite = (eventId: string, photoId: string) => {
+    setEvents((prev) =>
+      prev.map((e) => {
+        if (e.eventId === eventId && e.gallery) {
+          const gallery = e.gallery.map((p) =>
+            p.id === photoId ? { ...p, isFavorite: !p.isFavorite } : p
+          );
+          return { ...e, gallery };
+        }
+        return e;
+      })
+    );
+  };
+
+  const addGuestUpload = (
+    eventId: string,
+    upload: Omit<GuestUploadItem, "id" | "createdAt">
+  ) => {
+    const item: GuestUploadItem = {
+      ...upload,
+      id: "gu_" + Date.now(),
+      createdAt: new Date().toISOString().replace("T", " ").substring(0, 16),
+    };
+
+    setEvents((prev) =>
+      prev.map((e) => {
+        if (e.eventId === eventId) {
+          return {
+            ...e,
+            guestUploads: [item, ...(e.guestUploads || [])],
+          };
+        }
+        return e;
+      })
+    );
+    logActivity(`صورة جديدة مرفوعة من ضيف في المناسبة ${eventId}`, "create");
+  };
+
+  const addEventReview = (
+    eventId: string,
+    review: Omit<EventReviewItem, "id" | "date">
+  ) => {
+    const item: EventReviewItem = {
+      ...review,
+      id: "rev_" + Date.now(),
+      date: new Date().toISOString().split("T")[0],
+    };
+
+    setEvents((prev) =>
+      prev.map((e) => {
+        if (e.eventId === eventId) {
+          return { ...e, review: item };
+        }
+        return e;
+      })
+    );
+    logActivity(`تقييم جديد للمناسبة ${eventId}`, "create");
+  };
+
+  // =========================================================
   // PROVIDER
   // =========================================================
 
@@ -2558,6 +2811,18 @@ export const AppProvider: React.FC<{
         addTeamMember,
         updateTeamMember,
         deleteTeamMember,
+
+        // Events & Groom Management
+        events,
+        addEvent,
+        updateEvent,
+        addPaymentToEvent,
+        clientUser,
+        clientLogin,
+        clientLogout,
+        togglePhotoFavorite,
+        addGuestUpload,
+        addEventReview,
 
         currentUser,
         login,

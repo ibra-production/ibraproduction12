@@ -1,5 +1,13 @@
 export type Language = 'ar' | 'fr' | 'en';
 
+export interface HeroSlideItem {
+  id: string;
+  image: string;
+  labelAr?: string;
+  labelFr?: string;
+  labelEn?: string;
+}
+
 export interface SiteSettings {
   agencyName: string;
   taglineAr: string;
@@ -26,6 +34,7 @@ export interface SiteSettings {
   heroVideoUrl?: string; // Direct MP4 or embed link for hero background video
   enableHeroVideo?: boolean; // Toggle hero video on/off
   heroVideoPoster?: string; // Fallback image for hero video
+  heroSlides?: HeroSlideItem[]; // Custom background photos list for hero slider
 }
 
 export interface StatItem {
@@ -66,6 +75,9 @@ export interface PackageItem {
   featuresAr: string[];
   featuresFr: string[];
   featuresEn: string[];
+  descriptionAr?: string;
+  descriptionFr?: string;
+  descriptionEn?: string;
   isPopular: boolean;
   visible: boolean;
   order: number;

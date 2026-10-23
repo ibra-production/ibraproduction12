@@ -52,7 +52,7 @@ export const Services: React.FC<ServicesProps> = ({ onSelectService }) => {
                 <div className="relative aspect-[16/10] overflow-hidden">
                   <div className="absolute top-4 left-4 z-10 w-10 h-10 rounded-full border border-amber-400/30 bg-black/35 backdrop-blur-md flex items-center justify-center text-amber-400 text-xs font-cinzel font-bold">{String(activeServices.findIndex(s => s.id === service.id) + 1).padStart(2, "0")}</div>
                   <img
-                    src={service.image}
+                    src={(service.image && service.image.trim() !== '') ? service.image.trim() : '/img1.jpg'}
                     alt={title}
                     className="w-full h-full object-cover group-hover:scale-110 group-hover:rotate-1 transition-transform duration-700"
                   />
@@ -107,7 +107,7 @@ export const Services: React.FC<ServicesProps> = ({ onSelectService }) => {
 
             <div className="aspect-[16/9] rounded-2xl overflow-hidden mb-6 border border-neutral-800">
               <img
-                src={selectedServiceModal.image}
+                src={(selectedServiceModal.image && selectedServiceModal.image.trim() !== '') ? selectedServiceModal.image.trim() : '/img1.jpg'}
                 alt=""
                 className="w-full h-full object-cover"
               />

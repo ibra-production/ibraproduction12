@@ -64,7 +64,7 @@ export const OffersSection: React.FC<OffersProps> = ({ onOpenBooking }) => {
 
               <div className="relative aspect-[16/10] rounded-2xl overflow-hidden border border-amber-500/30 shadow-2xl">
                 <img
-                  src={offer.image}
+                  src={(offer.image && offer.image.trim() !== '') ? offer.image.trim() : '/img1.jpg'}
                   alt={title}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
                 />

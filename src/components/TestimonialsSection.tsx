@@ -59,9 +59,9 @@ export const TestimonialsSection: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-4 pt-6 border-t border-neutral-800">
-                  {t.image ? (
+                  {t.image && t.image.trim() !== '' ? (
                     <img
-                      src={t.image}
+                      src={t.image.trim()}
                       alt={t.clientName}
                       className="w-12 h-12 rounded-full object-cover border border-amber-500/30"
                     />

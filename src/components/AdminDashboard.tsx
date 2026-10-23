@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { auth, db } from '../firebase';
 import { addDoc, collection, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { enablePushNotifications } from "../pushNotifications";
@@ -7,6 +7,7 @@ import { TeamManagement } from './TeamManagement';
 import { BookingWorkflowPanel } from './BookingWorkflowPanel';
 import { ProFeaturesCenter } from './ProFeaturesCenter';
 import { OperationsCenter } from './OperationsCenter';
+import { HeroMediaManager } from './HeroMediaManager';
 import { uploadImageToIbraR2 } from '../r2Upload';
 import {
   LayoutDashboard,
@@ -38,7 +39,8 @@ import {
   Eye,
   FileImage,
   FileVideo,
-  Users
+  Users,
+  Film
 } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -108,6 +110,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
     | 'pro'
     | 'scan'
     | 'operations'
+    | 'heroMedia'
   >('dash');
 
   const [adminNotes, setAdminNotes] = useState<string>(() =>
@@ -719,6 +722,11 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               icon: <LayoutDashboard className="w-4 h-4" />
             },
             {
+              id: 'heroMedia',
+              label: 'فيديو وصور الخلفية',
+              icon: <Film className="w-4 h-4 text-amber-400" />
+            },
+            {
               id: 'bookings',
               label: `Ø§Ù�Ø­Ø¬Ù�Ø²Ø§Øª Ù�Ø§Ù�Ø·Ù�Ø¨Ø§Øª (${newBookingsCount} Ø¬Ø¯Ù�Ø¯Ø©)`,
               icon: <Calendar className="w-4 h-4" />
@@ -837,6 +845,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               onChange={e => setActiveTab(e.target.value as any)}
               className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-amber-500"
             >
+              <option value="heroMedia">فيديو وصور الخلفية</option>
               <option value="dash">Ù�Ù�Ø­Ø© Ø§Ù�Ù�Ù�Ø§Ø¯Ø© Ø§Ù�Ø¹Ø§Ù�Ø©</option>
               <option value="bookings">Ø§Ù�Ø­Ø¬Ù�Ø²Ø§Øª Ù�Ø§Ù�Ø·Ù�Ø¨Ø§Øª</option>
               <option value="analytics">Ø§Ù�Ø¥Ø­ØµØ§Ø¦Ù�Ø§Øª Ù�Ø§Ù�Ø£Ø±Ø¨Ø§Ø­</option>
@@ -866,6 +875,10 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
             <OperationsCenter bookings={safeBookings} teamMembers={teamMembers} />
           )}
 
+          {activeTab === 'heroMedia' && (
+            <HeroMediaManager />
+          )}
+
           {activeTab === 'dash' && (
             <div className="space-y-6">
               <section className="relative overflow-hidden rounded-3xl border border-amber-500/20 bg-gradient-to-br from-amber-500/10 via-neutral-900 to-neutral-950 p-6 md:p-8">
@@ -877,10 +890,42 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                     <p className="text-sm text-neutral-400 mt-2 max-w-2xl">كل عمليات الوكالة في مكان واحد: الحجوزات، العملاء، الدفعات، سير العمل، البطاقات، الفريق والأتمتة.</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <button onClick={() => setActiveTab('bookings')} className="px-4 py-3 rounded-xl bg-amber-500 text-black font-black text-sm">الحجوزات</button>
-                    <button onClick={() => setActiveTab('operations')} className="px-4 py-3 rounded-xl bg-neutral-800 text-white font-bold text-sm">مركز العمليات</button>
-                    <button onClick={() => setActiveTab('workflow')} className="px-4 py-3 rounded-xl bg-neutral-800 text-white font-bold text-sm">سير العمل</button>
+                    <button onClick={() => setActiveTab('heroMedia')} className="px-4 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black text-sm flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all">
+                      <Film className="w-4 h-4" />
+                      فيديو وصور الخلفية
+                    </button>
+                    <button onClick={() => setActiveTab('bookings')} className="px-4 py-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-sm">الحجوزات</button>
+                    <button onClick={() => setActiveTab('operations')} className="px-4 py-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-sm">مركز العمليات</button>
+                    <button onClick={() => setActiveTab('workflow')} className="px-4 py-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-sm">سير العمل</button>
                   </div>
+                </div>
+              </section>
+
+              {/* Hero Media Quick Control Banner */}
+              <section className="bg-gradient-to-r from-amber-500/15 via-neutral-900 to-neutral-900 border border-amber-500/40 rounded-3xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+                <div className="flex items-start md:items-center gap-4 relative z-10">
+                  <div className="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/10">
+                    <Film className="w-7 h-7" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-black text-white text-lg">التحكم في فيديو وصور خلفية الموقع</h3>
+                      <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-amber-500 text-black font-black">تحكم كامل</span>
+                    </div>
+                    <p className="text-xs text-neutral-300 mt-1 max-w-2xl leading-relaxed">
+                      تغيير فيديو الأعراس السينمائي، رفع فيديو خاص إلى سيرفر التخزين السحابي Cloudflare R2، تفعيل أو إيقاف الفيديو، وإضافة وحذف صور السلايدر الخلفي.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 shrink-0 relative z-10">
+                  <button
+                    onClick={() => setActiveTab('heroMedia')}
+                    className="px-6 py-3.5 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-neutral-950 font-black text-sm rounded-xl transition-all shadow-xl shadow-amber-500/20 flex items-center gap-2 whitespace-nowrap cursor-pointer"
+                  >
+                    <Film className="w-4 h-4" />
+                    التحكم بالخلفية الآن
+                  </button>
                 </div>
               </section>
               <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
@@ -921,11 +966,11 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                   </div>
                 </div>
               </section>
-              <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <section className="grid grid-cols-2 md:grid-cols-5 gap-3">
                 {[
-                  ['التقويم', 'calendar', CalendarDays],['بطاقات التعريف', 'idcards', FileText],['Ibra Scan Center', 'scan', ShieldCheck],['الإشعارات والأتمتة', 'notifications', Send]
+                  ['فيديو وصور الخلفية', 'heroMedia', Film],['التقويم', 'calendar', CalendarDays],['بطاقات التعريف', 'idcards', FileText],['Ibra Scan Center', 'scan', ShieldCheck],['الإشعارات والأتمتة', 'notifications', Send]
                 ].map(([label,tab,Icon]: any) => (
-                  <button key={String(tab)} onClick={() => setActiveTab(String(tab) as any)} className="text-right bg-neutral-900 border border-neutral-800 rounded-2xl p-4 hover:border-amber-500/30 hover:bg-neutral-800 transition-all">
+                  <button key={String(tab)} onClick={() => setActiveTab(String(tab) as any)} className={`text-right bg-neutral-900 border rounded-2xl p-4 transition-all ${tab === 'heroMedia' ? 'border-amber-500/50 bg-amber-500/10 hover:bg-amber-500/20' : 'border-neutral-800 hover:border-amber-500/30 hover:bg-neutral-800'}`}>
                     <Icon className="w-5 h-5 text-amber-400 mb-3" /><div className="font-bold text-white text-sm">{label}</div><div className="text-[11px] text-neutral-500 mt-1">فتح المركز</div>
                   </button>
                 ))}
@@ -2198,6 +2243,24 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
           )}
            {activeTab === 'settings' && (
             <div className="space-y-6">
+              {/* Quick Hero Media Card */}
+              <div className="bg-gradient-to-r from-amber-500/10 via-neutral-900 to-neutral-950 border border-amber-500/30 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+                    <Film className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white text-base">فيديو وصور خلفية الواجهة الرئيسية</h3>
+                    <p className="text-xs text-neutral-400">إضافة أو إزالة فيديو الأعراس، تبديل الفيديو، وإدارة صور السلايدر الخلفي</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setActiveTab('heroMedia')}
+                  className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-xs rounded-xl transition-all whitespace-nowrap shrink-0 shadow-lg"
+                >
+                  فتح لوحة التحكم بالخلفية
+                </button>
+              </div>
 
               <div>
                 <h2 className="text-2xl font-bold text-white">
