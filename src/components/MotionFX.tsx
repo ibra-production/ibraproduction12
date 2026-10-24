@@ -16,27 +16,13 @@ export const MotionFX = () => {
           }
         });
       },
-      { threshold: 0.12, rootMargin: '0px 0px -8% 0px' }
+      { threshold: 0.08, rootMargin: '0px 0px -5% 0px' }
     );
 
     sections.forEach((section) => observer.observe(section));
 
-    let raf = 0;
-    const handlePointerMove = (event: PointerEvent) => {
-      if (event.pointerType === 'touch') return;
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => {
-        document.documentElement.style.setProperty('--mouse-x', `${event.clientX}px`);
-        document.documentElement.style.setProperty('--mouse-y', `${event.clientY}px`);
-      });
-    };
-
-    window.addEventListener('pointermove', handlePointerMove, { passive: true });
-
     return () => {
-      cancelAnimationFrame(raf);
       observer.disconnect();
-      window.removeEventListener('pointermove', handlePointerMove);
       document.documentElement.classList.remove('motion-ready');
     };
   }, []);

@@ -62,6 +62,70 @@ export const initialSiteSettings: SiteSettings = {
       labelFr: 'Ibra Production',
       labelEn: 'Ibra Production',
     },
+  ],
+  activeHeroMediaType: 'auto',
+  heroMediaItems: [
+    {
+      id: 'sm_vid_1',
+      type: 'video',
+      url: 'https://assets.mixkit.co/videos/preview/mixkit-wedding-couple-walking-in-a-forest-41121-large.mp4',
+      posterUrl: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=2000&q=90',
+      titleAr: 'فيديو زفاف الغابة السينمائي (HD)',
+      titleFr: 'Vidéo Mariage Forêt HD',
+      titleEn: 'Wedding Forest Cinematic Video HD',
+      isActive: true,
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'sm_img_1',
+      type: 'image',
+      url: 'https://i.postimg.cc/fbZqcV5R/Re-Lens-IMG-20260625133005.jpg',
+      titleAr: 'جلسة تصوير العرسان - احترافية',
+      titleFr: 'Séance Couple Pro',
+      titleEn: 'Couple Portrait Pro',
+      isActive: true,
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'sm_img_2',
+      type: 'image',
+      url: 'https://i.postimg.cc/rybhhnQV/IMG-2114.avif',
+      titleAr: 'تغطية مناسبات - قاعة الأعراس',
+      titleFr: 'Couverture Événementielle',
+      titleEn: 'Event Coverage Wedding Hall',
+      isActive: true,
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'sm_img_3',
+      type: 'image',
+      url: 'https://i.postimg.cc/jSTBX3Sx/IMG-8875.avif',
+      titleAr: 'أجمل تفاصيل الزفاف والعروس',
+      titleFr: 'Détails du Mariage',
+      titleEn: 'Wedding Details & Bride',
+      isActive: true,
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'sm_img_4',
+      type: 'image',
+      url: 'https://i.postimg.cc/2SCXvq0V/IMG-8838.avif',
+      titleAr: 'إنتاج بصري سينمائي مميز',
+      titleFr: 'Production Visuelle Ciné',
+      titleEn: 'Cinematic Visual Production',
+      isActive: true,
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'sm_img_5',
+      type: 'image',
+      url: 'https://i.postimg.cc/RFtT29P5/IMG-8836.avif',
+      titleAr: 'استوديو Ibra Production المتنقل',
+      titleFr: 'Studio Mobile Ibra',
+      titleEn: 'Ibra Production Mobile Studio',
+      isActive: true,
+      createdAt: new Date().toISOString()
+    }
   ]
 };
 

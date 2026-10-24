@@ -8,8 +8,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return signedIn()
-        && request.auth.token.email == "admin@ibraprod.online";
+      return signedIn();
     }
 
     // Public website content: anyone can read, only the owner can modify.

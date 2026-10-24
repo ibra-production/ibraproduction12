@@ -1,12 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
-import { ArrowDown, ArrowUpRight, CalendarCheck, ChevronLeft, ChevronRight, Play, Pause, Volume2, VolumeX, Video, Sparkles, Star, Film, Sliders, X } from 'lucide-react';
-import { HeroMediaManager } from './HeroMediaManager';
+import { ArrowDown, ArrowUpRight, CalendarCheck, ChevronLeft, ChevronRight, Play, Pause, Volume2, VolumeX, Video, Sparkles, Star, Film } from 'lucide-react';
 
 interface HeroProps { onOpenBooking: () => void; }
 
 export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
-  const { language, settings, stats, currentUser } = useApp();
+  const { language, settings, stats } = useApp();
   const [index, setIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [useVideo, setUseVideo] = useState<boolean>(() => {
@@ -14,18 +13,10 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
   });
   const [isMuted, setIsMuted] = useState(true);
   const [isVideoPlaying, setIsVideoPlaying] = useState(true);
-  const [heroMediaModalOpen, setHeroMediaModalOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const ar = language === 'ar';
   const fr = language === 'fr';
-
-  // Keep useVideo in sync whenever settings are updated in Firestore or Admin
-  useEffect(() => {
-    if (typeof settings.enableHeroVideo === 'boolean') {
-      setUseVideo(settings.enableHeroVideo && Boolean(settings.heroVideoUrl && settings.heroVideoUrl.trim() !== ''));
-    }
-  }, [settings.enableHeroVideo, settings.heroVideoUrl]);
 
   const defaultSlides = [
     {
@@ -55,16 +46,52 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
     },
   ];
 
-  // If the admin has defined heroSlides in settings, use them; otherwise use default studio slides
-  const slides = (Array.isArray(settings.heroSlides) && settings.heroSlides.length > 0)
-    ? settings.heroSlides
+  const activeHeroVideo = React.useMemo(() => {
+    if (Array.isArray(settings.heroMediaItems) && settings.heroMediaItems.length > 0) {
+      return settings.heroMediaItems.find(m => m.type === 'video' && m.isActive !== false);
+    }
+    return null;
+  }, [settings.heroMediaItems]);
+
+  const activeVideoUrl = activeHeroVideo ? activeHeroVideo.url : (settings.heroVideoUrl || '');
+  const activeVideoPoster = activeHeroVideo?.posterUrl || settings.heroVideoPoster;
+
+  // Keep useVideo in sync whenever settings are updated in Firestore or Admin
+  useEffect(() => {
+    const mode = settings.activeHeroMediaType || 'auto';
+    if (mode === 'video') {
+      setUseVideo(Boolean(activeVideoUrl && activeVideoUrl.trim() !== ''));
+    } else if (mode === 'slideshow' || mode === 'single_image') {
+      setUseVideo(false);
+    } else {
+      const hasActiveVideo = Boolean(activeVideoUrl && activeVideoUrl.trim() !== '');
+      setUseVideo(settings.enableHeroVideo !== false && hasActiveVideo);
+    }
+  }, [settings.activeHeroMediaType, settings.enableHeroVideo, activeVideoUrl]);
+
+  // Derive slides from active heroMediaItems with fallback to heroSlides and defaultSlides
+  const slides = React.useMemo(() => {
+    if (Array.isArray(settings.heroMediaItems) && settings.heroMediaItems.length > 0) {
+      const activeImages = settings.heroMediaItems.filter(m => m.type === 'image' && m.isActive !== false);
+      if (activeImages.length > 0) {
+        return activeImages.map(img => ({
+          id: img.id,
+          image: img.url.trim(),
+          label: ar ? (img.titleAr || 'Ibra Production') : fr ? (img.titleFr || 'Ibra Production') : (img.titleEn || 'Ibra Production')
+        }));
+      }
+    }
+    if (Array.isArray(settings.heroSlides) && settings.heroSlides.length > 0) {
+      return settings.heroSlides
         .filter(s => s && typeof s.image === 'string' && s.image.trim() !== '')
         .map(s => ({
           id: s.id,
           image: s.image.trim(),
           label: ar ? (s.labelAr || 'Ibra Production') : fr ? (s.labelFr || 'Ibra Production') : (s.labelEn || 'Ibra Production'),
-        }))
-    : defaultSlides;
+        }));
+    }
+    return defaultSlides;
+  }, [settings.heroMediaItems, settings.heroSlides, ar, fr]);
 
   const activeSlideList = slides.length > 0 ? slides : defaultSlides;
 
@@ -105,11 +132,11 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
   return (
     <section id="home" className="ibra-hero" onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)}>
       <div className="ibra-hero-media">
-        {useVideo && settings.heroVideoUrl && settings.heroVideoUrl.trim() !== '' ? (
+        {useVideo && activeVideoUrl && activeVideoUrl.trim() !== '' ? (
           <video
             ref={videoRef}
-            src={settings.heroVideoUrl.trim()}
-            poster={(settings.heroVideoPoster && settings.heroVideoPoster.trim() !== '') ? settings.heroVideoPoster.trim() : activeSlideList[0]?.image}
+            src={activeVideoUrl.trim()}
+            poster={activeVideoPoster || activeSlideList[0]?.image}
             autoPlay
             muted={isMuted}
             loop
@@ -137,17 +164,6 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
         <div className="ibra-hero-copy">
           <div className="flex flex-wrap items-center gap-2 mb-3">
             <div className="ibra-eyebrow mb-0"><Sparkles className="w-4 h-4" /> {ar ? 'وكالة تصوير وإنتاج متكاملة' : fr ? 'Agence photo & production' : 'Photography & production agency'}</div>
-            {currentUser && (
-              <button
-                type="button"
-                onClick={() => setHeroMediaModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-neutral-950 border border-amber-500/40 text-[11px] font-bold transition-all shadow-md"
-                title="التحكم في فيديو وصور الخلفية"
-              >
-                <Sliders className="w-3.5 h-3.5" />
-                <span>التحكم في فيديو وصور الخلفية</span>
-              </button>
-            )}
           </div>
           <div className="ibra-hero-kicker"><span className="ibra-hero-live-dot" />{ar ? 'IBRA PRODUCTION' : 'IBRA PRODUCTION'} <span>—</span> {ar ? 'من الماء الأبيض إلى كامل الجزائر' : fr ? 'De El Ma Labiod à toute l’Algérie' : 'From El Ma Labiod across Algeria'}</div>
           <h1>{settings.agencyName}</h1>
@@ -234,21 +250,6 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
         </div>
         <a href="#about" className="ibra-scroll-cue"><span>{ar ? 'اكتشف' : fr ? 'Découvrir' : 'Discover'}</span><ArrowDown className="w-4 h-4" /></a>
       </div>
-
-      {heroMediaModalOpen && (
-        <div className="fixed inset-0 z-[120] bg-neutral-950/85 backdrop-blur-xl p-4 sm:p-6 overflow-y-auto flex items-center justify-center animate-fade-in">
-          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-4xl w-full p-6 sm:p-8 relative shadow-2xl my-8">
-            <button
-              onClick={() => setHeroMediaModalOpen(false)}
-              className="absolute top-4 left-4 p-2.5 rounded-full bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700 transition-colors"
-              title="إغلاق"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <HeroMediaManager onClose={() => setHeroMediaModalOpen(false)} />
-          </div>
-        </div>
-      )}
     </section>
   );
 };

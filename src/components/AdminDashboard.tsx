@@ -7,7 +7,7 @@ import { TeamManagement } from './TeamManagement';
 import { BookingWorkflowPanel } from './BookingWorkflowPanel';
 import { ProFeaturesCenter } from './ProFeaturesCenter';
 import { OperationsCenter } from './OperationsCenter';
-import { HeroMediaManager } from './HeroMediaManager';
+import { SiteMediaManager } from './SiteMediaManager';
 import { uploadImageToIbraR2 } from '../r2Upload';
 import {
   LayoutDashboard,
@@ -111,6 +111,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
     | 'scan'
     | 'operations'
     | 'heroMedia'
+    | 'siteMedia'
   >('dash');
 
   const [adminNotes, setAdminNotes] = useState<string>(() =>
@@ -700,12 +701,18 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
             ØªØ³Ø¬Ù�Ù� Ø§Ù�Ø®Ø±Ù�Ø¬
           </button>
 
-          <button
-            onClick={onClose}
-            className="p-2 text-neutral-400 hover:text-white bg-neutral-800 rounded-full"
+          <a
+            href="/"
+            onClick={(e) => {
+              e.preventDefault();
+              onClose();
+            }}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 hover:text-white rounded-xl text-xs font-bold transition-all border border-neutral-700"
+            title="الانتقال إلى الموقع العام للعملاء"
           >
-            <X className="w-5 h-5" />
-          </button>
+            <Eye className="w-3.5 h-3.5 text-amber-400" />
+            <span>عرض الموقع للعملاء</span>
+          </a>
 
         </div>
 
@@ -722,8 +729,8 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               icon: <LayoutDashboard className="w-4 h-4" />
             },
             {
-              id: 'heroMedia',
-              label: 'فيديو وصور الخلفية',
+              id: 'siteMedia',
+              label: 'وسائط الموقع (Site Media)',
               icon: <Film className="w-4 h-4 text-amber-400" />
             },
             {
@@ -845,7 +852,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               onChange={e => setActiveTab(e.target.value as any)}
               className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-amber-500"
             >
-              <option value="heroMedia">فيديو وصور الخلفية</option>
+              <option value="siteMedia">وسائط الموقع (Site Media)</option>
               <option value="dash">Ù�Ù�Ø­Ø© Ø§Ù�Ù�Ù�Ø§Ø¯Ø© Ø§Ù�Ø¹Ø§Ù�Ø©</option>
               <option value="bookings">Ø§Ù�Ø­Ø¬Ù�Ø²Ø§Øª Ù�Ø§Ù�Ø·Ù�Ø¨Ø§Øª</option>
               <option value="analytics">Ø§Ù�Ø¥Ø­ØµØ§Ø¦Ù�Ø§Øª Ù�Ø§Ù�Ø£Ø±Ø¨Ø§Ø­</option>
@@ -875,8 +882,8 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
             <OperationsCenter bookings={safeBookings} teamMembers={teamMembers} />
           )}
 
-          {activeTab === 'heroMedia' && (
-            <HeroMediaManager />
+          {(activeTab === 'siteMedia' || activeTab === 'heroMedia') && (
+            <SiteMediaManager />
           )}
 
           {activeTab === 'dash' && (
@@ -887,12 +894,12 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                   <div>
                     <div className="text-xs font-black tracking-[0.25em] text-amber-400 uppercase">IBRA PRODUCTION • ADMIN</div>
                     <h2 className="text-2xl md:text-4xl font-black text-white mt-2">لوحة التحكم الاحترافية</h2>
-                    <p className="text-sm text-neutral-400 mt-2 max-w-2xl">كل عمليات الوكالة في مكان واحد: الحجوزات، العملاء، الدفعات، سير العمل، البطاقات، الفريق والأتمتة.</p>
+                    <p className="text-sm text-neutral-400 mt-2 max-w-2xl">كل عمليات الوكالة في مكان واحد: الحجوزات، العملاء، وسائط الموقع، الدفعات، سير العمل، الفريق والأتمتة.</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <button onClick={() => setActiveTab('heroMedia')} className="px-4 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black text-sm flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all">
+                    <button onClick={() => setActiveTab('siteMedia')} className="px-4 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black text-sm flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all">
                       <Film className="w-4 h-4" />
-                      فيديو وصور الخلفية
+                      وسائط الموقع (Site Media)
                     </button>
                     <button onClick={() => setActiveTab('bookings')} className="px-4 py-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-sm">الحجوزات</button>
                     <button onClick={() => setActiveTab('operations')} className="px-4 py-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-sm">مركز العمليات</button>
@@ -901,7 +908,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 </div>
               </section>
 
-              {/* Hero Media Quick Control Banner */}
+              {/* Site Media Quick Control Banner */}
               <section className="bg-gradient-to-r from-amber-500/15 via-neutral-900 to-neutral-900 border border-amber-500/40 rounded-3xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-2xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
                 <div className="flex items-start md:items-center gap-4 relative z-10">
@@ -910,21 +917,21 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-black text-white text-lg">التحكم في فيديو وصور خلفية الموقع</h3>
+                      <h3 className="font-black text-white text-lg">وسائط وخلفية الموقع (Site Media)</h3>
                       <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-amber-500 text-black font-black">تحكم كامل</span>
                     </div>
                     <p className="text-xs text-neutral-300 mt-1 max-w-2xl leading-relaxed">
-                      تغيير فيديو الأعراس السينمائي، رفع فيديو خاص إلى سيرفر التخزين السحابي Cloudflare R2، تفعيل أو إيقاف الفيديو، وإضافة وحذف صور السلايدر الخلفي.
+                      إضافة روابط فيديوهات وصور، رفع ملفات من الحاسوب، وتحديد الوسائط النشطة في واجهة الهيرو مع الحفظ المباشر في Firestore.
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0 relative z-10">
                   <button
-                    onClick={() => setActiveTab('heroMedia')}
+                    onClick={() => setActiveTab('siteMedia')}
                     className="px-6 py-3.5 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-neutral-950 font-black text-sm rounded-xl transition-all shadow-xl shadow-amber-500/20 flex items-center gap-2 whitespace-nowrap cursor-pointer"
                   >
                     <Film className="w-4 h-4" />
-                    التحكم بالخلفية الآن
+                    فتح وسائط الموقع (Site Media)
                   </button>
                 </div>
               </section>
@@ -968,9 +975,9 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
               </section>
               <section className="grid grid-cols-2 md:grid-cols-5 gap-3">
                 {[
-                  ['فيديو وصور الخلفية', 'heroMedia', Film],['التقويم', 'calendar', CalendarDays],['بطاقات التعريف', 'idcards', FileText],['Ibra Scan Center', 'scan', ShieldCheck],['الإشعارات والأتمتة', 'notifications', Send]
+                  ['وسائط الموقع (Site Media)', 'siteMedia', Film],['التقويم', 'calendar', CalendarDays],['بطاقات التعريف', 'idcards', FileText],['Ibra Scan Center', 'scan', ShieldCheck],['الإشعارات والأتمتة', 'notifications', Send]
                 ].map(([label,tab,Icon]: any) => (
-                  <button key={String(tab)} onClick={() => setActiveTab(String(tab) as any)} className={`text-right bg-neutral-900 border rounded-2xl p-4 transition-all ${tab === 'heroMedia' ? 'border-amber-500/50 bg-amber-500/10 hover:bg-amber-500/20' : 'border-neutral-800 hover:border-amber-500/30 hover:bg-neutral-800'}`}>
+                  <button key={String(tab)} onClick={() => setActiveTab(String(tab) as any)} className={`text-right bg-neutral-900 border rounded-2xl p-4 transition-all ${tab === 'siteMedia' ? 'border-amber-500/50 bg-amber-500/10 hover:bg-amber-500/20' : 'border-neutral-800 hover:border-amber-500/30 hover:bg-neutral-800'}`}>
                     <Icon className="w-5 h-5 text-amber-400 mb-3" /><div className="font-bold text-white text-sm">{label}</div><div className="text-[11px] text-neutral-500 mt-1">فتح المركز</div>
                   </button>
                 ))}
@@ -1624,9 +1631,7 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                             <button
                               onClick={() => {
                                 if (
-                                  confirm(
-                                    'Ù�Ù� ØªØ±Ù�Ø¯ Ø­Ø°Ù Ù�Ø°Ø§ Ø§Ù�Ø¹Ù�Ù�Ø�'
-                                  )
+                                  confirm('هل أنت متأكد من حذف هذا العمل من المعرض؟')
                                 ) {
                                   deletePortfolioItem(item.id);
                                 }
@@ -1792,24 +1797,86 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
           <div className="space-y-3">
             <label className="flex items-center gap-3 w-full cursor-pointer bg-neutral-950 border border-dashed border-amber-500/40 rounded-xl px-4 py-4">
               <FileVideo className="w-5 h-5 text-amber-400" />
-              <div className="flex-1"><div className="text-sm text-white font-semibold">Ø±ÙØ¹ ÙÙ�Ø¯Ù�Ù� Ù�Ù� Ø§Ù�Ø­Ø§Ø³Ù�Ø¨</div><div className="text-xs text-neutral-500">MP4 / WEBM / MOV â�� Ø­ØªÙ� 500MB</div></div>
-              <input type="file" accept="video/mp4,video/webm,video/quicktime,video/x-msvideo,video/x-matroska" className="hidden" disabled={videoUploading} onChange={async e=>{const file=e.target.files?.[0];if(!file)return;try{setVideoUploading(true);const url=await uploadVideoFile(file);setVideoModal((m:any)=>({...m,videoUrl:url}));}catch(error){alert(error instanceof Error?error.message:'ÙØ´Ù� Ø±ÙØ¹ Ø§Ù�ÙÙ�Ø¯Ù�Ù�.');}finally{setVideoUploading(false);e.target.value='';}}}/>
+              <div className="flex-1">
+                <div className="text-sm text-white font-semibold">رفع فيديو من الحاسوب</div>
+                <div className="text-xs text-neutral-500">MP4 / WEBM / MOV — حتى 500MB</div>
+              </div>
+              <input
+                type="file"
+                accept="video/mp4,video/webm,video/quicktime,video/x-msvideo,video/x-matroska"
+                className="hidden"
+                disabled={videoUploading}
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  try {
+                    setVideoUploading(true);
+                    const url = await uploadVideoFile(file);
+                    setVideoModal((m: any) => ({ ...m, videoUrl: url }));
+                  } catch (error) {
+                    alert(error instanceof Error ? error.message : "فشل رفع الفيديو.");
+                  } finally {
+                    setVideoUploading(false);
+                    e.target.value = "";
+                  }
+                }}
+              />
             </label>
-            {videoUploading && <div className="text-xs text-amber-400">Ø¬Ø§Ø±Ù Ø±ÙØ¹ Ø§Ù�ÙÙ�Ø¯Ù�Ù�...</div>}
-            <input value={videoModal.videoUrl || ''} onChange={e=>setVideoModal({...videoModal,videoUrl:e.target.value})} placeholder="Ø£Ù� Ø£Ø¯Ø®Ù� Ø±Ø§Ø¨Ø· Ø§Ù�ÙÙ�Ø¯Ù�Ù�" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
+            {videoUploading && <div className="text-xs text-amber-400">جارٍ رفع الفيديو من الحاسوب...</div>}
+            {videoModal.videoUrl && (
+              <div className="flex items-center justify-between p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300">
+                <span className="truncate max-w-[80%]">تم رفع ملف الفيديو: {videoModal.videoUrl}</span>
+                <button
+                  type="button"
+                  onClick={() => setVideoModal({ ...videoModal, videoUrl: "" })}
+                  className="text-red-400 hover:text-red-300 font-bold px-2 py-1"
+                >
+                  حذف
+                </button>
+              </div>
+            )}
           </div>
 
-          <input
-            value={videoModal.thumbnail || ''}
-            onChange={e =>
-              setVideoModal({
-                ...videoModal,
-                thumbnail: e.target.value
-              })
-            }
-            placeholder="Ø±Ø§Ø¨Ø· Ø§Ù�ØµÙ�Ø±Ø© Ø§Ù�Ù�ØµØºØ±Ø©"
-            className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white"
-          />
+          <div className="space-y-2">
+            <label className="flex items-center gap-3 w-full cursor-pointer bg-neutral-950 border border-dashed border-amber-500/40 rounded-xl px-4 py-4">
+              <FileImage className="w-5 h-5 text-amber-400" />
+              <div className="flex-1">
+                <div className="text-sm text-white font-semibold">رفع صورة مصغرة للفيديو من الحاسوب</div>
+                <div className="text-xs text-neutral-500">JPG / PNG / WEBP</div>
+              </div>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  try {
+                    const urls = await uploadPortfolioImages([file]);
+                    if (urls[0]) {
+                      setVideoModal((m: any) => ({ ...m, thumbnail: urls[0] }));
+                    }
+                  } catch (err: any) {
+                    alert("فشل رفع الصورة المصغرة: " + (err?.message || "خطأ"));
+                  } finally {
+                    e.target.value = "";
+                  }
+                }}
+              />
+            </label>
+            {videoModal.thumbnail && (
+              <div className="relative w-36 aspect-video rounded-xl overflow-hidden border border-neutral-700">
+                <img src={videoModal.thumbnail} alt="Thumbnail preview" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => setVideoModal({ ...videoModal, thumbnail: "" })}
+                  className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+          </div>
 
           <input
             value={videoModal.duration || ''}
@@ -2243,22 +2310,22 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
           )}
            {activeTab === 'settings' && (
             <div className="space-y-6">
-              {/* Quick Hero Media Card */}
+              {/* Quick Site Media Card */}
               <div className="bg-gradient-to-r from-amber-500/10 via-neutral-900 to-neutral-950 border border-amber-500/30 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
                     <Film className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-white text-base">فيديو وصور خلفية الواجهة الرئيسية</h3>
-                    <p className="text-xs text-neutral-400">إضافة أو إزالة فيديو الأعراس، تبديل الفيديو، وإدارة صور السلايدر الخلفي</p>
+                    <h3 className="font-bold text-white text-base">وسائط وخلفية الموقع (Site Media)</h3>
+                    <p className="text-xs text-neutral-400">إضافة أو إزالة فيديو الأعراس، إضافة روابط الصور، تفعيل وتوقيف وسائط الهيرو</p>
                   </div>
                 </div>
                 <button
-                  onClick={() => setActiveTab('heroMedia')}
-                  className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-xs rounded-xl transition-all whitespace-nowrap shrink-0 shadow-lg"
+                  onClick={() => setActiveTab('siteMedia')}
+                  className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-xs rounded-xl transition-all whitespace-nowrap shrink-0 shadow-lg cursor-pointer"
                 >
-                  فتح لوحة التحكم بالخلفية
+                  فتح وسائط الموقع (Site Media)
                 </button>
               </div>
 
@@ -3410,7 +3477,6 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
                 </label>
                 {portfolioUploading && <div className="text-xs text-amber-400">Ø¬Ø§Ø±Ù Ø±ÙØ¹ Ø§Ù�ØµÙ�Ø±...</div>}
                 {Array.isArray(portfolioModal.images) && portfolioModal.images.length > 0 && <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">{portfolioModal.images.map((url:string,i:number)=><div key={url+i} className="relative aspect-square rounded-xl overflow-hidden"><img src={url} className="w-full h-full object-cover" /><button type="button" onClick={()=>{const images=portfolioModal.images.filter((_:string,n:number)=>n!==i);setPortfolioModal({...portfolioModal,images,image:images[0]||''})}} className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full"><X className="w-3 h-3"/></button></div>)}</div>}
-                <input placeholder="Ø£Ù� Ø£Ø¯Ø®Ù� Ø±Ø§Ø¨Ø· Ø§Ù�ØµÙ�Ø±Ø© Ù�Ø¯Ù�Ù�Ù�Ø§" value={portfolioModal.image || ''} onChange={e=>setPortfolioModal({...portfolioModal,image:e.target.value})} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white" />
               </div>
 
               <textarea

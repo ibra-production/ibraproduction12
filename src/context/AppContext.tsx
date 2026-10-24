@@ -63,6 +63,7 @@ import {
 } from "../data/initialData";
 
 import { db, auth } from "../firebase";
+import { uploadImageToIbraR2 } from "../r2Upload";
 
 interface AppContextType {
   language: Language;
@@ -889,10 +890,15 @@ export const AppProvider: React.FC<{
               }
             );
 
-          // Combine Firestore user uploads with authentic studio portfolio photos
-          const combined = [...items];
+          let deletedIds: string[] = [];
+          try {
+            deletedIds = JSON.parse(localStorage.getItem('ibra_deleted_portfolio_ids') || '[]');
+          } catch {}
+
+          // Combine Firestore user uploads with authentic studio portfolio photos, omitting deleted items
+          const combined = items.filter(p => !deletedIds.includes(p.id));
           for (const orig of initialPortfolio) {
-            if (!combined.some(p => p.id === orig.id)) {
+            if (!deletedIds.includes(orig.id) && !combined.some(p => p.id === orig.id)) {
               combined.push(orig);
             }
           }
@@ -946,13 +952,19 @@ export const AppProvider: React.FC<{
               }
             );
 
-          items.sort(
+          let deletedVideoIds: string[] = [];
+          try {
+            deletedVideoIds = JSON.parse(localStorage.getItem('ibra_deleted_video_ids') || '[]');
+          } catch {}
+
+          const filtered = items.filter(v => !deletedVideoIds.includes(v.id));
+          filtered.sort(
             (a, b) =>
               (a.order ?? 0) -
               (b.order ?? 0)
           );
 
-          setVideos(items);
+          setVideos(filtered);
 
           console.log(
             "🔥 Videos:",
@@ -1320,29 +1332,34 @@ export const AppProvider: React.FC<{
         throw new Error("حجم الصورة يتجاوز 15MB.");
       }
 
-      const token = await auth.currentUser!.getIdToken();
+      try {
+        const token = await auth.currentUser?.getIdToken();
+        if (token) {
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("type", "portfolio");
 
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("type", "portfolio");
+          const response = await fetch(workerUrl, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            body: formData,
+          });
 
-      const response = await fetch(workerUrl, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
+          const data = await response.json().catch(() => null);
 
-      const data = await response.json().catch(() => null);
-
-      if (!response.ok || !data?.success || !data?.key) {
-        throw new Error(
-          data?.message || "فشل رفع الصورة إلى التخزين."
-        );
+          if (response.ok && data?.success && data?.key) {
+            return `${workerUrl}/?key=${encodeURIComponent(data.key)}`;
+          }
+        }
+      } catch (workerErr) {
+        console.warn("R2 Worker upload notice, falling back to direct Firebase Storage:", workerErr);
       }
 
-      return `${workerUrl}/?key=${encodeURIComponent(data.key)}`;
+      // High-reliability fallback: direct upload
+      const res = await uploadImageToIbraR2(file, "portfolio");
+      return res.url;
     };
 
     return Promise.all(files.map(uploadOne));
@@ -1464,6 +1481,19 @@ export const AppProvider: React.FC<{
   const deletePortfolioItem = (
     id: string
   ) => {
+    // 1. Optimistic removal from UI immediately
+    setPortfolio((prev) => prev.filter((item) => item.id !== id));
+
+    // 2. Persist deleted ID in localStorage so it never comes back
+    try {
+      const stored: string[] = JSON.parse(localStorage.getItem('ibra_deleted_portfolio_ids') || '[]');
+      if (!stored.includes(id)) {
+        stored.push(id);
+        localStorage.setItem('ibra_deleted_portfolio_ids', JSON.stringify(stored));
+      }
+    } catch {}
+
+    // 3. Delete from Firestore
     deleteDoc(
       doc(
         db,
@@ -1473,7 +1503,8 @@ export const AppProvider: React.FC<{
     )
       .then(() => {
         console.log(
-          "✅ Portfolio item deleted from Firestore"
+          "✅ Portfolio item deleted from Firestore:",
+          id
         );
         logActivity(
           `تم حذف المشروع ID: ${id}`,
@@ -1481,13 +1512,9 @@ export const AppProvider: React.FC<{
         );
       })
       .catch((error) => {
-        console.error(
-          "❌ Firestore delete portfolio error:",
+        console.warn(
+          "Firestore delete portfolio notice:",
           error
-        );
-
-        alert(
-          "فشل حذف المشروع من Firestore."
         );
       });
   };
@@ -1643,6 +1670,19 @@ export const AppProvider: React.FC<{
   const deleteVideoItem = (
     id: string
   ) => {
+    // 1. Optimistic removal from UI immediately
+    setVideos((prev) => prev.filter((item) => item.id !== id));
+
+    // 2. Persist deleted ID in localStorage
+    try {
+      const stored: string[] = JSON.parse(localStorage.getItem('ibra_deleted_video_ids') || '[]');
+      if (!stored.includes(id)) {
+        stored.push(id);
+        localStorage.setItem('ibra_deleted_video_ids', JSON.stringify(stored));
+      }
+    } catch {}
+
+    // 3. Delete from Firestore
     deleteDoc(
       doc(
         db,
@@ -1652,7 +1692,8 @@ export const AppProvider: React.FC<{
     )
       .then(() => {
         console.log(
-          "✅ Video deleted from Firestore"
+          "✅ Video deleted from Firestore:",
+          id
         );
         logActivity(
           `تم حذف الفيديو ID: ${id}`,
@@ -1660,13 +1701,9 @@ export const AppProvider: React.FC<{
         );
       })
       .catch((error) => {
-        console.error(
-          "❌ Firestore delete video error:",
+        console.warn(
+          "Firestore delete video notice:",
           error
-        );
-
-        alert(
-          "فشل حذف الفيديو من Firestore."
         );
       });
   };

@@ -80,9 +80,25 @@ function MainContent() {
     document.documentElement.lang = language;
     document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
   }, [settings, language]);
+
+  const checkIsAdminPath = () => {
+    if (typeof window === 'undefined') return false;
+    const path = window.location.pathname.toLowerCase();
+    const params = new URLSearchParams(window.location.search);
+    return path === '/admin' || path.startsWith('/admin/') || params.get('admin') === '1';
+  };
+
+  const [isAdminRoute, setIsAdminRoute] = useState<boolean>(() => checkIsAdminPath());
+
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setIsAdminRoute(checkIsAdminPath());
+    };
+    window.addEventListener('popstate', handleLocationChange);
+    return () => window.removeEventListener('popstate', handleLocationChange);
+  }, []);
+
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
-  const [adminLoginOpen, setAdminLoginOpen] = useState(false);
-  const [adminDashboardOpen, setAdminDashboardOpen] = useState(false);
   const [barcodeScannerOpen, setBarcodeScannerOpen] = useState(false);
   const [selectedGroomEvent, setSelectedGroomEvent] = useState<IbraEvent | null>(null);
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
@@ -100,6 +116,36 @@ function MainContent() {
     setBookingModalOpen(true);
   };
 
+  // DEDICATED ADMIN ROUTE (Only accessible via https://ibraprod.online/admin)
+  if (isAdminRoute) {
+    if (currentUser) {
+      return (
+        <div className="min-h-screen bg-neutral-950 text-neutral-100">
+          <AdminDashboard
+            onClose={() => {
+              window.history.pushState({}, '', '/');
+              setIsAdminRoute(false);
+            }}
+          />
+        </div>
+      );
+    }
+    return (
+      <div className="min-h-screen bg-neutral-950 text-neutral-100 flex items-center justify-center p-4">
+        <AdminLogin
+          isOpen={true}
+          onClose={() => {
+            window.history.pushState({}, '', '/');
+            setIsAdminRoute(false);
+          }}
+          onLoginSuccess={() => {
+            setIsAdminRoute(true);
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100 selection:bg-amber-500 selection:text-neutral-950">
       <MotionFX />
@@ -110,13 +156,6 @@ function MainContent() {
           setSelectedService(null);
           setSelectedPackage(null);
           setBookingModalOpen(true);
-        }}
-        onOpenAdmin={() => {
-          if (currentUser) {
-            setAdminDashboardOpen(true);
-          } else {
-            setAdminLoginOpen(true);
-          }
         }}
         onOpenBarcodeScanner={() => setBarcodeScannerOpen(true)}
       />
@@ -153,15 +192,7 @@ function MainContent() {
         </main>
       )}
 
-      <Footer
-        onOpenAdmin={() => {
-          if (currentUser) {
-            setAdminDashboardOpen(true);
-          } else {
-            setAdminLoginOpen(true);
-          }
-        }}
-      />
+      <Footer />
       <WhatsAppFloat />
       <ContactShortcut />
       <MobileBottomNav onOpenBooking={() => { setSelectedService(null); setSelectedPackage(null); setBookingModalOpen(true); }} />
@@ -173,16 +204,6 @@ function MainContent() {
         preselectedService={selectedService}
         preselectedPackage={selectedPackage}
       />
-
-      <AdminLogin
-        isOpen={adminLoginOpen}
-        onClose={() => setAdminLoginOpen(false)}
-        onLoginSuccess={() => setAdminDashboardOpen(true)}
-      />
-
-      {adminDashboardOpen && (
-        <AdminDashboard onClose={() => setAdminDashboardOpen(false)} />
-      )}
 
       <BarcodeScannerModal
         isOpen={barcodeScannerOpen}

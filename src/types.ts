@@ -8,6 +8,18 @@ export interface HeroSlideItem {
   labelEn?: string;
 }
 
+export interface SiteMediaItem {
+  id: string;
+  type: 'image' | 'video';
+  url: string;
+  posterUrl?: string;
+  titleAr?: string;
+  titleFr?: string;
+  titleEn?: string;
+  isActive: boolean; // Toggles whether this media is active in the Hero section
+  createdAt?: string;
+}
+
 export interface SiteSettings {
   agencyName: string;
   taglineAr: string;
@@ -35,6 +47,22 @@ export interface SiteSettings {
   enableHeroVideo?: boolean; // Toggle hero video on/off
   heroVideoPoster?: string; // Fallback image for hero video
   heroSlides?: HeroSlideItem[]; // Custom background photos list for hero slider
+  heroMediaItems?: SiteMediaItem[]; // Master list of image/video URLs with active toggles
+  activeHeroMediaType?: 'video' | 'slideshow' | 'single_image' | 'auto';
+  activeSingleMediaId?: string;
+  visibleSections?: {
+    about?: boolean;
+    services?: boolean;
+    packages?: boolean;
+    portfolio?: boolean;
+    videos?: boolean;
+    offers?: boolean;
+    testimonials?: boolean;
+    whyUs?: boolean;
+    clientExperience?: boolean;
+    availabilityChecker?: boolean;
+    customizer?: boolean;
+  };
 }
 
 export interface StatItem {

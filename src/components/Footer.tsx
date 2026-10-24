@@ -1,12 +1,12 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { Facebook, Instagram, Youtube, Phone, Mail, MapPin, Lock } from 'lucide-react';
+import { Facebook, Instagram, Youtube, Phone, Mail, MapPin } from 'lucide-react';
 
 interface FooterProps {
-  onOpenAdmin: () => void;
+  onOpenAdmin?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
+export const Footer: React.FC<FooterProps> = () => {
   const { language, settings } = useApp();
 
   return (
@@ -48,15 +48,6 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
                 <Youtube className="w-4 h-4" />
               </a>
             </div>
-
-            {/* Owner CMS Access Button */}
-            <button
-              onClick={onOpenAdmin}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-neutral-900 border border-amber-500/30 text-amber-400 text-xs font-bold hover:bg-amber-500 hover:text-neutral-950 transition-all shadow-lg"
-            >
-              <Lock className="w-3.5 h-3.5" />
-              <span>{language === 'ar' ? 'لوحة تحكم المسؤول (Owner CMS)' : 'Admin Control Panel'}</span>
-            </button>
           </div>
 
           {/* Quick links */}
