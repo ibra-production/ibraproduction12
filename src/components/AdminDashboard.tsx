@@ -667,53 +667,57 @@ const [videoModal, setVideoModal] = useState<any | null>(null);
   return (
     <div className="fixed inset-0 z-50 bg-neutral-950 text-neutral-100 flex flex-col overflow-hidden font-sans">
 
-      <header className="bg-neutral-900 border-b border-neutral-800 px-6 py-4 flex items-center justify-between shrink-0">
+      <header className="bg-neutral-900 border-b border-neutral-800 px-6 py-3.5 flex items-center justify-between shrink-0">
 
         <div className="flex items-center gap-3">
-
-          <div className="w-10 h-10 rounded-full bg-amber-500 text-neutral-950 font-bold flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-neutral-950 font-black flex items-center justify-center shadow-lg shadow-amber-500/15">
             IP
           </div>
 
           <div>
-            <h1 className="font-bold text-lg text-white">
-              IBRA PRODUCTION â�¢ Ù�Ù�Ø­Ø© Ø§Ù�ØªØ­Ù�Ù�
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="font-black text-base sm:text-lg text-white font-cinzel tracking-wide">
+                IBRA PRODUCTION
+              </h1>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                MASTER CMS
+              </span>
+            </div>
 
-            <span className="text-xs text-amber-400 flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              ØµÙ�Ø§Ø­Ù�Ø§Øª Ø§Ù�Ù�Ø³Ø¤Ù�Ù� Ù�ÙØ¹Ù�Ø©
+            <span className="text-[11px] text-amber-400/90 flex items-center gap-1 font-semibold">
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+              جلسة إدارة معتمدة ومحمية • صلاحيات المالك الكاملة
             </span>
           </div>
-
         </div>
 
-        <div className="flex items-center gap-3">
-
-          <button
-            onClick={() => {
-              logout();
-              onClose();
-            }}
-            className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-400 border border-red-500/30 rounded-xl text-xs font-semibold"
-          >
-            <LogOut className="w-4 h-4" />
-            ØªØ³Ø¬Ù�Ù� Ø§Ù�Ø®Ø±Ù�Ø¬
-          </button>
-
+        <div className="flex items-center gap-2.5 sm:gap-3">
           <a
             href="/"
             onClick={(e) => {
               e.preventDefault();
               onClose();
             }}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 hover:text-white rounded-xl text-xs font-bold transition-all border border-neutral-700"
-            title="الانتقال إلى الموقع العام للعملاء"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 hover:text-white rounded-xl text-xs font-bold transition-all border border-neutral-700 cursor-pointer"
+            title="الانتقال إلى موقع الزبائن"
           >
             <Eye className="w-3.5 h-3.5 text-amber-400" />
-            <span>عرض الموقع للعملاء</span>
+            <span className="hidden sm:inline">معاينة موقع الزبائن</span>
+            <span className="sm:hidden">الموقع</span>
           </a>
 
+          <button
+            onClick={() => {
+              if (confirm('هل أنت متأكد من تسجيل الخروج من لوحة الإدارة؟')) {
+                logout();
+                onClose();
+              }
+            }}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl text-xs font-bold transition-all cursor-pointer"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>تسجيل الخروج</span>
+          </button>
         </div>
 
       </header>

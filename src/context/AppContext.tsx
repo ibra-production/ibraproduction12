@@ -104,6 +104,8 @@ interface AppContextType {
   addEventReview: (eventId: string, review: Omit<EventReviewItem, 'id' | 'date'>) => void;
 
   currentUser: AdminUser | null;
+  authError: string | null;
+  clearAuthError: () => void;
 
   login: (
     email: string,
@@ -411,6 +413,7 @@ export const AppProvider: React.FC<{
 
   const [currentUser, setCurrentUser] =
     useState<AdminUser | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   // =========================================================
   // Local logs only
@@ -574,6 +577,7 @@ export const AppProvider: React.FC<{
     email: string,
     pass: string
   ): Promise<boolean> => {
+    setAuthError(null);
     try {
       const credential = await signInWithEmailAndPassword(
         auth,
@@ -584,26 +588,34 @@ export const AppProvider: React.FC<{
       const signedInEmail = (credential.user.email || "").trim().toLowerCase();
       if (signedInEmail !== "admin@ibraprod.online") {
         await signOut(auth);
-        alert("هذا الحساب غير مخول للوصول إلى لوحة الإدارة.");
+        setAuthError("هذا الحساب غير مخول للوصول إلى لوحة الإدارة. الدخول مسموح فقط للمالك الرسمي.");
         return false;
       }
 
+      setAuthError(null);
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error(
         "Firebase login error:",
         error
       );
 
-      alert(
-        "فشل تسجيل الدخول: " +
-          String(
-            error instanceof Error
-              ? error.message
-              : error
-          )
-      );
+      let msg = "بيانات الدخول غير صحيحة. يرجى التحقق من البريد وكلمة المرور.";
+      const code = String(error?.code || "");
+      if (
+        code.includes("user-not-found") ||
+        code.includes("wrong-password") ||
+        code.includes("invalid-credential") ||
+        code.includes("invalid-login-credentials")
+      ) {
+        msg = "بيانات الدخول غير صحيحة. يرجى التأكد من كلمة المرور الخاصة بحساب الإدارة.";
+      } else if (code.includes("too-many-requests")) {
+        msg = "تم حظر المحاولات مؤقتاً لتكرار المحاولات الخاطئة. يرجى الانتظار دقيقة والمحاولة مجدداً.";
+      } else if (code.includes("network-request-failed")) {
+        msg = "تعذر الاتصال بالخادم السحابي. يرجى التحقق من اتصال الإنترنت.";
+      }
 
+      setAuthError(msg);
       return false;
     }
   };
@@ -2862,6 +2874,8 @@ export const AppProvider: React.FC<{
         addEventReview,
 
         currentUser,
+        authError,
+        clearAuthError: () => setAuthError(null),
         login,
         logout,
 

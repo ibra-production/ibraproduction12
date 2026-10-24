@@ -131,18 +131,16 @@ function MainContent() {
       );
     }
     return (
-      <div className="min-h-screen bg-neutral-950 text-neutral-100 flex items-center justify-center p-4">
-        <AdminLogin
-          isOpen={true}
-          onClose={() => {
-            window.history.pushState({}, '', '/');
-            setIsAdminRoute(false);
-          }}
-          onLoginSuccess={() => {
-            setIsAdminRoute(true);
-          }}
-        />
-      </div>
+      <AdminLogin
+        isOpen={true}
+        onClose={() => {
+          window.history.pushState({}, '', '/');
+          setIsAdminRoute(false);
+        }}
+        onLoginSuccess={() => {
+          setIsAdminRoute(true);
+        }}
+      />
     );
   }
 
