@@ -1,6 +1,6 @@
 {
-  "name": "IBRA PRODUCTION",
-  "description": "Professional Wedding & Media Production Agency",
+  "name": "IBRA PRODUCTION STUDIO",
+  "description": "Comprehensive premium Android business management system for IBRA PRODUCTION wedding and media studio.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

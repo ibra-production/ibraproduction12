@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "794299708186",
+    "project_id": "ibra-production-web",
+    "storage_bucket": "ibra-production-web.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:794299708186:android:d576f550f8f0eec00532a3",
+        "android_client_info": {
+          "package_name": "com.aistudio.ibraprod.stdiov"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCQ9m5Z89ThqVYaUDW02pPhcDxge-pzonU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
