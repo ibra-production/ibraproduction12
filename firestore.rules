@@ -2,16 +2,75 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    function signedIn() {
-      return request.auth != null;
-    }
-
     function isAdmin() {
-      return signedIn();
+      return request.auth != null && request.auth.token.admin == true;
     }
 
-    // Public website content: anyone can read, only the owner can modify.
+    function validBookingStatus(status) {
+      return status in ["new", "confirmed", "processing", "completed", "cancelled"];
+    }
+
+    function validPublicBookingCreate() {
+      let data = request.resource.data;
+      return data.keys().hasOnly([
+          "groomName", "brideName", "phone", "email", "eventType",
+          "eventDate", "eventDates", "eventTime", "wilaya", "venue",
+          "serviceId", "packageId", "notes", "idCardUrl", "idCardKey",
+          "idCardName", "idCardMimeType", "status", "createdAt"
+        ])
+        && data.keys().hasAll([
+          "groomName", "phone", "eventType", "eventTime", "venue",
+          "status", "createdAt"
+        ])
+        && data.groomName is string
+        && data.groomName.size() >= 2
+        && data.groomName.size() <= 100
+        && data.phone is string
+        && data.phone.size() >= 8
+        && data.phone.size() <= 30
+        && data.eventType is string
+        && data.eventType.size() >= 1
+        && data.eventType.size() <= 100
+        && data.eventTime is string
+        && data.eventTime.size() <= 100
+        && data.venue is string
+        && data.venue.size() <= 250
+        && data.status == "new"
+        && data.createdAt is timestamp
+        && (!("brideName" in data) || data.brideName is string)
+        && (!("email" in data) || data.email is string)
+        && (!("eventDate" in data) || data.eventDate is string)
+        && (!("eventDates" in data) || data.eventDates is list)
+        && (!("wilaya" in data) || data.wilaya is string)
+        && (!("serviceId" in data) || data.serviceId is string)
+        && (!("packageId" in data) || data.packageId is string)
+        && (!("notes" in data) || data.notes is string)
+        && (!("idCardUrl" in data) || data.idCardUrl is string)
+        && (!("idCardKey" in data) || data.idCardKey is string)
+        && (!("idCardName" in data) || data.idCardName is string)
+        && (!("idCardMimeType" in data) || data.idCardMimeType is string);
+    }
+
+    function validAdminBooking(data) {
+      return data.status is string
+        && validBookingStatus(data.status)
+        && (!("groomName" in data) || data.groomName is string)
+        && (!("brideName" in data) || data.brideName is string)
+        && (!("phone" in data) || data.phone is string)
+        && (!("email" in data) || data.email is string)
+        && (!("eventTime" in data) || data.eventTime is string)
+        && (!("eventDate" in data) || data.eventDate is string)
+        && (!("eventDates" in data) || data.eventDates is list)
+        && (!("clientId" in data) || data.clientId is string)
+        && (!("clientCode" in data) || data.clientCode is string)
+        && (!("eventType" in data) || data.eventType is string)
+        && (!("venue" in data) || data.venue is string)
+        && (!("wilaya" in data) || data.wilaya is string)
+        && (!("serviceId" in data) || data.serviceId is string)
+        && (!("packageId" in data) || data.packageId is string)
+        && (!("notes" in data) || data.notes is string);
+    }
+
     match /siteSettings/{document} {
       allow read: if true;
       allow write: if isAdmin();
@@ -47,51 +106,43 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Team profiles are public to display on the website,
-    // but only the owner can create/change/delete them.
     match /teamMembers/{document} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // Public booking submission. Clients cannot read, edit or delete bookings.
-    // Require the minimum fields needed by the booking flow.
     match /bookings/{bookingId} {
       allow create: if
-        request.resource.data.groomName is string
-        && request.resource.data.groomName.size() >= 2
-        && request.resource.data.groomName.size() <= 100
-        && request.resource.data.phone is string
-        && request.resource.data.phone.size() >= 8
-        && request.resource.data.phone.size() <= 30
-        && request.resource.data.eventType is string
-        && request.resource.data.eventType.size() >= 1
-        && request.resource.data.eventType.size() <= 100
-        && request.resource.data.eventTime is string
-        && request.resource.data.eventTime.size() <= 50
-        && request.resource.data.venue is string
-        && request.resource.data.venue.size() <= 250
-        && request.resource.data.status == "new";
-
-      allow read, update, delete: if isAdmin();
+        (isAdmin() && validAdminBooking(request.resource.data))
+        || validPublicBookingCreate();
+      allow read, delete: if isAdmin();
+      allow update: if isAdmin() && validAdminBooking(request.resource.data);
     }
 
+    match /clients/{clientId} {
+      allow read, write: if isAdmin();
+    }
 
-    // Client portal documents are readable by anyone holding the unguessable portal code.
-    // Only the admin can create/update/delete portal snapshots.
+    match /clientPhoneIndex/{phoneIdentity} {
+      allow read, write: if isAdmin();
+    }
+
+    match /bookingClientLinks/{bookingId} {
+      allow read, write: if isAdmin();
+    }
+
     match /clientPortals/{portalCode} {
-      allow read: if true;
+      allow get: if true;
+      allow list: if false;
       allow write: if isAdmin();
     }
 
-    // Internal workflow data is admin-only.
     match /bookingWorkflows/{bookingId} {
       allow read, write: if isAdmin();
     }
 
-    // Push notification tokens must never be readable/writable by ordinary users.
     match /pushTokens/{token} {
-      allow read, create, update, delete: if isAdmin();
+      allow read, write: if isAdmin();
     }
 
     match /automationQueue/{eventId} {
@@ -99,11 +150,6 @@ service cloud.firestore {
     }
 
     match /scanLogs/{scanId} {
-      allow read, write: if isAdmin();
-    }
-
-    // Operations Center: private CRM and production records.
-    match /clients/{clientId} {
       allow read, write: if isAdmin();
     }
 
@@ -131,7 +177,6 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
-    // Everything else is denied by default.
     match /{document=**} {
       allow read, write: if false;
     }

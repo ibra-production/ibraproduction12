@@ -22,8 +22,9 @@ import {
 
 import {
   signInWithEmailAndPassword,
+  getIdTokenResult,
   signOut,
-  onAuthStateChanged,
+  onIdTokenChanged,
 } from "firebase/auth";
 
 
@@ -64,6 +65,7 @@ import {
 
 import { db, auth } from "../firebase";
 import { uploadImageToIbraR2 } from "../r2Upload";
+import { linkBookingsToClients } from "../firebase/bookingClientLinker";
 
 interface AppContextType {
   language: Language;
@@ -585,16 +587,21 @@ export const AppProvider: React.FC<{
         pass
       );
 
-      const signedInEmail = (credential.user.email || "").trim().toLowerCase();
-      if (signedInEmail !== "admin@ibraprod.online") {
+      const token = await getIdTokenResult(credential.user, true);
+      if (token.claims.admin !== true) {
         await signOut(auth);
-        setAuthError("هذا الحساب غير مخول للوصول إلى لوحة الإدارة. الدخول مسموح فقط للمالك الرسمي.");
+        setAuthError("هذا الحساب لا يحمل صلاحية مدير Firebase المطلوبة.");
         return false;
       }
 
       setAuthError(null);
       return true;
     } catch (error: any) {
+      if (auth.currentUser) {
+        await signOut(auth).catch((signOutError) => {
+          console.error("Firebase cleanup after failed admin login:", signOutError);
+        });
+      }
       console.error(
         "Firebase login error:",
         error
@@ -640,28 +647,54 @@ export const AppProvider: React.FC<{
   // =========================================================
 
   useEffect(() => {
-    const unsubscribe =
-      onAuthStateChanged(
-        auth,
-        (firebaseUser) => {
-          if (firebaseUser) {
-            const signedInEmail = (firebaseUser.email || "").trim().toLowerCase();
-            if (signedInEmail !== "admin@ibraprod.online") {
-              signOut(auth).catch(() => undefined);
-              setCurrentUser(null);
-              return;
-            }
+    let active = true;
+    const rejectAdminSession = async (message: string) => {
+      if (!active) return;
+      setCurrentUser(null);
+      setAuthError(message);
+      if (auth.currentUser) {
+        await signOut(auth).catch((error) => {
+          console.error("Firebase admin session cleanup failed:", error);
+        });
+      }
+    };
+    const verifyCurrentToken = async (forceRefresh: boolean) => {
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) {
+        if (active) setCurrentUser(null);
+        return;
+      }
 
-            const adminUser = users[0];
-            setCurrentUser(adminUser);
-          } else {
-            setCurrentUser(null);
-          }
+      try {
+        const token = await getIdTokenResult(firebaseUser, forceRefresh);
+        if (!active) return;
+        if (token.claims.admin === true) {
+          setCurrentUser(users[0]);
+          setAuthError(null);
+        } else {
+          await rejectAdminSession("جلسة Firebase الحالية لا تحمل صلاحية المدير.");
         }
-      );
+      } catch (error) {
+        console.error("Firebase admin claim verification failed:", error);
+        await rejectAdminSession("تعذر التحقق من صلاحيات مدير Firebase.");
+      }
+    };
+    const unsubscribe = onIdTokenChanged(auth, () => {
+      void verifyCurrentToken(false);
+    });
+    const refreshVisibleSession = () => {
+      if (document.visibilityState === "visible") {
+        void verifyCurrentToken(true);
+      }
+    };
+    const refreshTimer = window.setInterval(refreshVisibleSession, 60_000);
+    window.addEventListener("focus", refreshVisibleSession);
 
     return () => {
+      active = false;
       unsubscribe();
+      window.clearInterval(refreshTimer);
+      window.removeEventListener("focus", refreshVisibleSession);
     };
   }, [users]);
 
@@ -724,7 +757,7 @@ export const AppProvider: React.FC<{
 
   useEffect(() => {
     // Only subscribe to teamMembers in Firestore if admin is authenticated
-    if (!currentUser && !auth.currentUser) {
+    if (!currentUser) {
       return;
     }
 
@@ -1851,88 +1884,37 @@ export const AppProvider: React.FC<{
     >
   ): Promise<void> => {
     try {
-      console.log(
-        "1️⃣ إرسال الحجز إلى Firestore:",
-        bookingData
+      const publicFields = [
+        "groomName",
+        "brideName",
+        "phone",
+        "email",
+        "eventType",
+        "eventDate",
+        "eventDates",
+        "eventTime",
+        "wilaya",
+        "venue",
+        "serviceId",
+        "packageId",
+        "notes",
+        "idCardUrl",
+        "idCardKey",
+        "idCardName",
+        "idCardMimeType",
+      ] as const;
+      const publicBooking = Object.fromEntries(
+        publicFields.flatMap((field) => {
+          const value = bookingData[field];
+          return value === undefined || value === null ? [] : [[field, value]];
+        })
       );
 
-      const cleanBookingData =
-        Object.fromEntries(
-          Object.entries(
-            bookingData
-          ).filter(
-            ([, value]) =>
-              value !== undefined &&
-              value !== null
-          )
-        );
-
-      const bookingRef =
-        await addDoc(
-          collection(
-            db,
-            "bookings"
-          ),
-          {
-            ...cleanBookingData,
-            status: "new",
-            createdAt:
-              serverTimestamp(),
-          }
-        );
-
-      // Create/reuse one permanent client file and attach its stable barcode ID to the booking.
-      const phoneKey = String(bookingData.phone || "").trim();
-      let clientDoc: any = null;
-      if (phoneKey) {
-        const existing = await getDocs(
-          query(collection(db, "clients"), where("phone", "==", phoneKey))
-        );
-        if (!existing.empty) {
-          clientDoc = existing.docs[0];
-        }
-      }
-
-      const clientId = clientDoc?.id || doc(collection(db, "clients")).id;
-      const existingClient = clientDoc?.data() || {};
-      const clientCode =
-        String(existingClient.clientCode || existingClient.barcode || "").trim() ||
-        `IBRA-C-${bookingRef.id.slice(-8).toUpperCase()}`;
-
-      await setDoc(
-        doc(db, "clients", clientId),
-        {
-          clientCode,
-          barcode: clientCode,
-          fullName: bookingData.groomName || "",
-          groomName: bookingData.groomName || "",
-          brideName: bookingData.brideName || "",
-          phone: phoneKey,
-          email: bookingData.email || "",
-          address: bookingData.venue || "",
-          active: true,
-          totalProjects: Number(existingClient.totalProjects || 0) + 1,
-          lastBookingId: bookingRef.id,
-          lastEventDates: bookingData.eventDates || [bookingData.eventDate].filter(Boolean),
-          lastStatus: "new",
-          updatedAt: serverTimestamp(),
-          createdAt: existingClient.createdAt || serverTimestamp(),
-          source: "booking",
-        },
-        { merge: true }
-      );
-
-      await updateDoc(doc(db, "bookings", bookingRef.id), {
-        clientId,
-        clientCode,
+      await addDoc(collection(db, "bookings"), {
+        ...publicBooking,
+        status: "new",
+        createdAt: serverTimestamp(),
       });
-
-      console.log(
-        "2️⃣ تم الحفظ في Firestore بنجاح:",
-        bookingRef.id,
-        "Client:",
-        clientCode
-      );
 
       logActivity(
         `حجز جديد: ${bookingData.groomName} والعروس: ${bookingData.brideName}`,
@@ -2065,7 +2047,7 @@ export const AppProvider: React.FC<{
 
   useEffect(() => {
     // Only subscribe to bookings in Firestore if admin is authenticated
-    if (!currentUser && !auth.currentUser) {
+    if (!currentUser) {
       return;
     }
 
@@ -2076,6 +2058,29 @@ export const AppProvider: React.FC<{
           "bookings"
         ),
         (snapshot) => {
+          const unlinkedBookings = snapshot.docs
+            .filter((bookingDoc) => {
+              const data = bookingDoc.data();
+              return !data.clientId && !data.clientCode;
+            })
+            .map((bookingDoc) => {
+              const data = bookingDoc.data();
+              return {
+                id: bookingDoc.id,
+                groomName: String(data.groomName || ""),
+                brideName: String(data.brideName || ""),
+                phone: String(data.phone || ""),
+                email: typeof data.email === "string" ? data.email : "",
+                venue: typeof data.venue === "string" ? data.venue : "",
+                eventDate: typeof data.eventDate === "string" ? data.eventDate : "",
+                eventDates: Array.isArray(data.eventDates) ? data.eventDates : [],
+                status: String(data.status || "new"),
+              };
+            });
+          void linkBookingsToClients(db, unlinkedBookings).catch((error) => {
+            console.error("Failed to link pending bookings to client records:", error);
+          });
+
           const firestoreBookings: BookingItem[] =
             snapshot.docs.map(
               (bookingDoc) => {
@@ -2084,6 +2089,8 @@ export const AppProvider: React.FC<{
 
                 return {
                   id: bookingDoc.id,
+                  clientId: data.clientId || "",
+                  clientCode: data.clientCode || "",
 
                   groomName:
                     data.groomName ||

@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "ibra-production-web"
-  }
+    "default": "ibra-production-web",
+    "production": "ibra-production-web"
+  },
+  "targets": {},
+  "etags": {}
 }

@@ -1,0 +1,184 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
+    }
+
+    function validBookingStatus(status) {
+      return status in ["new", "confirmed", "processing", "completed", "cancelled"];
+    }
+
+    function validPublicBookingCreate() {
+      let data = request.resource.data;
+      return data.keys().hasOnly([
+          "groomName", "brideName", "phone", "email", "eventType",
+          "eventDate", "eventDates", "eventTime", "wilaya", "venue",
+          "serviceId", "packageId", "notes", "idCardUrl", "idCardKey",
+          "idCardName", "idCardMimeType", "status", "createdAt"
+        ])
+        && data.keys().hasAll([
+          "groomName", "phone", "eventType", "eventTime", "venue",
+          "status", "createdAt"
+        ])
+        && data.groomName is string
+        && data.groomName.size() >= 2
+        && data.groomName.size() <= 100
+        && data.phone is string
+        && data.phone.size() >= 8
+        && data.phone.size() <= 30
+        && data.eventType is string
+        && data.eventType.size() >= 1
+        && data.eventType.size() <= 100
+        && data.eventTime is string
+        && data.eventTime.size() <= 100
+        && data.venue is string
+        && data.venue.size() <= 250
+        && data.status == "new"
+        && data.createdAt is timestamp
+        && (!("brideName" in data) || data.brideName is string)
+        && (!("email" in data) || data.email is string)
+        && (!("eventDate" in data) || data.eventDate is string)
+        && (!("eventDates" in data) || data.eventDates is list)
+        && (!("wilaya" in data) || data.wilaya is string)
+        && (!("serviceId" in data) || data.serviceId is string)
+        && (!("packageId" in data) || data.packageId is string)
+        && (!("notes" in data) || data.notes is string)
+        && (!("idCardUrl" in data) || data.idCardUrl is string)
+        && (!("idCardKey" in data) || data.idCardKey is string)
+        && (!("idCardName" in data) || data.idCardName is string)
+        && (!("idCardMimeType" in data) || data.idCardMimeType is string);
+    }
+
+    function validAdminBooking(data) {
+      return data.status is string
+        && validBookingStatus(data.status)
+        && (!("groomName" in data) || data.groomName is string)
+        && (!("brideName" in data) || data.brideName is string)
+        && (!("phone" in data) || data.phone is string)
+        && (!("email" in data) || data.email is string)
+        && (!("eventTime" in data) || data.eventTime is string)
+        && (!("eventDate" in data) || data.eventDate is string)
+        && (!("eventDates" in data) || data.eventDates is list)
+        && (!("clientId" in data) || data.clientId is string)
+        && (!("clientCode" in data) || data.clientCode is string)
+        && (!("eventType" in data) || data.eventType is string)
+        && (!("venue" in data) || data.venue is string)
+        && (!("wilaya" in data) || data.wilaya is string)
+        && (!("serviceId" in data) || data.serviceId is string)
+        && (!("packageId" in data) || data.packageId is string)
+        && (!("notes" in data) || data.notes is string);
+    }
+
+    match /siteSettings/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /services/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /packages/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /portfolio/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /videos/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /testimonials/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /offers/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /teamMembers/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /bookings/{bookingId} {
+      allow create: if
+        (isAdmin() && validAdminBooking(request.resource.data))
+        || validPublicBookingCreate();
+      allow read, delete: if isAdmin();
+      allow update: if isAdmin() && validAdminBooking(request.resource.data);
+    }
+
+    match /clients/{clientId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /clientPhoneIndex/{phoneIdentity} {
+      allow read, write: if isAdmin();
+    }
+
+    match /bookingClientLinks/{bookingId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /clientPortals/{portalCode} {
+      allow get: if true;
+      allow list: if false;
+      allow write: if isAdmin();
+    }
+
+    match /bookingWorkflows/{bookingId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /pushTokens/{token} {
+      allow read, write: if isAdmin();
+    }
+
+    match /automationQueue/{eventId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /scanLogs/{scanId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /galleryItems/{galleryId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /usbRecords/{recordId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /adminPermissions/{permissionId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /contracts/{contractId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /invoices/{invoiceId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /payments/{paymentId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

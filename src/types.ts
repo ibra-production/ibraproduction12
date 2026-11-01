@@ -191,6 +191,8 @@ export interface BookingItem {
 
   status: 'new' | 'confirmed' | 'processing' | 'completed' | 'cancelled';
   createdAt: string;
+  clientId?: string;
+  clientCode?: string;
   eventId?: string;
   barcode?: string;
 }

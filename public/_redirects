@@ -1,0 +1,4 @@
+# Serve the SPA shell for direct navigation to the admin route on Cloudflare Pages.
+/admin /index.html 200
+/admin/ /index.html 200
+/admin/* /index.html 200

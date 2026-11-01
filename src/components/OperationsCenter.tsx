@@ -3,6 +3,7 @@ import { addDoc, collection, doc, getDocs, onSnapshot, query, serverTimestamp, s
 import { BarChart3, BriefcaseBusiness, CalendarDays, CheckCircle2, CreditCard, FileText, Image as ImageIcon, LockKeyhole, Plus, Printer, RefreshCw, Search, ShieldCheck, Usb, Users, WalletCards, ScanLine, Upload } from 'lucide-react';
 import { db } from '../firebase';
 import { uploadImageToIbraR2 } from '../r2Upload';
+import { normalizePhone, phonesMatch, stableClientCode } from '../utils/clientIdentity';
 
 type Props = { bookings: any[]; teamMembers: any[] };
 
@@ -89,12 +90,16 @@ export const OperationsCenter: React.FC<Props> = ({ bookings, teamMembers }) => 
   };
 
   const upsertClient=async(b:any)=>{
-    const id=String(b.phone||b.id||'').replace(/[^0-9A-Za-z_-]/g,'_');
-    if(!id)return;
+    const phone=String(b.phone||'');
+    const normalizedPhone=normalizePhone(phone);
+    if(!normalizedPhone)return;
+    const existing=clients.find(c=>phonesMatch(String(c.phone||''),phone));
+    const code=String(existing?.clientCode||existing?.barcode||await stableClientCode(phone));
+    const id=String(existing?.id||code);
     await setDoc(doc(db,'clients',id),{
-      phone:b.phone||'',groomName:b.groomName||'',brideName:b.brideName||'',email:b.email||'',
+      phone:existing?.phone||b.phone||'',groomName:b.groomName||'',brideName:b.brideName||'',email:b.email||'',
       lastBookingId:b.id||'',lastEventDates:dates(b),lastStatus:b.status||'new',
-      clientCode:code('IBRA-C',id),barcode:code('IBRA-C',id),
+      clientCode:existing?.clientCode||code,barcode:existing?.barcode||code,
       updatedAt:serverTimestamp(),source:'booking'
     },{merge:true});
   };
@@ -109,7 +114,7 @@ export const OperationsCenter: React.FC<Props> = ({ bookings, teamMembers }) => 
       if(snap.empty)snap=await getDocs(query(collection(db,'clients'),where('clientCode','==',value)));
       if(snap.empty){await addDoc(collection(db,'scanLogs'),{code:value,type:'client',success:false,createdAt:serverTimestamp()});alert('لم يتم العثور على ملف عميل بهذا الكود.');return;}
       const found={id:snap.docs[0].id,...snap.docs[0].data()} as any;
-      const bs=bookings.filter(b=>String(b.clientId||'')===String(found.id)||String(b.clientCode||'').toUpperCase()===String(found.clientCode||'').toUpperCase()||String(b.phone||'')===String(found.phone||''));
+      const bs=bookings.filter(b=>String(b.clientId||'')===String(found.id)||String(b.clientCode||'').toUpperCase()===String(found.clientCode||'').toUpperCase()||phonesMatch(String(b.phone||''),String(found.phone||'')));
       await addDoc(collection(db,'scanLogs'),{code:value,type:'client',success:true,clientId:found.id,clientCode:found.clientCode||value,createdAt:serverTimestamp()});
       setSelected({...found,bookings:bs});
       setScan('');
@@ -129,7 +134,7 @@ export const OperationsCenter: React.FC<Props> = ({ bookings, teamMembers }) => 
   const ensureClientIdentity=async(client:any)=>{
     const id=String(client?.id||''); if(!id) return {id:'',clientCode:''};
     const clientCode=String(client.clientCode||client.barcode||code('IBRA-C',id));
-    await setDoc(doc(db,'clients',id),{clientCode,barcode:clientCode,updatedAt:serverTimestamp()},{merge:true});
+    await setDoc(doc(db,'clients',id),{clientCode,barcode:client.barcode||clientCode,updatedAt:serverTimestamp()},{merge:true});
     return {id,clientCode};
   };
 

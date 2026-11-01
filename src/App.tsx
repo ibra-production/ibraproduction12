@@ -34,6 +34,7 @@ import { QuickActions, ContactShortcut } from './components/QuickActions';
 import { BarcodeScannerModal } from './components/BarcodeScannerModal';
 import { GroomDossierModal } from './components/GroomDossierModal';
 import { ServiceItem, PackageItem, IbraEvent } from './types';
+import { isAdminPath } from './routing';
 
 function MainContent() {
   const { currentUser, settings, language } = useApp();
@@ -81,22 +82,20 @@ function MainContent() {
     document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
   }, [settings, language]);
 
-  const checkIsAdminPath = () => {
-    if (typeof window === 'undefined') return false;
-    const path = window.location.pathname.toLowerCase();
-    const params = new URLSearchParams(window.location.search);
-    return path === '/admin' || path.startsWith('/admin/') || params.get('admin') === '1';
-  };
-
-  const [isAdminRoute, setIsAdminRoute] = useState<boolean>(() => checkIsAdminPath());
+  const [isAdminRoute, setIsAdminRoute] = useState<boolean>(() => isAdminPath(window.location));
 
   useEffect(() => {
     const handleLocationChange = () => {
-      setIsAdminRoute(checkIsAdminPath());
+      setIsAdminRoute(isAdminPath(window.location));
     };
     window.addEventListener('popstate', handleLocationChange);
     return () => window.removeEventListener('popstate', handleLocationChange);
   }, []);
+
+  const returnToWebsite = () => {
+    window.history.pushState({}, '', '/');
+    setIsAdminRoute(false);
+  };
 
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [barcodeScannerOpen, setBarcodeScannerOpen] = useState(false);
@@ -122,10 +121,7 @@ function MainContent() {
       return (
         <div className="min-h-screen bg-neutral-950 text-neutral-100">
           <AdminDashboard
-            onClose={() => {
-              window.history.pushState({}, '', '/');
-              setIsAdminRoute(false);
-            }}
+            onClose={returnToWebsite}
           />
         </div>
       );
@@ -133,10 +129,7 @@ function MainContent() {
     return (
       <AdminLogin
         isOpen={true}
-        onClose={() => {
-          window.history.pushState({}, '', '/');
-          setIsAdminRoute(false);
-        }}
+        onClose={returnToWebsite}
         onLoginSuccess={() => {
           setIsAdminRoute(true);
         }}
@@ -226,4 +219,3 @@ export default function App() {
     </AppProvider>
   );
 }
-
