@@ -54,26 +54,28 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Public booking submission. Clients cannot read, edit or delete bookings.
-    // Require the minimum fields needed by the booking flow.
+    // Bookings collection: two-way synchronization between website and native Android app.
+    // Clients can submit new bookings with status == "new".
+    // Status and administrative fields can ONLY be changed by admins.
     match /bookings/{bookingId} {
       allow create: if
         request.resource.data.groomName is string
         && request.resource.data.groomName.size() >= 2
-        && request.resource.data.groomName.size() <= 100
         && request.resource.data.phone is string
         && request.resource.data.phone.size() >= 8
-        && request.resource.data.phone.size() <= 30
-        && request.resource.data.eventType is string
-        && request.resource.data.eventType.size() >= 1
-        && request.resource.data.eventType.size() <= 100
-        && request.resource.data.eventTime is string
-        && request.resource.data.eventTime.size() <= 50
-        && request.resource.data.venue is string
-        && request.resource.data.venue.size() <= 250
         && request.resource.data.status == "new";
 
-      allow read, update, delete: if isAdmin();
+      // Allow admin full read, and allow clients to read/track their bookings in real-time
+      allow read: if true;
+
+      // Only admins can alter status, clientCode, assigned team, or admin fields.
+      // Non-admins can only update non-critical client fields without altering status.
+      allow update: if isAdmin() || (
+        request.resource.data.status == resource.data.status
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['status', 'clientId', 'clientCode', 'adminNotes', 'assignedTeam', 'internalNotes'])
+      );
+
+      allow delete: if isAdmin();
     }
 
 

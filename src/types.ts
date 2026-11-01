@@ -245,6 +245,7 @@ export interface AdminUser {
   name: string;
   role: 'Owner' | 'Admin' | 'Editor' | 'Photographer' | 'Manager';
   active: boolean;
+  phone?: string;
 }
 
 

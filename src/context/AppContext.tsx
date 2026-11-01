@@ -112,6 +112,11 @@ interface AppContextType {
     pass: string
   ) => Promise<boolean>;
 
+  adminLoginWithPhone: (
+    phone: string,
+    pass: string
+  ) => Promise<boolean>;
+
   logout: () => Promise<void>;
 
   addService: (
@@ -412,7 +417,13 @@ export const AppProvider: React.FC<{
   // =========================================================
 
   const [currentUser, setCurrentUser] =
-    useState<AdminUser | null>(null);
+    useState<AdminUser | null>(() => {
+      try {
+        const saved = localStorage.getItem("ibra_admin_session");
+        if (saved) return JSON.parse(saved);
+      } catch {}
+      return null;
+    });
   const [authError, setAuthError] = useState<string | null>(null);
 
   // =========================================================
@@ -620,18 +631,63 @@ export const AppProvider: React.FC<{
     }
   };
 
+  const adminLoginWithPhone = async (
+    phone: string,
+    pass: string
+  ): Promise<boolean> => {
+    setAuthError(null);
+    const cleanPhone = phone.trim().replace(/[^0-9]/g, "");
+    const cleanPass = pass.trim();
+
+    // Check against authorized owner credentials (0558948485 / sana2005)
+    const isOwnerPhone =
+      cleanPhone === "0558948485" ||
+      cleanPhone === "558948485" ||
+      cleanPhone === "213558948485";
+    const isOwnerPass = cleanPass === "sana2005";
+
+    if (!isOwnerPhone || !isOwnerPass) {
+      setAuthError("رقم الهاتف أو كلمة السر غير صحيحة. يرجى التحقق من بيانات الدخول.");
+      return false;
+    }
+
+    const adminProfile: AdminUser = {
+      id: "owner_ibrahim",
+      email: "admin@ibraprod.online",
+      name: "إبراهيم بن سالم (المالك والمدير العام)",
+      role: "Owner",
+      phone: "0558948485",
+      active: true,
+    };
+
+    try {
+      localStorage.setItem("ibra_admin_session", JSON.stringify(adminProfile));
+    } catch {}
+    setCurrentUser(adminProfile);
+
+    // Also attempt Firebase Auth in the background
+    try {
+      await signInWithEmailAndPassword(auth, "admin@ibraprod.online", "sana2005");
+    } catch (fbErr) {
+      console.warn("Firebase Auth background link status:", fbErr);
+    }
+
+    logActivity("تسجيل دخول المالك بنجاح عبر البوابة الإدارية الموثقة", "settings");
+    return true;
+  };
+
   const logout = async (): Promise<void> => {
     try {
+      localStorage.removeItem("ibra_admin_session");
+      setCurrentUser(null);
       await signOut(auth);
     } catch (error) {
       console.error(
         "Firebase logout error:",
         error
       );
-
-      alert(
-        "حدث خطأ أثناء تسجيل الخروج"
-      );
+      localStorage.removeItem("ibra_admin_session");
+      setCurrentUser(null);
     }
   };
 
@@ -648,14 +704,25 @@ export const AppProvider: React.FC<{
             const signedInEmail = (firebaseUser.email || "").trim().toLowerCase();
             if (signedInEmail !== "admin@ibraprod.online") {
               signOut(auth).catch(() => undefined);
-              setCurrentUser(null);
+              const session = localStorage.getItem("ibra_admin_session");
+              if (!session) setCurrentUser(null);
               return;
             }
 
-            const adminUser = users[0];
+            const adminUser = users[0] || {
+              id: "owner_ibrahim",
+              email: "admin@ibraprod.online",
+              name: "إبراهيم بن سالم (المالك والمدير العام)",
+              role: "Owner",
+              phone: "0558948485",
+              active: true,
+            };
             setCurrentUser(adminUser);
           } else {
-            setCurrentUser(null);
+            const session = localStorage.getItem("ibra_admin_session");
+            if (!session) {
+              setCurrentUser(null);
+            }
           }
         }
       );
@@ -2877,6 +2944,7 @@ export const AppProvider: React.FC<{
         authError,
         clearAuthError: () => setAuthError(null),
         login,
+        adminLoginWithPhone,
         logout,
 
         addService,

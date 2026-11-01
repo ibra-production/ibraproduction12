@@ -52,6 +52,23 @@ function MainContent() {
   }, []);
   const maintenance = settings.maintenanceMode === true;
 
+  const checkIsAdminPath = () => {
+    if (typeof window === 'undefined') return false;
+    const path = window.location.pathname.toLowerCase();
+    const params = new URLSearchParams(window.location.search);
+    return path === '/admin' || path.startsWith('/admin/') || params.get('admin') === '1';
+  };
+
+  const [isAdminRoute, setIsAdminRoute] = useState<boolean>(() => checkIsAdminPath());
+
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setIsAdminRoute(checkIsAdminPath());
+    };
+    window.addEventListener('popstate', handleLocationChange);
+    return () => window.removeEventListener('popstate', handleLocationChange);
+  }, []);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('booking') === '1') setBookingModalOpen(true);
@@ -61,6 +78,12 @@ function MainContent() {
   }, []);
 
   useEffect(() => {
+    if (isAdminRoute) {
+      document.title = 'لوحة الإدارة التنفيذية | IBRA PRODUCTION CMS';
+      document.documentElement.lang = 'ar';
+      document.documentElement.dir = 'rtl';
+      return;
+    }
     const title =
       language === 'ar'
         ? 'منصة إبرا للحجوزات | Ibra Production'
@@ -79,24 +102,7 @@ function MainContent() {
     meta.content = description;
     document.documentElement.lang = language;
     document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
-  }, [settings, language]);
-
-  const checkIsAdminPath = () => {
-    if (typeof window === 'undefined') return false;
-    const path = window.location.pathname.toLowerCase();
-    const params = new URLSearchParams(window.location.search);
-    return path === '/admin' || path.startsWith('/admin/') || params.get('admin') === '1';
-  };
-
-  const [isAdminRoute, setIsAdminRoute] = useState<boolean>(() => checkIsAdminPath());
-
-  useEffect(() => {
-    const handleLocationChange = () => {
-      setIsAdminRoute(checkIsAdminPath());
-    };
-    window.addEventListener('popstate', handleLocationChange);
-    return () => window.removeEventListener('popstate', handleLocationChange);
-  }, []);
+  }, [settings, language, isAdminRoute]);
 
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [barcodeScannerOpen, setBarcodeScannerOpen] = useState(false);
